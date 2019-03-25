@@ -37,7 +37,7 @@ class RegistrationApi(object):
             response["result"], is_none(), quiet=False
         )
 
-        lcc.set_step("Check that Database api identifier is unique")
+        lcc.set_step("Check that Registration api identifier is unique")
         public_key = base.generate_keys()[1]
         account_params = [get_random_valid_account_name, public_key, public_key, public_key,
                           "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH"]  # todo: fix

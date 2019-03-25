@@ -305,7 +305,7 @@ class BaseTest(object):
                                    debug_mode=False):
         response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
         if response.get("result") is None and self.validator.is_account_name(account_name):
-            self.register_account(account_name, registration_api_identifier)
+            self.register_account(account_name, registration_api_identifier, debug_mode=debug_mode)
             response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
             account_id = response.get("result").get("id")
             with open(WALLETS, "r") as file:
