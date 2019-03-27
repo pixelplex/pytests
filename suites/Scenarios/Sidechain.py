@@ -58,7 +58,7 @@ class Sidechain(BaseTest):
                     "Sidechain transfer '{}':\n{}".format(transfer_id, json.dumps(response["result"][i], indent=4)))
                 return response["result"][i].get("withdraw_code")
         if self.temp_count != 10:
-            time.sleep(1)
+            self.set_timeout_wait(1)
             return self.get_withdraw_code(eth_address, transfer_id, value_amount)
         raise Exception("No object with transfer id: '{}'".format(transfer_id))
 

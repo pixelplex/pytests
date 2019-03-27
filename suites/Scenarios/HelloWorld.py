@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, is_, is_integer, is_str, check_that_in, is_true
+from lemoncheesecake.matching import check_that, is_, is_integer, is_str, check_that_in, is_true, this_dict, \
+    check_that_entry
 
 from common.base_test import BaseTest
 from common.echo_operation import EchoOperations
@@ -84,11 +85,9 @@ class HelloWorld(BaseTest):
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        check_that_in(
-            response["result"][0],
-            "amount", is_integer(),
-            "asset_id", is_str(self.asset)
-        )
+        with this_dict(response["result"][0]):
+            self.check_uint64_numbers(response["result"][0], "amount")
+            check_that_entry("asset_id", is_str(self.asset))
         owner_balance = response["result"][0]["amount"]
 
         lcc.set_step("Call 'getPennie' method")
@@ -113,10 +112,13 @@ class HelloWorld(BaseTest):
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
+        if isinstance(owner_balance, str):
+            actual_balance = int(response.get("result")[0].get("amount"))
+            owner_balance = int(owner_balance)
         check_that(
             "'owner balance'",
-            response.get("result")[0].get("amount"),
-            is_integer(owner_balance - fee[0].get("amount") + 1)
+            actual_balance,
+            is_(owner_balance - fee[0].get("amount") + 1)
         )
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")

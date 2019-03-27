@@ -239,6 +239,6 @@ class NegativeTesting(BaseTest):
                                             self.__api_identifier)
             response = self.get_response(response_id, negative=True)
             check_that(
-                "'get_required_fees' return error message with '{}' params".format(random_type_names[i]),
+                "'get_global_properties' return error message with '{}' params".format(random_type_names[i]),
                 response, has_entry("error"),  quiet=True,
             )

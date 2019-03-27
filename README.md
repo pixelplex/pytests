@@ -21,7 +21,7 @@ The project is intended for testing Echo. Includes testing:
 ---------------------------------|----------------------
 Run all tests                    | `$ lcc run`
 Run tests with special tag       | `$ lcc run -a tag_name`
-Run tests with special property  | `$ lcc run -m priority_kind:property_name`
+Run tests with special property  | `$ lcc run -m property_kind:property_name`
 Run tests with special link      | `$ lcc run -l link_name`
 Run only passed tests            | `$ lcc run --passed`
 Run only failed tests            | `$ lcc run --failed`
@@ -39,7 +39,7 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [Login API](https://echo-dev.io/developers/apis/login-api/#login-api)
 
-![](https://img.shields.io/badge/coverage-1_method(s)-red.svg?style=for-the-badge)
+![](https://img.shields.io/badge/coverage-all_methods-red.svg?style=for-the-badge)
 ![](https://img.shields.io/badge/WIP-YES-informational.svg?style=for-the-badge)
 
 ##### Methods:
@@ -55,37 +55,48 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [Asset API](https://echo-dev.io/developers/apis/asset-api/#asset-api)
 
-![](https://img.shields.io/badge/coverage-0_method(s)-red.svg?style=for-the-badge)
+![](https://img.shields.io/badge/coverage-all_methods-green.svg?style=for-the-badge)
 ![](https://img.shields.io/badge/WIP-YES-informational.svg?style=for-the-badge)
 
 ##### Methods: 
 
 1) **[get_asset_holders](https://echo-dev.io/developers/apis/asset-api/#get_asset_holdersstring-asset_id-int-start-int-limit)**  
-![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
-![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
+![](https://img.shields.io/badge/2_positive_test(s)-green.svg?style=plastic?logoColor=violet)
+![](https://img.shields.io/badge/5_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive: 
-    - [ ] a list of test(s)...
+    - [x] method main check
+    - [x] get info about the new asset holders
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [x] use in method call nonexistent asset_id
+    - [x] call method without params
+    - [x] call method with wrong params of all types
+    - [x] call method with nonstandard params
+    - [x] call method with more then limit params
     
 2) **[get_asset_holders_count](https://echo-dev.io/developers/apis/asset-api/#get_asset_holders_countstring-asset_id)**  
-![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
-![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
+![](https://img.shields.io/badge/2_positive_test(s)-green.svg?style=plastic?logoColor=violet)
+![](https://img.shields.io/badge/3_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive: 
-    - [ ] a list of test(s)...
+    - [x] method main check
+    - [x] add holders to new asset
+    - [x] work of start and limit params
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [x] use in method call nonexistent asset_id
+    - [x] call method without params
+    - [x] call method with wrong params of all types
     
 3) **[get_all_asset_holders](https://echo-dev.io/developers/apis/asset-api/#get_all_asset_holders)**  
-![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
-![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
+![](https://img.shields.io/badge/3_positive_test(s)-green.svg?style=plastic?logoColor=violet)
+![](https://img.shields.io/badge/1_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
+    ###### Positive:
+    - [x] method main check
+    - [x] new asset without holders
+    - [x] new asset with holders
     ###### Negative:
-    - [ ] a list of test(s)...
-    ###### Negative:
-    - [ ] a list of test(s)...
+    - [x] call method with params of all types
 
 #### [Database API](https://echo-dev.io/developers/apis/database-api/#database-api)
 
@@ -98,90 +109,90 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 2) **[set_subscribe_callback](https://echo-dev.io/developers/apis/database-api/#set_subscribe_callbackcallback-notify_remove_create)**   
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)**
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 3) **[set_pending_transaction_callback](https://echo-dev.io/developers/apis/database-api/#set_pending_transaction_callbackcallback)**   
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 4) **[set_block_applied_callback ](https://echo-dev.io/developers/apis/database-api/#set_block_applied_callbackcallback)**   
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 5) **[cancel_all_subscriptions](https://echo-dev.io/developers/apis/database-api/#cancel_all_subscriptions)**   
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 6) **[get_block_header](https://echo-dev.io/developers/apis/database-api/#get_block_headerblock_num)**   
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 7) **[get_block](https://echo-dev.io/developers/apis/database-api/#get_blockblock_num)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 8) **[get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 9) **[get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...  
+    - [ ] _Work In Progress_  
 
 10) **[get_chain_properties](https://echo-dev.io/developers/apis/database-api/#get_chain_properties)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 11) **[get_global_properties](https://echo-dev.io/developers/apis/database-api/#get_global_properties)**  
 ![](https://img.shields.io/badge/1_positive_test(s)-green.svg?style=plastic?logoColor=violet)
@@ -197,400 +208,400 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 13) **[get_chain_id](https://echo-dev.io/developers/apis/database-api/#get_chain_id)  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)**
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 14) **[get_dynamic_global_properties](https://echo-dev.io/developers/apis/database-api/#get_dynamic_global_properties)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 15) **[get_key_references](https://echo-dev.io/developers/apis/database-api/#get_key_referenceskeys)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 16) **[get_accounts](https://echo-dev.io/developers/apis/database-api/#get_accountsaccount_ids)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 17) **[get_full_accounts](https://echo-dev.io/developers/apis/database-api/#get_full_accountsnames_or_ids-subscribe)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 18) **[get_account_by_name](https://echo-dev.io/developers/apis/database-api/#get_account_by_namename)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 19) **[get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 20) **[lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 21) **[lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 22) **[get_account_count](https://echo-dev.io/developers/apis/database-api/#get_account_count)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 23) **[get_account_balances](https://echo-dev.io/developers/apis/database-api/#get_account_balancesid-assets)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 24) **[get_named_account_balances](https://echo-dev.io/developers/apis/database-api/#get_named_account_balancesname-assets)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 25) **[get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 26) **[get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 27) **[get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 28) **[get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 29) **[list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 30) **[lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 31) **[get_order_book](https://echo-dev.io/developers/apis/database-api/#get_order_bookbase-quote-depth-50)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 32) **[get_limit_orders](https://echo-dev.io/developers/apis/database-api/#get_limit_ordersa-b-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 33) **[get_call_orders](https://echo-dev.io/developers/apis/database-api/#get_call_ordersa-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 34) **[get_settle_orders](https://echo-dev.io/developers/apis/database-api/#get_settle_ordersa-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 35) **[get_margin_positions](https://echo-dev.io/developers/apis/database-api/#get_margin_positionsid)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 36) **[subscribe_to_market](https://echo-dev.io/developers/apis/database-api/#subscribe_to_marketcallback-a-b)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 37) **[unsubscribe_from_market](https://echo-dev.io/developers/apis/database-api/#unsubscribe_from_marketa-b)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 38) **[get_ticker](https://echo-dev.io/developers/apis/database-api/#get_tickerbase-quote)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 39) **[get_24_volume](https://echo-dev.io/developers/apis/database-api/#get_24_volumebase-quote)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 40) **[get_trade_history](https://echo-dev.io/developers/apis/database-api/#get_trade_historybase-quote-start-stop-limit-100)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 41) **[get_witnesses](https://echo-dev.io/developers/apis/database-api/#get_witnesseswitness_ids)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 42) **[get_witness_by_account](https://echo-dev.io/developers/apis/database-api/#get_witness_by_accountaccount)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 43) **[lookup_witness_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_witness_accountslower_bound_name-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 44) **[get_witness_count](https://echo-dev.io/developers/apis/database-api/#get_witness_count)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 45) **[get_committee_members](https://echo-dev.io/developers/apis/database-api/#get_committee_memberscommittee_member_ids)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 46) **[get_committee_member_by_account](https://echo-dev.io/developers/apis/database-api/#get_committee_member_by_accountaccount)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 47) **[lookup_committee_member_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_committee_member_accountslower_bound_name-limit)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 48) **[get_workers_by_account](https://echo-dev.io/developers/apis/database-api/#get_workers_by_accountaccount_id)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 49) **[lookup_vote_ids](https://echo-dev.io/developers/apis/database-api/#lookup_vote_idsvotes)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 50) **[get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 51) **[get_required_signatures](https://echo-dev.io/developers/apis/database-api/#get_required_signaturestrx-available_keys)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 52) **[get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 53) **[get_potential_address_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_address_signaturestrx)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 54) **[verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 55) **[verify_account_authority](https://echo-dev.io/developers/apis/database-api/#verify_account_authorityname_or_id-signers)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 56) **[validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 57) **[get_required_fees](https://echo-dev.io/developers/apis/database-api/#get_required_feesops-id)**  
 ![](https://img.shields.io/badge/3_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/9_negative_test(s)-red.svg?style=plastic?logoColor=violet)
@@ -615,81 +626,81 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 59) **[get_all_contracts](https://echo-dev.io/developers/apis/database-api/#get_all_contracts)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 60) **[get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 61) **[subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 62) **[get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 63) **[get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 64) **[call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 65) **[get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 66) **[get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 
 
 #### [History API](https://echo-dev.io/developers/apis/history-api/#history-api)
@@ -703,36 +714,36 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 2) **[get_relative_account_history](https://echo-dev.io/developers/apis/history-api/#get_relative_account_historyaccount-stop-0-limit-100-start-0)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 3) **[get_account_history_operations](https://echo-dev.io/developers/apis/history-api/#get_account_history_operations-account-operation_id-start-stop-limit-100)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     
 4) **[get_contract_history](https://echo-dev.io/developers/apis/history-api/#get_contract_history-account-stop-limit-start)**  
 ![](https://img.shields.io/badge/0_positive_test(s)-green.svg?style=plastic?logoColor=violet)
 ![](https://img.shields.io/badge/0_negative_test(s)-red.svg?style=plastic?logoColor=violet)
 
     ###### Positive:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
     ###### Negative:
-    - [ ] a list of test(s)...
+    - [ ] _Work In Progress_
 
 #### [Network broadcast API](https://echo-dev.io/developers/apis/network-broadcast-api/#network-broadcast-api)
 
@@ -778,7 +789,7 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [Registration API](https://echo-dev.io/developers/apis/registration-api/#registration-api)
 
-![](https://img.shields.io/badge/coverage-1_method(s)-red.svg?style=for-the-badge)
+![](https://img.shields.io/badge/coverage-all_methods-red.svg?style=for-the-badge)
 ![](https://img.shields.io/badge/WIP-YES-informational.svg?style=for-the-badge)
 
 ##### Methods:

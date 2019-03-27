@@ -2,6 +2,7 @@
 import codecs
 import json
 import os
+import time
 
 from echopy import Echo
 from echopy.echobase import BrainKey
@@ -38,6 +39,12 @@ class BaseTest(object):
             check_that_entry(key, is_str(), quiet=quiet)
         else:
             check_that_entry(key, is_integer(), quiet=quiet)
+
+    @staticmethod
+    def set_timeout_wait(seconds):
+        print("\nBefore sleep: {}".format(time.ctime()))
+        time.sleep(seconds)
+        print("After sleep: {}\n".format(time.ctime()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):
@@ -314,7 +321,7 @@ class BaseTest(object):
                 with open(WALLETS, "w") as new_file:
                     new_file.write(json.dumps(data))
         if debug_mode:
-            lcc.log_debug("Account is {}".format(response))
+            lcc.log_debug("Account is {}".format(json.dumps(response, indent=4)))
         return response
 
     def get_account_id(self, account_name, database_api_identifier, registration_api_identifier, debug_mode=False):

@@ -124,16 +124,18 @@ class NegativeTesting(BaseTest):
         self.operation = None
         self.contract = self.get_byte_code("piggy_code")
         self.valid_contract_id = None
+        self.list_asset_ids = []
         self.nonexistent_asset_id = None
         self.required_fee = None
 
-    def get_nonexistent_asset_id(self):
-        list_asset_ids = []
-        response_id = self.send_request(self.get_request("list_assets", ["", 100]), self.__database_api_identifier)
+    def get_nonexistent_asset_id(self, symbol=""):
+        response_id = self.send_request(self.get_request("list_assets", [symbol, 100]), self.__database_api_identifier)
         response = self.get_response(response_id)
         for i in range(len(response["result"])):
-            list_asset_ids.append(response["result"][i]["id"])
-        sorted_list_asset_ids = sorted(list_asset_ids, key=self.get_value_for_sorting_func)
+            self.list_asset_ids.append(response["result"][i]["id"])
+        if len(response["result"]) == 100:
+            return self.get_nonexistent_asset_id(symbol=response["result"][-1]["symbol"])
+        sorted_list_asset_ids = sorted(self.list_asset_ids, key=self.get_value_for_sorting_func)
         return "1.3.{}".format(str(int(sorted_list_asset_ids[-1][4:]) + 1))
 
     def get_valid_contract_id(self, registrar, contract):
