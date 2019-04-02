@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import is_integer, check_that, has_entry, greater_than_or_equal_to, is_
+from lemoncheesecake.matching import is_integer, check_that, has_entry, greater_than_or_equal_to
 
 from common.base_test import BaseTest
 from common.echo_operation import EchoOperations
@@ -28,7 +28,7 @@ class GetAssetHoldersCount(BaseTest):
         lcc.set_step("Get holders count of ECHO asset")
         response_id = self.send_request(self.get_request("get_asset_holders_count", [self.asset]),
                                         self.__asset_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
 
         lcc.set_step("Check response from method 'get_asset_holders_count'")
         check_that(
@@ -65,7 +65,7 @@ class PositiveTesting(BaseTest):
                                                                    issue_to_account=to_account)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
-        return self.is_operation_completed(broadcast_result)
+        return self.is_operation_completed(broadcast_result, expected_static_variant=0)
 
     def setup_suite(self):
         super().setup_suite()

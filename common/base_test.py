@@ -44,7 +44,7 @@ class BaseTest(object):
     def set_timeout_wait(seconds):
         print("\nBefore sleep: {}".format(time.ctime()))
         time.sleep(seconds)
-        print("After sleep: {}\n".format(time.ctime()))
+        print("\nAfter sleep: {}".format(time.ctime()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):
@@ -195,21 +195,43 @@ class BaseTest(object):
         return api_identifier
 
     @staticmethod
-    def is_operation_completed(response):
+    def is_completed_operation_return_empty_object(response):
         operations_count = response.get("trx").get("operations")
         if len(operations_count) == 1:
             operation_result = response.get("trx").get("operation_results")[0]
-            if operation_result[0] != 0 or operation_result[1] != {}:
+            if operation_result[0] != 0 and operation_result[1] != {}:
                 lcc.log_error("Wrong format of operation result, got {}".format(operation_result))
                 raise Exception("Wrong format of operation result")
             return True
         operation_results = []
         for i in range(len(operations_count)):
             operation_results.append(response.get("trx").get("operation_results")[i])
-            if operation_results[i][0] != 0 or operation_results[i][1] != {}:
+            if operation_results[i][0] != 0 and operation_results[i][1] != {}:
                 lcc.log_error("Wrong format of operation results, got {}".format(operation_results))
                 raise Exception("Wrong format of operation results")
             return True
+
+    def is_completed_operation_return_id(self, response):
+        operations_count = response.get("trx").get("operations")
+        if len(operations_count) == 1:
+            operation_result = response.get("trx").get("operation_results")[0]
+            if operation_result[0] != 1 and not self.validator.is_object_id(operation_result[1]):
+                lcc.log_error("Wrong format of operation result, got {}".format(operation_result))
+                raise Exception("Wrong format of operation result")
+            return True
+        operation_results = []
+        for i in range(len(operations_count)):
+            operation_results.append(response.get("trx").get("operation_results")[i])
+            if operation_results[i][0] != 1 and not self.validator.is_object_id(operation_results[i][1]):
+                lcc.log_error("Wrong format of operation results, got {}".format(operation_results))
+                raise Exception("Wrong format of operation results")
+            return True
+
+    def is_operation_completed(self, response, expected_static_variant):
+        if expected_static_variant == 0:
+            return self.is_completed_operation_return_empty_object(response)
+        if expected_static_variant == 1:
+            return self.is_completed_operation_return_id(response)
 
     @staticmethod
     def get_operation_results_ids(response):

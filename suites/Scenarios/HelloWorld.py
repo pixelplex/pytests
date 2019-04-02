@@ -112,8 +112,9 @@ class HelloWorld(BaseTest):
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
+        actual_balance = response.get("result")[0].get("amount")
         if isinstance(owner_balance, str):
-            actual_balance = int(response.get("result")[0].get("amount"))
+            actual_balance = int(actual_balance)
             owner_balance = int(owner_balance)
         check_that(
             "'owner balance'",

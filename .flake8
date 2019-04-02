@@ -12,5 +12,7 @@ exclude =
     # This contains our built documentation
     build,
     # This contains builds of flake8 that we don't want to check
-    dist
+    dist,
+    # This contains list of temp files, that would not added to git
+    debug.py
 max-complexity = 10

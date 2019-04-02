@@ -31,8 +31,8 @@ class GetRequiredFees(BaseTest):
         lcc.set_step("Get required fee for default 'transfer_operation'")
         response_id = self.send_request(self.get_request("get_required_fees", [
             [self.echo_operations.get_operation_json("transfer_operation", example=True),
-             self.echo_operations.get_operation_json("transfer_operation", example=True)], self.asset]),
-                                        self.__database_api_identifier)
+             self.echo_operations.get_operation_json("transfer_operation", example=True)],
+            self.asset]), self.__database_api_identifier)
         response = self.get_response(response_id)
 
         lcc.set_step("Check simple work of method 'get_required_fees'")
@@ -185,9 +185,10 @@ class NegativeTesting(BaseTest):
         )
 
         lcc.set_step("Call method with insufficient number of params")
-        response_id = self.send_request(self.get_request("get_required_fees", [
-            [self.echo_operations.get_operation_json("transfer_operation", example=True)]]),
-                                        self.__database_api_identifier)
+        response_id = self.send_request(
+            self.get_request("get_required_fees",
+                             [[self.echo_operations.get_operation_json("transfer_operation", example=True)]]),
+            self.__database_api_identifier)
         response = self.get_response(response_id, negative=True)
         check_that(
             "'get_required_fees' return error message",
@@ -231,9 +232,10 @@ class NegativeTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def nonexistent_asset_id_in_method_call(self):
         lcc.set_step("Get required fee for default 'transfer_operation' but with nonexistent asset_id")
-        response_id = self.send_request(self.get_request("get_required_fees", [
-            [self.echo_operations.get_operation_json("transfer_operation", example=True)], self.nonexistent_asset_id]),
-                                        self.__database_api_identifier)
+        response_id = self.send_request(
+            self.get_request("get_required_fees",
+                             [[self.echo_operations.get_operation_json("transfer_operation", example=True)],
+                              self.nonexistent_asset_id]), self.__database_api_identifier)
         response = self.get_response(response_id, negative=True)
         check_that(
             "'get_required_fees' return error message",

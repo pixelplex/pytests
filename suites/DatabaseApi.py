@@ -24,7 +24,7 @@ class DatabaseApi(object):
 
         lcc.set_step("Check Database api identifier. Call database api method 'get_objects'")
         response_id = base.send_request(base.get_request("get_objects"), api_identifier)
-        response = base.get_response(response_id)
+        response = base.get_response(response_id, log_response=True)
 
         check_that(
             "'call method 'get_objects''",
@@ -33,7 +33,7 @@ class DatabaseApi(object):
 
         lcc.set_step("Check that Database api identifier is unique")
         response_id = base.send_request(base.get_request("get_objects"), api_identifier + 1)
-        response = base.get_response(response_id, negative=True)
+        response = base.get_response(response_id, negative=True, log_response=True)
 
         check_that(
             "'using another identifier gives an error'",

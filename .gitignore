@@ -5,3 +5,4 @@ reports
 public
 venv
 resources/wallets.json
+suites/debug.py

@@ -240,5 +240,5 @@ class NegativeTesting(BaseTest):
             response = self.get_response(response_id, negative=True)
             check_that(
                 "'get_global_properties' return error message with '{}' params".format(random_type_names[i]),
-                response, has_entry("error"),  quiet=True,
+                response, has_entry("error"), quiet=True
             )

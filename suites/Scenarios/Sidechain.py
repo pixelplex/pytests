@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import time
 
 import lemoncheesecake.api as lcc
 
@@ -58,7 +57,7 @@ class Sidechain(BaseTest):
                     "Sidechain transfer '{}':\n{}".format(transfer_id, json.dumps(response["result"][i], indent=4)))
                 return response["result"][i].get("withdraw_code")
         if self.temp_count != 10:
-            self.set_timeout_wait(1)
+            self.set_timeout_wait(30)
             return self.get_withdraw_code(eth_address, transfer_id, value_amount)
         raise Exception("No object with transfer id: '{}'".format(transfer_id))
 
@@ -84,7 +83,7 @@ class Sidechain(BaseTest):
         params = [self.registrar, [self.eth_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        self.get_response(response_id, log_response=True)
 
     @lcc.prop("type", "scenario")
     @lcc.tags("eth_out")

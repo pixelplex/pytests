@@ -19,9 +19,23 @@ def get_random_integer():
 
 
 @lcc.fixture(scope="test")
+def get_random_integer_up_to_hundred():
+    random_int = random.randrange(1, 100)
+    lcc.log_info("Generated random integer up to a hundred: {}".format(random_int))
+    return random_int
+
+
+@lcc.fixture(scope="test")
 def get_random_float():
     random_float = random.uniform(NUM_RANGE_1, NUM_RANGE_2)
     lcc.log_info("Generated random float: {}".format(random_float))
+    return random_float
+
+
+@lcc.fixture(scope="test")
+def get_random_float_up_to_hundred():
+    random_float = random.uniform(1, 100)
+    lcc.log_info("Generated random float up to a hundred: {}".format(random_float))
     return random_float
 
 
@@ -108,11 +122,3 @@ def get_random_character():
         random.SystemRandom().choice(string.punctuation))
     lcc.log_info("Generated random punctuation: {}".format(random_character))
     return random_character
-
-
-@lcc.fixture(scope="test")
-def get_random_valid_asset_name():
-    random_string = ''.join(
-        random.SystemRandom().choice(string.ascii_uppercase) for _ in range(RANGE_OF_STR))
-    lcc.log_info("Generated random asset_name: {}".format(random_string))
-    return random_string

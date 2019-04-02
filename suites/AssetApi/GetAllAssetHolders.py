@@ -68,7 +68,7 @@ class PositiveTesting(BaseTest):
                                                                    issue_to_account=to_account)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
-        return self.is_operation_completed(broadcast_result)
+        return self.is_operation_completed(broadcast_result, expected_static_variant=0)
 
     def setup_suite(self):
         super().setup_suite()

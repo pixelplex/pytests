@@ -92,7 +92,7 @@ class PositiveTesting(BaseTest):
                                                                    issue_to_account=to_account)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
-        return self.is_operation_completed(broadcast_result)
+        return self.is_operation_completed(broadcast_result, expected_static_variant=0)
 
     def check_start_and_limit_params(self, asset_id, start, limit, account_names, accounts_ids, asset_value):
         params = [asset_id, start, limit]
@@ -311,12 +311,14 @@ class NegativeTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with nonstandard params")
-    @lcc.depends_on("AssetApi.GetAssetHolders.PositiveTesting.work_of_start_and_limit_params")
-    def call_method_with_nonstandard_params(self, get_random_integer, get_random_float, get_random_bool):
+    @lcc.tags("qwer")
+    # @lcc.depends_on("AssetApi.GetAssetHolders.PositiveTesting.work_of_start_and_limit_params")
+    def call_method_with_nonstandard_params(self, get_random_integer_up_to_hundred, get_random_float_up_to_hundred,
+                                            get_random_bool):
         asset_name = "LEX"
         asset_id = self.get_asset_id(asset_name)
-        negative_int = round(get_random_integer / 10) * (-1)
-        float_number = get_random_float / 10
+        negative_int = get_random_integer_up_to_hundred * (-1)
+        float_number = get_random_float_up_to_hundred
 
         lcc.set_step("Call method with start param equal to negative integers")
         params = [asset_id, negative_int, 100]
