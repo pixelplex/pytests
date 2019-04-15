@@ -16,7 +16,14 @@ class DatabaseApi(BaseTest):
 
     def __init__(self):
         super().__init__()
+        self.__api_identifier = None
+
+    def setup_suite(self):
+        super().setup_suite()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__api_identifier = self.get_identifier("database")
+        lcc.log_info(
+            "Database API identifiers is '{}'".format(self.__api_identifier))
 
     @lcc.test("Get objects")
     def test_get_objects(self):

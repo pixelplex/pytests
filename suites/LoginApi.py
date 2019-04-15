@@ -3,6 +3,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_bool, is_true
 
 from common.base_test import BaseTest
+from common.receiver import Receiver
 
 SUITE = {
     "description": "Login Api"
@@ -11,19 +12,23 @@ SUITE = {
 
 @lcc.prop("testing", "main")
 @lcc.tags("login_api")
-@lcc.suite("LoginApi API", rank=1)
+@lcc.suite("Login API", rank=1)
 class LoginApi(object):
 
     @lcc.prop("type", "method")
     @lcc.test("Login with empty credential")
     def login_with_empty_credential(self):
         base = BaseTest()
+        base.ws = base.create_connection_to_echo()
+        base.receiver = Receiver(web_socket=base.ws)
         lcc.set_step("Login to the Full Node with empty credential")
         response_id = base.send_request(base.get_request("login"))
         response = base.get_response(response_id)
 
         lcc.set_step("Check that login successful")
         check_that("'login status'", response["result"], is_bool(is_true()))
+
+        base.ws.close()
 
 
 @lcc.prop("testing", "positive")
@@ -37,12 +42,17 @@ class PositiveTesting(object):
     def login_with_credential(self):
         lcc.set_step("Login to the Full Node with credential")
         base = BaseTest()
+        base.ws = base.create_connection_to_echo()
+        base.receiver = Receiver(web_socket=base.ws)
         credential = ["test", "TEST123"]
         response_id = base.send_request(base.get_request("login", credential))
         response = base.get_response(response_id)
 
         lcc.set_step("Check that login successful")
         check_that("'login status'", response["result"], is_bool(is_true()))
+
+        base.ws.close()
+
 
 # todo: add when will be validation on login
 # @lcc.prop("testing", "negative")

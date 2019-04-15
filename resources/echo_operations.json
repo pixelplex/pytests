@@ -91,7 +91,7 @@
         }
     ],
     "create_contract_operation": [
-        47,
+        44,
         {
             "fee": {
                 "amount": 0,
@@ -108,7 +108,7 @@
         }
     ],
     "call_contract_operation": [
-        48,
+        45,
         {
             "fee": {
                 "amount": 0,
@@ -120,17 +120,17 @@
                 "asset_id": "1.3.0"
             },
             "code": "",
-            "callee": "1.16.0"
+            "callee": "1.14.0"
         }
     ],
     "contract_transfer_operation": [
-        49,
+        46,
         {
             "fee": {
                 "amount": 0,
                 "asset_id": "1.3.0"
             },
-            "from": "1.16.0",
+            "from": "1.14.0",
             "to": "0.0.0",
             "amount": {
                 "amount": 0,

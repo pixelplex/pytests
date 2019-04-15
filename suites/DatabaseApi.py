@@ -3,6 +3,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_integer, is_not_none, has_entry
 
 from common.base_test import BaseTest
+from common.receiver import Receiver
 
 SUITE = {
     "description": "Database Api"
@@ -18,6 +19,8 @@ class DatabaseApi(object):
     @lcc.test("Check connection to DatabaseApi")
     def connection_to_database_api(self):
         base = BaseTest()
+        base.ws = base.create_connection_to_echo()
+        base.receiver = Receiver(web_socket=base.ws)
         lcc.set_step("Requesting Access to a Database API")
         api_identifier = base.get_identifier("database")
         check_that("'database api identifier'", api_identifier, is_integer())
@@ -39,3 +42,5 @@ class DatabaseApi(object):
             "'using another identifier gives an error'",
             response, has_entry("error"), quiet=True
         )
+
+        base.ws.close()

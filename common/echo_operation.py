@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import os
 
@@ -125,7 +126,7 @@ class EchoOperations(object):
             lcc.log_debug("Call contract operation: \n{}".format(json.dumps(call_contract_props, indent=4)))
         return [operation_id, call_contract_props, registrar]
 
-    def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
+    def broadcast(self,  echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))

@@ -4,7 +4,6 @@ import json
 import lemoncheesecake.api as lcc
 
 from common.base_test import BaseTest
-from common.echo_operation import EchoOperations
 
 SUITE = {
     "description": "Testing work of 'sidechain'"
@@ -20,13 +19,10 @@ class Sidechain(BaseTest):
 
     def __init__(self):
         super().__init__()
-        self.__database_api_identifier = self.get_identifier("database")
-        self.__registration_api_identifier = self.get_identifier("registration")
-        self.echo_operations = EchoOperations()
-        self.registrar = "test-echo-1"
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
         self.contract_id = None
         # todo: get from global properties:
-        self.eth_asset = "1.3.48"
         self.eth_out = "6e20b99b"
         self.temp_count = 0
 
@@ -65,10 +61,16 @@ class Sidechain(BaseTest):
         super().setup_suite()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.registrar = self.get_account_id(self.registrar, self.__database_api_identifier,
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
         self.contract_id = self.get_echo_contract_id()
-        lcc.log_info("eth_contract_address: '{}'".format(self.get_eth_contract_address()))
+        lcc.log_info("Ethereum contract address: '{}'".format(self.get_eth_contract_address()))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -80,7 +82,7 @@ class Sidechain(BaseTest):
     def sidechain_in(self):
         # todo: add manual steps. Send eth to echo_account
         lcc.set_step("Get account balance in eETH")
-        params = [self.registrar, [self.eth_asset]]
+        params = [self.echo_acc1, [self.eeth_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         self.get_response(response_id, log_response=True)
@@ -96,19 +98,19 @@ class Sidechain(BaseTest):
 
         # todo: add when will be added other steps
         # lcc.set_step("Get account balance in eETH")
-        # params = [self.registrar, [self.eth_asset]]
+        # params = [self.echo_acc1, [self.eeth_asset]]
         # response_id = self.send_request(self.get_request("get_account_balances", params),
         #                                 self.__database_api_identifier)
         # response = self.get_response(response_id, log_response=True)
         # eETH_registar = response["result"].get("amount")
 
         lcc.set_step("Call withdraw method")
-        operation = self.echo_operations.get_call_contract_operation(echo=self.echo, registrar=self.registrar,
-                                                                     bytecode=withdraw, callee=self.contract_id,
-                                                                     value_amount=value_amount,
-                                                                     value_asset_id=self.eth_asset)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+                                                              bytecode=withdraw, callee=self.contract_id,
+                                                              value_amount=value_amount,
+                                                              value_asset_id=self.eeth_asset)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 
         lcc.set_step("Get transfer id")
@@ -121,7 +123,7 @@ class Sidechain(BaseTest):
 
         # todo: add when will be added other steps
         # lcc.set_step("Check that the balance has decreased by the amount of withdrawal")
-        # params = [self.registrar, [self.eth_asset]]
+        # params = [self.echo_acc1, [self.eeth_asset]]
         # response_id = self.send_request(self.get_request("get_account_balances", params),
         #                                 self.__database_api_identifier)
         # response = self.get_response(response_id, log_response=True)

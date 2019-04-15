@@ -3,6 +3,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_integer, is_not_none, has_entry
 
 from common.base_test import BaseTest
+from common.receiver import Receiver
 
 SUITE = {
     "description": "Asset Api"
@@ -11,13 +12,15 @@ SUITE = {
 
 @lcc.prop("testing", "main")
 @lcc.tags("asset_api")
-@lcc.suite("Database API")
+@lcc.suite("Asset API")
 class AssetApi(object):
 
     @lcc.tags("connection_to_asset_api")
     @lcc.test("Check connection to AssetApi")
     def connection_to_asset_api(self):
         base = BaseTest()
+        base.ws = base.create_connection_to_echo()
+        base.receiver = Receiver(web_socket=base.ws)
         lcc.set_step("Requesting Access to a Asset API")
         api_identifier = base.get_identifier("asset")
         check_that("'asset api identifier'", api_identifier, is_integer())
@@ -39,3 +42,5 @@ class AssetApi(object):
             "'using another identifier gives an error'",
             response, has_entry("error"), quiet=True
         )
+
+        base.ws.close()

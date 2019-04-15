@@ -1,29 +1,27 @@
 import re
 
-NAME_MIN_LENGTH = 3
+NAME_MIN_LENGTH = 1
 NAME_MAX_LENGTH = 63
 
 
 class Validator(object):
     id_regex = re.compile(r"^(0|([1-9]\d*\.)){2}(0|([1-9]\d*))$")
     account_id_regex = re.compile(r"^1\.2\.(0|[1-9]\d*)$")
-    block_id_regex = re.compile(r"^1\.18\.[1-9]\d*$")
     asset_id_regex = re.compile(r"^1\.3\.(0|[1-9]\d*)$")
     force_settlement_id_regex = re.compile(r"^1\.4\.[1-9]\d*$")
     committee_member_id_regex = re.compile(r"^1\.5\.(0|[1-9]\d*)$")
-    witness_id_regex = re.compile(r"^1\.6\.(0|[1-9]\d*)$")
-    limit_order_id_regex = re.compile(r"^1\.7\.[1-9]\d*$")
-    call_order_id_regex = re.compile(r"^1\.8\.[1-9]\d*$")
-    custom_id_regex = re.compile(r"^1\.9\.[1-9]\d*$")
-    proposal_id_regex = re.compile(r"^1\.10\.[1-9]\d*$")
-    operation_history_id_regex = re.compile(r"^1\.11\.(0|[1-9]\d*)$")
-    withdraw_permission_id_regex = re.compile(r"^1\.12\.[1-9]\d*$")
-    vesting_balance_id_regex = re.compile(r"^1\.13\.[1-9]\d*$")
-    worker_id_regex = re.compile(r"^1\.14\.[1-9]\d*$")
-    balance_id_regex = re.compile(r"^1\.15\.[1-9]\d*$")
-    contract_id_regex = re.compile(r"^1\.16\.(0|[1-9]\d*)$")
-    contract_result_id_regex = re.compile(r"^1\.17\.[1-9]\d*$")
-    transfer_id_regex = re.compile(r"^1\.19\.[1-9]\d*$")
+    limit_order_id_regex = re.compile(r"^1\.6\.[1-9]\d*$")
+    call_order_id_regex = re.compile(r"^1\.7\.[1-9]\d*$")
+    custom_id_regex = re.compile(r"^1\.8\.[1-9]\d*$")
+    proposal_id_regex = re.compile(r"^1\.9\.[1-9]\d*$")
+    operation_history_id_regex = re.compile(r"^1\.10\.(0|[1-9]\d*)$")
+    withdraw_permission_id_regex = re.compile(r"^1\.11\.[1-9]\d*$")
+    vesting_balance_id_regex = re.compile(r"^1\.12\.[1-9]\d*$")
+    balance_id_regex = re.compile(r"^1\.13\.[1-9]\d*$")
+    contract_id_regex = re.compile(r"^1\.14\.(0|[1-9]\d*)$")
+    contract_result_id_regex = re.compile(r"^1\.15\.[1-9]\d*$")
+    block_id_regex = re.compile(r"^1\.16\.[1-9]\d*$")
+    transfer_id_regex = re.compile(r"^1\.17\.[1-9]\d*$")
     dynamic_global_object_id_regex = re.compile(r"^2.1.0$")
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
     bit_asset_id_regex = re.compile(r"^2\.4\.(0|[1-9]\d*)$")
@@ -35,6 +33,8 @@ class Validator(object):
     hex_regex = re.compile(r"^[0-9a-fA-F]+")
     bytecode_regex = re.compile(r"^[\da-fA-F]{8}([\da-fA-F]{64})*$")
     vote_id_type_regex = re.compile(r"^[0-3]:[0-9]+")
+    iso8601_regex = re.compile(r"^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01]"
+                               r"[0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$")
 
     def __init__(self):
         super().__init__()
@@ -71,123 +71,115 @@ class Validator(object):
             "Value is not integer"
 
     def is_hex(self, value):
-        if self.is_string(value) and self.hex_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.hex_regex.match(value))
 
     def is_bytecode(self, value):
-        if self.is_string(value) and self.bytecode_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.bytecode_regex.match(value))
 
     def is_bytes(self, value, length):
         return self.is_hex(value) and len(value) == length * 2
 
     def is_account_id(self, value):
-        if self.is_string(value) and self.account_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.account_id_regex.match(value))
 
     def is_block_id(self, value):
-        if self.is_string(value) and self.block_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.block_id_regex.match(value))
 
     def is_asset_id(self, value):
-        if self.is_string(value) and self.asset_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.asset_id_regex.match(value))
 
     def is_force_settlement_id(self, value):
-        if self.is_string(value) and self.force_settlement_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.force_settlement_id_regex.match(value))
 
     def is_committee_member_id(self, value):
-        if self.is_string(value) and self.committee_member_id_regex.match(value):
-            return True
-
-    def is_witness_id(self, value):
-        if self.is_string(value) and self.witness_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.committee_member_id_regex.match(value))
 
     def is_limit_order_id(self, value):
-        if self.is_string(value) and self.limit_order_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.limit_order_id_regex.match(value))
 
     def is_call_order_id(self, value):
-        if self.is_string(value) and self.call_order_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.call_order_id_regex.match(value))
 
     def is_custom_id(self, value):
-        if self.is_string(value) and self.custom_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.custom_id_regex.match(value))
 
     def is_proposal_id(self, value):
-        if self.is_string(value) and self.proposal_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.proposal_id_regex.match(value))
 
     def is_operation_history_id(self, value):
-        if self.is_string(value) and self.operation_history_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.operation_history_id_regex.match(value))
 
     def is_withdraw_permission_id(self, value):
-        if self.is_string(value) and self.withdraw_permission_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.withdraw_permission_id_regex.match(value))
 
     def is_vesting_balance_id(self, value):
-        if self.is_string(value) and self.vesting_balance_id_regex.match(value):
-            return True
-
-    def is_worker_id(self, value):
-        if self.is_string(value) and self.worker_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.vesting_balance_id_regex.match(value))
 
     def is_balance_id(self, value):
-        if self.is_string(value) and self.balance_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.balance_id_regex.match(value))
 
     def is_contract_id(self, value):
-        if self.is_string(value) and self.contract_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.contract_id_regex.match(value))
 
     def is_contract_result_id(self, value):
-        if self.is_string(value) and self.contract_result_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.contract_result_id_regex.match(value))
 
     def is_transfer_id(self, value):
-        if self.is_string(value) and self.transfer_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.transfer_id_regex.match(value))
 
     def is_dynamic_global_object_id(self, value):
-        if self.is_string(value) and self.dynamic_global_object_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.dynamic_global_object_id_regex.match(value))
 
     def is_dynamic_asset_data_id(self, value):
-        if self.is_string(value) and self.dynamic_asset_data_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.dynamic_asset_data_id_regex.match(value))
 
     def is_bit_asset_id(self, value):
-        if self.is_string(value) and self.bit_asset_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.bit_asset_id_regex.match(value))
 
     def is_account_balance_id(self, value):
-        if self.is_string(value) and self.account_balance_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.account_balance_id_regex.match(value))
 
     def is_account_statistics_id(self, value):
-        if self.is_string(value) and self.account_statistics_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.account_statistics_id_regex.match(value))
 
     def is_transaction_id(self, value):
-        if self.is_string(value) and self.transaction_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.transaction_id_regex.match(value))
 
     def is_block_summary_id(self, value):
-        if self.is_string(value) and self.block_summary_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.block_summary_id_regex.match(value))
 
     def is_account_transaction_history_id(self, value):
-        if self.is_string(value) and self.account_transaction_history_id_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.account_transaction_history_id_regex.match(value))
 
     def is_vote_id(self, value):
-        if self.is_string(value) and self.vote_id_type_regex.match(value):
-            return True
+        if self.is_string(value):
+            return bool(self.vote_id_type_regex.match(value))
 
     def is_uint8(self, value):
         return self.is_uint(value, 8)
@@ -206,8 +198,8 @@ class Validator(object):
 
     @staticmethod
     def is_asset_name(value):
-        return bool(value is not None and len(value.split(".")) <= 2 and 3 <= len(value) <= 16 and re.match(
-            r"^[A-Z][A-Z\d.]*[A-Z]$", value))
+        return bool(value is not None and len(value.split(".")) <= 2 and 3 <= len(value) <= 16 and
+                    re.match(r"^[A-Z][A-Z\d.]*[A-Z]$", value))
 
     def is_account_name(self, value):
         if not self.is_string(value):
@@ -260,3 +252,7 @@ class Validator(object):
             return False
         prefix = value[0:len(address_prefix)]
         return address_prefix == prefix
+
+    def is_iso8601(self, value):
+        if self.is_string(value):
+            return bool(self.iso8601_regex.match(value))

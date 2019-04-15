@@ -26,6 +26,13 @@ def get_random_integer_up_to_hundred():
 
 
 @lcc.fixture(scope="test")
+def get_random_integer_up_to_fifty():
+    random_int = random.randrange(1, 50)
+    lcc.log_info("Generated random integer up to a fifty: {}".format(random_int))
+    return random_int
+
+
+@lcc.fixture(scope="test")
 def get_random_float():
     random_float = random.uniform(NUM_RANGE_1, NUM_RANGE_2)
     lcc.log_info("Generated random float: {}".format(random_float))
@@ -84,11 +91,10 @@ def get_random_bool():
 
 
 @lcc.fixture(scope="test")
-def get_all_random_types(get_random_integer, get_random_float, get_random_string, get_random_dict, get_random_list,
-                         get_random_bool):
-    return {"random_integer": get_random_integer, "random_float": get_random_float,
-            "random_string": get_random_string, "random_dict": get_random_dict,
-            "random_list": get_random_list, "random_bool": get_random_bool}
+def get_all_random_types():
+    return {"random_integer": get_random_integer(), "random_float": get_random_float(),
+            "random_string": get_random_string(), "random_dict": get_random_dict(),
+            "random_list": get_random_list(), "random_bool": get_random_bool()}
 
 
 @lcc.fixture(scope="test")

@@ -5,7 +5,6 @@ from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entr
     has_entry, is_not_none
 
 from common.base_test import BaseTest
-from common.echo_operation import EchoOperations
 
 SUITE = {
     "description": "Method 'get_asset_holders'"
@@ -21,23 +20,31 @@ class GetAssetHolders(BaseTest):
 
     def __init__(self):
         super().__init__()
+        self.__asset_api_identifier = None
+
+    def setup_suite(self):
+        super().setup_suite()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__asset_api_identifier = self.get_identifier("asset")
-        self.asset = "1.3.0"
+        lcc.log_info("Asset API identifier is '{}'".format(self.__asset_api_identifier))
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_asset_holders'")
     def method_main_check(self):
         start = 0
-        limit = 10
+        limit = 7
         lcc.set_step("Get holders of ECHO asset")
-        params = [self.asset, start, limit]
+        params = [self.echo_asset, start, limit]
         response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
         response = self.get_response(response_id)
+        lcc.log_info(
+            "Call method 'get_asset_holders' with: asset='{}', start='{}', limit='{}' parameters".format(
+                self.echo_asset, start, limit))
 
         lcc.set_step("Check response from method 'get_asset_holders'")
         result = response["result"]
         check_that(
-            "'number of asset '{}' holders'".format(self.asset),
+            "'number of asset '{}' holders'".format(self.echo_asset),
             len(result), is_(limit)
         )
         for i in range(len(result)):
@@ -55,49 +62,28 @@ class PositiveTesting(BaseTest):
 
     def __init__(self):
         super().__init__()
-        self.__database_api_identifier = self.get_identifier("database")
-        self.__registration_api_identifier = self.get_identifier("registration")
-        self.__asset_api_identifier = self.get_identifier("asset")
-        self.echo_operations = EchoOperations()
-        self.asset = "1.3.0"
-        self.account_1_name = "test-echo-1"
-        self.account_2_name = "test-echo-2"
-        self.account_3_name = "test-echo-3"
-        self.account_1 = None
-        self.account_2 = None
-        self.account_3 = None
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+        self.__asset_api_identifier = None
+        self.echo_acc1_name = self.echo_acc1
+        self.echo_acc2_name = self.echo_acc2
+        self.echo_acc3_name = self.echo_acc3
 
     def get_accounts_ids(self, account_name, account_count):
-        holders_ids = []
+        account_ids = []
         for i in range(account_count):
-            holders_ids.append(self.get_account_id(account_name + str(i), self.__database_api_identifier,
+            account_ids.append(self.get_account_id(account_name + str(i), self.__database_api_identifier,
                                                    self.__registration_api_identifier))
-        return holders_ids
+        return account_ids
 
-    def get_asset_id(self, symbol):
-        params = [symbol, 1]
-        response_id = self.send_request(self.get_request("list_assets", params), self.__database_api_identifier)
-        response = self.get_response(response_id)
-        if response["result"][0]["symbol"] != symbol:
-            operation = self.echo_operations.get_asset_create_operation(echo=self.echo, issuer=self.account_1,
-                                                                        symbol=symbol)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
-            return self.get_operation_results_ids(broadcast_result)
-        return response["result"][0]["id"]
-
-    def add_assets_to_account(self, value, asset_id, to_account):
-        operation = self.echo_operations.get_asset_issue_operation(echo=self.echo, issuer=self.account_1,
-                                                                   value_amount=value, value_asset_id=asset_id,
-                                                                   issue_to_account=to_account)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
-        return self.is_operation_completed(broadcast_result, expected_static_variant=0)
-
-    def check_start_and_limit_params(self, asset_id, start, limit, account_names, accounts_ids, asset_value):
+    def get_asset_holders(self, asset_id, start, limit, negative=False):
+        lcc.log_info("Get '{}' asset holders".format(asset_id))
         params = [asset_id, start, limit]
         response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id)
+        return self.get_response(response_id, negative=negative)
+
+    def check_start_and_limit_params(self, asset_id, start, limit, account_names, accounts_ids, asset_value):
+        response = self.get_asset_holders(asset_id, start, limit)
         result = response["result"]
         require_that(
             "'number of asset '{}' holders'".format(asset_id),
@@ -108,18 +94,27 @@ class PositiveTesting(BaseTest):
             with this_dict(holders_info):
                 check_that_entry("name", is_(account_names + str(start + i)))
                 check_that_entry("account_id", is_(accounts_ids[start + i]))
-                check_that_entry("amount", is_(asset_value))
+                check_that_entry("amount", is_(asset_value - i))
 
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.account_1 = self.get_account_id(self.account_1_name, self.__database_api_identifier,
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        self.__asset_api_identifier = self.get_identifier("asset")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}', "
+            "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
+                                self.__asset_api_identifier))
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.account_2 = self.get_account_id(self.account_2_name, self.__database_api_identifier,
+        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.account_3 = self.get_account_id(self.account_3_name, self.__database_api_identifier,
+        self.echo_acc3 = self.get_account_id(self.echo_acc3, self.__database_api_identifier,
                                              self.__registration_api_identifier)
+        lcc.log_info(
+            "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc1, self.echo_acc2, self.echo_acc3))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -132,21 +127,22 @@ class PositiveTesting(BaseTest):
         new_asset_name = get_random_valid_asset_name
         asset_value = 100
         lcc.set_step("Create a new asset and get id new asset")
-        new_asset_id = self.get_asset_id(new_asset_name)
+        new_asset_id = self.utils.get_asset_id(self, self.echo, new_asset_name, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset_id))
 
         lcc.set_step("Add new asset holders")
-        new_holders = [self.account_1, self.account_2, self.account_3]
+        new_holders = [self.echo_acc1, self.echo_acc2, self.echo_acc3]
         for i in range(len(new_holders)):
-            if not self.add_assets_to_account(asset_value - i, new_asset_id, new_holders[i]):
-                lcc.log_error("New asset holder '{}' not added".format(new_holders[i]))
+            self.utils.add_assets_to_account(self, self.echo, asset_value - i, new_asset_id, new_holders[i],
+                                             self.__database_api_identifier)
+        lcc.log_info(
+            "Echo accounts '{}' became new asset holders of '{}' asset_id".format(new_holders, new_asset_id))
 
         lcc.set_step("Check new asset holders")
         start = 0
         limit = 100
-        new_holders_names = [self.account_1_name, self.account_2_name, self.account_3_name]
-        params = [new_asset_id, start, limit]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id)
+        new_holders_names = [self.echo_acc1_name, self.echo_acc2_name, self.echo_acc3_name]
+        response = self.get_asset_holders(new_asset_id, start, limit)
         result = response["result"]
         check_that(
             "'number of asset '{}' holders'".format(new_asset_id),
@@ -160,17 +156,16 @@ class PositiveTesting(BaseTest):
                 check_that_entry("amount", is_(asset_value - i))
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug: 'ECHO-576'")
     @lcc.test("Check work of start and limit params")
     @lcc.depends_on("AssetApi.GetAssetHolders.GetAssetHolders.method_main_check")
     # todo: change to run on a empty node. Remove creation of accounts.
     def work_of_start_and_limit_params(self):
-        asset_name = "LEX"
-        account_names = "acc-echo-"
-        asset_value = 2
-        max_limit = 100
+        asset_name = "GOD"
+        account_names = "test-acc-"
+        asset_value = max_limit = 100
         lcc.set_step("Create asset and get id new asset")
-        asset_id = self.get_asset_id(asset_name)
+        asset_id = self.utils.get_asset_id(self, self.echo, asset_name, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
         lcc.set_step("Get or register accounts, the number of which is equal to the max limit 'get_asset_holders'")
         accounts_ids = self.get_accounts_ids(account_names, max_limit)
@@ -180,11 +175,12 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_asset_holders_count", [asset_id]),
                                         self.__asset_api_identifier)
         response = self.get_response(response_id)
-        # todo: remove '+ 1'. Bug: "ECHO-576"
-        if response["result"] + 1 < max_limit:
+        if response["result"] < max_limit:
             for i in range(max_limit):
-                if not self.add_assets_to_account(asset_value, asset_id, accounts_ids[i]):
-                    lcc.log_error("New asset holder '{}' not added".format(accounts_ids[i]))
+                self.utils.add_assets_to_account(self, self.echo, asset_value - i, asset_id, accounts_ids[i],
+                                                 self.__database_api_identifier)
+        lcc.log_info(
+            "Echo accounts '{}' became new asset holders of '{}' asset_id".format(accounts_ids, asset_id))
 
         lcc.set_step("Check maximum list length asset holders")
         start = 0
@@ -199,7 +195,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check start and limit param")
         start = 25
         limit = 25
-        self.check_start_and_limit_params(asset_id, start, limit, account_names, accounts_ids, asset_value)
+        self.check_start_and_limit_params(asset_id, start, limit, account_names, accounts_ids, asset_value - start)
 
 
 @lcc.prop("testing", "negative")
@@ -209,49 +205,36 @@ class NegativeTesting(BaseTest):
 
     def __init__(self):
         super().__init__()
-        self.__database_api_identifier = self.get_identifier("database")
-        self.__asset_api_identifier = self.get_identifier("asset")
-        self.list_asset_ids = []
+        self.__database_api_identifier = None
+        self.__asset_api_identifier = None
+        self.asset_name = "GOD"
         self.nonexistent_asset_id = None
 
-    def get_nonexistent_asset_id(self, symbol=""):
-        response_id = self.send_request(self.get_request("list_assets", [symbol, 100]), self.__database_api_identifier)
-        response = self.get_response(response_id)
-        for i in range(len(response["result"])):
-            self.list_asset_ids.append(response["result"][i]["id"])
-        if len(response["result"]) == 100:
-            return self.get_nonexistent_asset_id(symbol=response["result"][-1]["symbol"])
-        sorted_list_asset_ids = sorted(self.list_asset_ids, key=self.get_value_for_sorting_func)
-        return "1.3.{}".format(str(int(sorted_list_asset_ids[-1][4:]) + 1))
-
-    def get_asset_id(self, symbol):
-        params = [symbol, 1]
-        response_id = self.send_request(self.get_request("list_assets", params), self.__database_api_identifier)
-        response = self.get_response(response_id)
-        if response["result"][0]["symbol"] != symbol:
-            operation = self.echo_operations.get_asset_create_operation(echo=self.echo, issuer=self.account_1,
-                                                                        symbol=symbol)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=collected_operation)
-            return self.get_operation_results_ids(broadcast_result)
-        return response["result"][0]["id"]
+    def get_asset_holders(self, asset_id, start, limit, negative=False):
+        lcc.log_info("Get '{}' asset holders".format(asset_id))
+        params = [asset_id, start, limit]
+        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
+        return self.get_response(response_id, negative=negative)
 
     def setup_suite(self):
         super().setup_suite()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.nonexistent_asset_id = self.get_nonexistent_asset_id()
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__asset_api_identifier = self.get_identifier("asset")
+        lcc.log_info(
+            "API identifiers are: database='{}', asset='{}'".format(self.__database_api_identifier,
+                                                                    self.__asset_api_identifier))
+        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
+        lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
 
     @lcc.prop("type", "method")
     @lcc.test("Use in method call nonexistent asset_id")
-    @lcc.tags("Improve: 'ECHO-689'")
     @lcc.depends_on("AssetApi.GetAssetHolders.GetAssetHolders.method_main_check")
     def nonexistent_asset_id_in_method_call(self):
         start = 0
         limit = 1
-        params = [self.nonexistent_asset_id, start, limit]
         lcc.set_step("Get nonexistent asset holders")
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_asset_holders(self.nonexistent_asset_id, start, limit, negative=True)
         check_that(
             "'get_asset_holders'",
             response["result"], is_list([]),
@@ -273,16 +256,16 @@ class NegativeTesting(BaseTest):
     @lcc.test("Call method with wrong params of all types")
     @lcc.depends_on("AssetApi.GetAssetHolders.PositiveTesting.work_of_start_and_limit_params")
     def call_method_with_wrong_params(self, get_all_random_types):
-        lcc.set_step("Call method with wrong params of all types")
-        asset_name = "LEX"
-        asset_id = self.get_asset_id(asset_name)
         random_type_names = list(get_all_random_types.keys())
         random_values = list(get_all_random_types.values())
+
+        lcc.set_step("Get asset id")
+        asset_id = self.utils.get_asset_id(self, self.echo, self.asset_name, self.__database_api_identifier)
+        lcc.log_info("Asset_id is '{}'".format(asset_id))
+
         for i in range(len(get_all_random_types)):
             lcc.set_step("Wrong asset param, used '{}'".format(random_type_names[i]))
-            params = [random_values[i], 0, 100]
-            response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-            response = self.get_response(response_id, negative=True)
+            response = self.get_asset_holders(random_values[i], 0, 100, negative=True)
             check_that(
                 "'get_asset_holders' return error message with '{}' params".format(random_type_names[i]),
                 response, has_entry("error"), quiet=True,
@@ -292,18 +275,14 @@ class NegativeTesting(BaseTest):
                 continue
 
             lcc.set_step("Wrong start param, used '{}'".format(random_type_names[i]))
-            params = [asset_id, random_values[i], 100]
-            response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-            response = self.get_response(response_id, negative=True)
+            response = self.get_asset_holders(asset_id, random_values[i], 100, negative=True)
             check_that(
                 "'get_asset_holders' return error message with '{}' params".format(random_type_names[i]),
                 response, has_entry("error"), quiet=True,
             )
 
             lcc.set_step("Wrong limit param, used '{}'".format(random_type_names[i]))
-            params = [asset_id, 0, random_values[i]]
-            response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-            response = self.get_response(response_id, negative=True)
+            response = self.get_asset_holders(asset_id, 0, random_values[i], negative=True)
             check_that(
                 "'get_asset_holders' return error message with '{}' params".format(random_type_names[i]),
                 response, has_entry("error"), quiet=True,
@@ -311,46 +290,39 @@ class NegativeTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with nonstandard params")
-    @lcc.tags("qwer")
-    # @lcc.depends_on("AssetApi.GetAssetHolders.PositiveTesting.work_of_start_and_limit_params")
+    @lcc.depends_on("AssetApi.GetAssetHolders.PositiveTesting.work_of_start_and_limit_params")
     def call_method_with_nonstandard_params(self, get_random_integer_up_to_hundred, get_random_float_up_to_hundred,
                                             get_random_bool):
-        asset_name = "LEX"
-        asset_id = self.get_asset_id(asset_name)
+        lcc.set_step("Get asset id")
+        asset_id = self.utils.get_asset_id(self, self.echo, self.asset_name, self.__database_api_identifier)
+        lcc.log_info("Asset_id is '{}'".format(asset_id))
+
         negative_int = get_random_integer_up_to_hundred * (-1)
         float_number = get_random_float_up_to_hundred
 
         lcc.set_step("Call method with start param equal to negative integers")
-        params = [asset_id, negative_int, 100]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id, negative=True)
+        response = self.get_asset_holders(asset_id, negative_int, 100, negative=True)
         check_that(
             "'result'",
             response["result"], is_not_none(), quiet=True
         )
 
         lcc.set_step("Call method with limit param equal to negative integers")
-        params = [asset_id, 0, negative_int]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id, negative=True)
+        response = self.get_asset_holders(asset_id, 0, negative_int, negative=True)
         check_that(
             "'get_asset_holders' return error message",
             response, has_entry("error"), quiet=True,
         )
 
         lcc.set_step("Call method with start and limit params equal to floats")
-        params = [asset_id, float_number, float_number]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id, negative=True)
+        response = self.get_asset_holders(asset_id, float_number, float_number, negative=True)
         check_that(
             "'result'",
             response["result"], is_not_none(), quiet=True
         )
 
         lcc.set_step("Call method with start and limit params equal to booleans")
-        params = [asset_id, get_random_bool, get_random_bool]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id, negative=True)
+        response = self.get_asset_holders(asset_id, get_random_bool, get_random_bool, negative=True)
         check_that(
             "'result'",
             response["result"], is_not_none(), quiet=True
@@ -358,35 +330,32 @@ class NegativeTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with more then limit params")
-    @lcc.tags("Bug: 'ECHO-576'")
     @lcc.depends_on("AssetApi.GetAssetHolders.PositiveTesting.work_of_start_and_limit_params")
     def call_method_with_more_then_limit_params(self):
-        asset_name = "LEX"
-        asset_id = self.get_asset_id(asset_name)
         limit = 100
-        lcc.set_step("Check asset holders count")
+
+        lcc.set_step("Get asset id")
+        asset_id = self.utils.get_asset_id(self, self.echo, self.asset_name, self.__database_api_identifier)
+        lcc.log_info("Asset_id is '{}'".format(asset_id))
+
         response_id = self.send_request(self.get_request("get_asset_holders_count", [asset_id]),
                                         self.__asset_api_identifier)
         response = self.get_response(response_id)
         holders_count = response["result"]
-        # todo: remove '- 1'. Bug: "ECHO-576"
-        if holders_count != limit - 1:
+        if holders_count != limit:
             lcc.log_error("Wrong asset_id '{}', holders count: '{}'".format(asset_id, response["result"]))
             raise Exception("Wrong asset_id")
+        lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
+
         lcc.set_step("Call method with start param > holders count")
-        # todo: remove '+ 2'. Bug: "ECHO-576"
-        params = [asset_id, holders_count + 2, 1]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id, negative=True)
+        response = self.get_asset_holders(asset_id, holders_count, 1, negative=True)
         check_that(
             "'get_asset_holders'",
             response["result"], is_list([]),
         )
 
         lcc.set_step("Call method with limit param > limit")
-        params = [asset_id, 0, limit + 1]
-        response_id = self.send_request(self.get_request("get_asset_holders", params), self.__asset_api_identifier)
-        response = self.get_response(response_id, negative=True)
+        response = self.get_asset_holders(asset_id, 0, limit + 1, negative=True)
         check_that(
             "'get_asset_holders' return error message",
             response, has_entry("error"),

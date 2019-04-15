@@ -19,10 +19,8 @@ class GasUsed(BaseTest):
 
     def __init__(self):
         super().__init__()
-        self.__database_api_identifier = self.get_identifier("database")
-        self.__registration_api_identifier = self.get_identifier("registration")
-        self.echo_operations = EchoOperations()
-        self.registrar = None
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy_code")
         self.break_piggy = self.get_byte_code("piggy_breakPiggy")
         self.enough_fee_amount = 2000
@@ -50,10 +48,18 @@ class GasUsed(BaseTest):
         super().setup_suite()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.registrar = self.get_account_id("test-echo-1", self.__database_api_identifier,
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
         self.create_contract_id = self.echo.config.operation_ids.CREATE_CONTRACT
         self.call_contract_id = self.echo.config.operation_ids.CALL_CONTRACT
+        lcc.log_info("Echo operation ids are: create_contract='{}', call_contract='{}'".format(self.create_contract_id,
+                                                                                               self.call_contract_id))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -76,14 +82,14 @@ class GasUsed(BaseTest):
                 default_fee_for_contract_creation, default_fee_for_call_contract, gas_price, gas_amount))
 
         lcc.set_step("Get required fee for create_contract operation and store")
-        operation = self.echo_operations.get_create_contract_operation(echo=self.echo, registrar=self.registrar,
-                                                                       bytecode=self.contract)
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+                                                                bytecode=self.contract)
         required_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
         lcc.log_info("Required fee for contract create: {}".format(required_fee))
 
         lcc.set_step("Create 'Piggy' contract in the Echo network. Store gas_used")
         self.add_fee_to_operation(operation, self.__database_api_identifier, fee_amount=self.enough_fee_amount)
-        broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=operation)
         contract_result = self.get_operation_results_ids(broadcast_result)
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         self.__database_api_identifier)
@@ -99,14 +105,14 @@ class GasUsed(BaseTest):
 
         lcc.set_step("Get required fee for call_contract operation and store")
         contract_id = self.get_contract_id(response)
-        operation = self.echo_operations.get_call_contract_operation(echo=self.echo, registrar=self.registrar,
-                                                                     bytecode=self.break_piggy, callee=contract_id)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+                                                              bytecode=self.break_piggy, callee=contract_id)
         required_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
         lcc.log_info("Required fee for call contract: {}".format(required_fee))
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method. Store gas_used")
         self.add_fee_to_operation(operation, self.__database_api_identifier, fee_amount=self.enough_fee_amount)
-        broadcast_result = self.echo_operations.broadcast(echo=self.echo, list_operations=operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=operation)
         contract_result = self.get_operation_results_ids(broadcast_result)
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         self.__database_api_identifier)

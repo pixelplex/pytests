@@ -19,8 +19,9 @@ class GetGlobalProperties(BaseTest):
 
     def __init__(self):
         super().__init__()
-        self.__api_identifier = self.get_identifier("database")
-        self.all_operations = self.echo.config.operation_ids.__dict__
+        self.__api_identifier = None
+        # todo: change to 'self.echo.config.operation_ids.__dict__' when update echopy-lib (echo v.0.4.0)
+        self.all_operations = None
 
     @staticmethod
     def no_fee(actual_fee):
@@ -70,6 +71,12 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("fee", is_integer(), quiet=True)
                 check_that_entry("price_per_output", is_integer(), quiet=True)
 
+    # todo: remove when update echopy-lib (echo v.0.4.0)
+    def get_operations_in_current_fees(self):
+        operations = dict(self.echo.config.operation_ids.__dict__)
+        del operations["CHANGE_SIDECHAIN_CONFIG"]
+        return operations
+
     def check_default_fee_for_operation(self, current_fees, operations, check_kind):
         for i in range(len(operations)):
             for j in range(len(current_fees)):
@@ -79,26 +86,34 @@ class GetGlobalProperties(BaseTest):
                     check_kind(current_fees[j][1])
                     break
 
+    def setup_suite(self):
+        super().setup_suite()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__api_identifier = self.get_identifier("database")
+        lcc.log_info("Database API identifier is '{}'".format(self.__api_identifier))
+        # todo: remove when update echopy-lib (echo v.0.4.0)
+        self.all_operations = self.get_operations_in_current_fees()
+
     @lcc.prop("type", "method")
     @lcc.test("Check all fields in global properties")
     def method_main_check(self):
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
         response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_global_properties'")
 
         lcc.set_step("Check field 'id'")
         with this_dict(response["result"]):
-            if check_that("global_properties", response["result"], has_length(5)):
+            if check_that("global_properties", response["result"], has_length(4)):
                 check_that_entry("id", is_str(), quiet=True)
                 check_that_entry("parameters", is_dict(), quiet=True)
                 check_that_entry("next_available_vote_id", is_integer(), quiet=True)
                 check_that_entry("active_committee_members", is_list(), quiet=True)
-                check_that_entry("active_witnesses", is_list(), quiet=True)
 
         lcc.set_step("Check global parameters: 'current_fees' field")
         parameters = response["result"]["parameters"]
         with this_dict(parameters):
-            if check_that("parameters", parameters, has_length(32)):
+            if check_that("parameters", parameters, has_length(29)):
                 check_that_entry("current_fees", is_dict(), quiet=True)
                 check_that_entry("block_interval", is_integer(), quiet=True)
                 check_that_entry("maintenance_interval", is_integer(), quiet=True)
@@ -110,7 +125,6 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("maximum_proposal_lifetime", is_integer(), quiet=True)
                 check_that_entry("maximum_asset_whitelist_authorities", is_integer(), quiet=True)
                 check_that_entry("maximum_asset_feed_publishers", is_integer(), quiet=True)
-                check_that_entry("maximum_witness_count", is_integer(), quiet=True)
                 check_that_entry("maximum_committee_count", is_integer(), quiet=True)
                 check_that_entry("maximum_authority_membership", is_integer(), quiet=True)
                 check_that_entry("reserve_percent_of_fee", is_integer(), quiet=True)
@@ -120,8 +134,6 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("cashback_vesting_threshold", is_integer(), quiet=True)
                 check_that_entry("count_non_member_votes", is_bool(), quiet=True)
                 check_that_entry("allow_non_member_whitelists", is_bool(), quiet=True)
-                check_that_entry("witness_pay_per_block", is_integer(), quiet=True)
-                self.check_uint64_numbers(parameters, "worker_budget_per_day", quiet=True)
                 check_that_entry("max_predicate_opcode", is_integer(), quiet=True)
                 check_that_entry("fee_liquidation_threshold", is_integer(), quiet=True)
                 check_that_entry("accounts_per_fee_scale", is_integer(), quiet=True)
@@ -142,7 +154,7 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            len(current_fees["parameters"]), is_(len(self.all_operations)), quiet=True
+            len(current_fees["parameters"]), is_(len(self.all_operations))
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
@@ -221,7 +233,13 @@ class NegativeTesting(BaseTest):
 
     def __init__(self):
         super().__init__()
+        self.__api_identifier = None
+
+    def setup_suite(self):
+        super().setup_suite()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__api_identifier = self.get_identifier("database")
+        lcc.log_info("Database API identifier is '{}'".format(self.__api_identifier))
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with params of all types")

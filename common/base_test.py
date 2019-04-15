@@ -11,11 +11,16 @@ from websocket import create_connection
 
 import lemoncheesecake.api as lcc
 
+from common.echo_operation import EchoOperations
 from common.receiver import Receiver
+from common.utils import Utils
 from common.validation import Validator
 
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "..//resources")
-ECHO_DEV = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
+if "BASE_URL" not in os.environ:
+    BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
+else:
+    BASE_URL = os.environ["BASE_URL"]
 METHOD = json.load(open(os.path.join(RESOURCES_DIR, "echo_methods.json")))
 EXPECTED = json.load(open(os.path.join(RESOURCES_DIR, "expected_data.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
@@ -26,12 +31,24 @@ class BaseTest(object):
 
     def __init__(self):
         super().__init__()
-        self.__ws = create_connection(url=ECHO_DEV)
+        self.ws = None
+        self.receiver = None
         self.echo = Echo()
+        self.utils = Utils()
+        self.echo_ops = EchoOperations()
         self.__id = 0
-        self.receiver = Receiver(web_socket=self.__ws)
         self.validator = Validator()
         self.__public_key = None
+        self.__echorand_key = None
+        self.echo_asset = "1.3.0"
+        self.eeth_asset = "1.3.9"
+        self.echo_acc1 = "echo-acc1"
+        self.echo_acc2 = "echo-acc2"
+        self.echo_acc3 = "echo-acc3"
+
+    @staticmethod
+    def create_connection_to_echo():
+        return create_connection(url=BASE_URL)
 
     def check_uint64_numbers(self, response, key, quiet=False):
         if type(response.get(key)) is str:
@@ -136,22 +153,22 @@ class BaseTest(object):
         # Send request to server
         if api_identifier is None:
             method = self.__call_method(request)
-            self.__ws.send(json.dumps(method))
+            self.ws.send(json.dumps(method))
             if debug_mode:
                 lcc.log_debug("Send: {}".format(json.dumps(method, indent=4)))
-            return method.get("id")
+            return method["id"]
         method = self.__call_method(request, api_identifier)
-        self.__ws.send(json.dumps(method))
+        self.ws.send(json.dumps(method))
         if debug_mode:
             lcc.log_debug("Send: {}".format(json.dumps(method, indent=4)))
-        return method.get("id")
+        return method["id"]
 
     def get_response(self, id_response, negative=False, log_response=False, debug_mode=False):
         # Receive answer from server
         try:
             if debug_mode:
                 lcc.log_debug("Parameters: negative={}, ".format(negative))
-                response = json.loads(self.__ws.recv())
+                response = json.loads(self.ws.recv())
                 lcc.log_debug("Received:\n{}".format(json.dumps(response, indent=4)))
                 return response
             return self.receiver.get_response(id_response, negative, log_response)
@@ -165,7 +182,7 @@ class BaseTest(object):
         try:
             if debug_mode:
                 lcc.log_debug("Parameters: object_id={}, log_block_id={}".format(object_id, log_block_id))
-                response = json.loads(self.__ws.recv())
+                response = json.loads(self.ws.recv())
                 lcc.log_debug("Received:\n{}".format(json.dumps(response, indent=4)))
                 return response
             return self.receiver.get_notice(id_response, object_id, log_block_id, log_response)
@@ -187,8 +204,8 @@ class BaseTest(object):
         # Initialise identifier for api
         call_template = self.get_call_template()
         call_template["params"] = [1, api, []]
-        self.__ws.send(json.dumps(call_template))
-        response = json.loads(self.__ws.recv())
+        self.ws.send(json.dumps(call_template))
+        response = json.loads(self.ws.recv())
         api_identifier = response["result"]
         if debug_mode:
             print("'{}' api identifier is '{}'\n".format(api, api_identifier))
@@ -252,7 +269,7 @@ class BaseTest(object):
 
     def get_contract_id(self, response, log_response=True):
         contract_identifier_hex = response["result"][1].get("exec_res").get("new_address")
-        contract_id = "1.16.{}".format(int(str(contract_identifier_hex)[2:], 16))
+        contract_id = "1.14.{}".format(int(str(contract_identifier_hex)[2:], 16))
         if log_response:
             lcc.log_info("Contract identifier is {}".format(contract_id))
         if not self.validator.is_contract_id(contract_id):
@@ -260,16 +277,12 @@ class BaseTest(object):
             raise Exception("Wrong format of contract id")
         return contract_id
 
-    def get_transfer_id(self, response, log_response=True):
-        # todo: uncommented and add. Bug: "ECHO-669"
+    @staticmethod
+    def get_transfer_id(response, log_response=True):
         transfer_identifier_hex = str(response["result"][1].get("tr_receipt").get("log")[0].get("data"))[:64][-8:]
-        # transfer_id = "1.19.{}".format(int(str(transfer_identifier_hex), 16))
         transfer_id = int(str(transfer_identifier_hex), 16)
         if log_response:
             lcc.log_info("Transfer identifier is {}".format(transfer_id))
-        # if not self.validator.is_transfer_id(transfer_id):
-        #     lcc.log_error("Wrong format of transfer id, got {}".format(transfer_id))
-        #     raise Exception("Wrong format of transfer id")
         return transfer_id
 
     @staticmethod
@@ -282,21 +295,24 @@ class BaseTest(object):
         return contract_output.replace("\u0000", "").replace("\u000e", "")
 
     @staticmethod
-    def get_account_details_template(account_name, private_key, public_key):
-        return {account_name: {"id": "", "private_key": private_key, "public_key": public_key}}
+    def get_account_details_template(account_name, private_key, public_key, echorand_key):
+        return {account_name: {"id": "", "private_key": private_key, "public_key": public_key,
+                               "echorand_key": echorand_key}}
 
     @staticmethod
     def generate_keys():
         brain_key = BrainKey()
         private_key = str(brain_key.get_private_key())
         public_key = str(brain_key.get_public_key())
-        return [private_key, public_key]
+        echorand_key = str(brain_key.get_echorand_key())
+        return [private_key, public_key, echorand_key]
 
     def store_new_account(self, account_name):
         keys = self.generate_keys()
         private_key = str(keys[0])
         public_key = str(keys[1])
-        account_details = self.get_account_details_template(account_name, private_key, public_key)
+        echorand_key = str(keys[2])
+        account_details = self.get_account_details_template(account_name, private_key, public_key, echorand_key)
         if not os.path.exists(WALLETS):
             with open(WALLETS, "w") as file:
                 file.write(json.dumps(account_details))
@@ -307,15 +323,18 @@ class BaseTest(object):
             with open(WALLETS, "w") as new_file:
                 new_file.write(json.dumps(data))
         self.__public_key = public_key
+        self.__echorand_key = echorand_key
 
     def register_account(self, account_name, registration_api_identifier, debug_mode=False):
         self.store_new_account(account_name)
-        account_params = [account_name, self.__public_key, self.__public_key, self.__public_key,
-                          "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH"]  # todo: fix
+        self.__id += 1
+        callback = self.__id
+        account_params = [callback, account_name, self.__public_key, self.__public_key, self.__public_key,
+                          self.__echorand_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         registration_api_identifier, debug_mode=debug_mode)
         response = self.get_response(response_id, debug_mode=debug_mode)
-        if response.get("result") is not None:
+        if response.get("error"):
             lcc.log_error(
                 "Account '{}' not registered, response:\n{}".format(account_name, json.dumps(response, indent=4)))
             raise Exception("Account not registered.")
@@ -419,31 +438,37 @@ class BaseTest(object):
 
     def _connect_to_echopy_lib(self):
         lcc.set_step("Open connection to echopy-lib")
-        self.echo.connect(url=ECHO_DEV)
-        if self.echo is None:
+        self.echo.connect(url=BASE_URL)
+        if self.echo.api.ws.connection is None:
             lcc.log_error("Connection to echopy-lib not established")
+            raise Exception("Connection to echopy-lib not established")
         lcc.log_info("Connection to echopy-lib successfully created")
 
     def _disconnect_to_echopy_lib(self):
         lcc.set_step("Close connection to echopy-lib")
-        echopy_lib_connection = self.echo.disconnect()
-        if echopy_lib_connection is not None:
+        self.echo.disconnect()
+        if self.echo.api.ws.connection is not None:
             lcc.log_error("Connection to echopy-lib not closed")
+            raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
     def setup_suite(self):
         # Check status of connection
         lcc.set_step("Open connection")
-        lcc.log_url(ECHO_DEV)
-        if self.__ws is None:
+        lcc.log_url(BASE_URL)
+        self.ws = self.create_connection_to_echo()
+        if not self.ws.connected:
             lcc.log_error("WebSocket connection not established")
+            raise Exception("WebSocket connection not established")
         lcc.log_info("WebSocket connection successfully created")
+        self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
 
     def teardown_suite(self):
         # Close connection to WebSocket
         lcc.set_step("Close connection")
-        connection = self.__ws.close()
-        if connection is not None:
+        self.ws.close()
+        if self.ws.connected:
             lcc.log_error("WebSocket connection not closed")
+            raise Exception("WebSocket connection not closed")
         lcc.log_info("WebSocket connection closed")
