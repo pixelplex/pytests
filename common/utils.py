@@ -5,7 +5,8 @@ class Utils(object):
 
     @staticmethod
     def add_balance_for_operations(base_test, echo, account, database_api_id, contract_bytecode=None,
-                                   method_bytecode=None, transfer_amount=None, asset_name=None, operation_count=1):
+                                   method_bytecode=None, transfer_amount=None, asset_name=None, operation_count=1,
+                                   log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=echo, registrar=account,
@@ -25,7 +26,7 @@ class Utils(object):
         operation = base_test.echo_ops.get_transfer_operation(echo=echo, from_account_id=base_test.echo_acc1,
                                                               to_account_id=account, amount=amount)
         collected_operation = base_test.collect_operations(operation, database_api_id)
-        return base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation, log_broadcast=False)
+        return base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation, log_broadcast=log_broadcast)
 
     def get_nonexistent_asset_id(self, base_test, echo, database_api_id, symbol=""):
         max_limit = 100
@@ -64,7 +65,8 @@ class Utils(object):
         return [base_test.get_contract_id(contract_id_16), broadcast_result]
 
     def fill_account_history_with_contract_transfer_operation(self, base_test, echo, registrar, method_bytecode,
-                                                              database_api_id, contract_id, operation_count=1):
+                                                              database_api_id, contract_id, operation_count=1,
+                                                              log_broadcast=False):
         if registrar != base_test.echo_acc1:
             broadcast_result = self.add_balance_for_operations(base_test, echo, registrar, database_api_id,
                                                                method_bytecode=method_bytecode,
@@ -76,17 +78,17 @@ class Utils(object):
         collected_operation = base_test.collect_operations(operation, database_api_id)
         if operation_count == 1:
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
-                                                            log_broadcast=True)
+                                                            log_broadcast=log_broadcast)
             return broadcast_result
         list_operations = []
         for i in range(operation_count):
             list_operations.append(collected_operation)
         broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=list_operations,
-                                                        log_broadcast=True)
+                                                        log_broadcast=log_broadcast)
         return broadcast_result
 
     def fill_account_history_with_transfer_operations(self, base_test, echo, account_1, account_2, database_api_id,
-                                                      transfer_amount=1, operation_count=1):
+                                                      transfer_amount=1, operation_count=1, log_broadcast=False):
         add_balance_operation = 0
         if account_1 != base_test.echo_acc1:
             broadcast_result = self.add_balance_for_operations(base_test, echo, account_1, database_api_id,
@@ -100,17 +102,17 @@ class Utils(object):
         collected_operation = base_test.collect_operations(operation, database_api_id)
         if operation_count == 1 or operation_count == 2:
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
-                                                            log_broadcast=False)
+                                                            log_broadcast=log_broadcast)
             return broadcast_result
         list_operations = []
         for i in range(operation_count - add_balance_operation):
             list_operations.append(collected_operation)
         broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=list_operations,
-                                                        log_broadcast=False)
+                                                        log_broadcast=log_broadcast)
         return broadcast_result
 
     def fill_account_history_with_asset_create_operation(self, base_test, echo, registrar, asset_name, database_api_id,
-                                                         operation_count=1):
+                                                         operation_count=1, log_broadcast=False):
         if registrar != base_test.echo_acc1:
             broadcast_result = self.add_balance_for_operations(base_test, echo, registrar, database_api_id,
                                                                asset_name=asset_name,
@@ -121,13 +123,13 @@ class Utils(object):
         collected_operation = base_test.collect_operations(operation, database_api_id)
         if operation_count == 1:
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
-                                                            log_broadcast=False)
+                                                            log_broadcast=log_broadcast)
             return broadcast_result
         list_operations = []
         for i in range(operation_count):
             list_operations.append(collected_operation)
         broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=list_operations,
-                                                        log_broadcast=False)
+                                                        log_broadcast=log_broadcast)
         return broadcast_result
 
     @staticmethod
