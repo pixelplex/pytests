@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entry, is_str, require_that, is_list, \
     has_entry, is_not_none

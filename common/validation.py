@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 
 NAME_MIN_LENGTH = 1
