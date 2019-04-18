@@ -138,7 +138,7 @@ class Utils(object):
         if not response["result"] or response["result"][0]["symbol"] != symbol:
             operation = base_test.echo_ops.get_asset_create_operation(echo=echo, issuer=base_test.echo_acc1,
                                                                       symbol=symbol)
-            collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
+            collected_operation = base_test.collect_operations(operation, database_api_id)
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation)
             return base_test.get_operation_results_ids(broadcast_result)
         return response["result"][0]["id"]

@@ -396,7 +396,7 @@ class BaseTest(object):
         if type(list_operations) is list:
             list_operations = [list_operations]
         for i in range(len(list_operations)):
-            self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id, debug_mode=True)
+            self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id)
         return list_operations
 
     def get_contract_result(self, broadcast_result, database_api_identifier, debug_mode=False):
