@@ -4,6 +4,7 @@ from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entr
     has_entry, is_not_none
 
 from common.base_test import BaseTest
+from project import DEFAULT_ACCOUNT_PREFIX
 
 SUITE = {
     "description": "Method 'get_asset_holders'"

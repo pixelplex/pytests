@@ -257,20 +257,6 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "Account '{}' has '{}' in '{}' asset".format(self.new_account, all_balance_amount, self.echo_asset))
 
-        lcc.set_step("Send all assets to any account, if account balance is not 0")
-        # todo empty node
-        if all_balance_amount != 0:
-            operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.new_account,
-                                                             to_account_id=self.echo_acc2,
-                                                             amount=all_balance_amount)
-            required_fee = self.get_required_fee(operation, self.__database_api_identifier)
-            required_fee = required_fee[0].get("amount")
-            operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.new_account,
-                                                             to_account_id=self.echo_acc2,
-                                                             amount=all_balance_amount - required_fee)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-
         lcc.set_step("Send transfer transaction with a fee equal to the 'get_required_fee', "
                      "but sender don't have enough fee")
         operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.new_account,

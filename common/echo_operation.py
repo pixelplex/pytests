@@ -56,6 +56,51 @@ class EchoOperations(object):
             return [operation_id, transfer_props, from_account_id]
         return [operation_id, transfer_props, signer]
 
+    def get_account_create_operation(self, echo, name, owner_key_auths, active_key_auths, ed_key, options_memo_key,
+                                     fee_amount=0, fee_asset_id="1.3.0", registrar="1.2.12", referrer="1.2.12",
+                                     referrer_percent=7500, owner_weight_threshold=1, owner_account_auths=None,
+                                     owner_address_auths=None, active_weight_threshold=1, active_account_auths=None,
+                                     active_address_auths=None, options_voting_account="1.2.5",
+                                     options_delegating_account="1.2.12", options_num_committee=0, options_votes=None,
+                                     options_extensions=None, signer=None, debug_mode=False):
+        if isinstance(owner_key_auths, str):
+            owner_key_auths = [[owner_key_auths, 1]]
+        if owner_account_auths is None:
+            owner_account_auths = []
+        if owner_address_auths is None:
+            owner_address_auths = []
+        if isinstance(active_key_auths, str):
+            active_key_auths = [[active_key_auths, 1]]
+        if active_account_auths is None:
+            active_account_auths = []
+        if active_address_auths is None:
+            active_address_auths = []
+        if options_votes is None:
+            options_votes = []
+        if options_extensions is None:
+            options_extensions = []
+        operation_id = echo.config.operation_ids.ACCOUNT_CREATE
+        account_create_props = self.get_operation_json("account_create_operation").copy()
+        account_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        account_create_props.update(
+            {"registrar": registrar, "referrer": referrer, "referrer_percent": referrer_percent, "name": name,
+             "ed_key": ed_key})
+        account_create_props["owner"].update(
+            {"weight_threshold": owner_weight_threshold, "account_auths": owner_account_auths,
+             "key_auths": owner_key_auths, "address_auths": owner_address_auths})
+        account_create_props["active"].update(
+            {"weight_threshold": active_weight_threshold, "account_auths": active_account_auths,
+             "key_auths": active_key_auths, "address_auths": active_address_auths})
+        account_create_props["options"].update(
+            {"memo_key": options_memo_key, "voting_account": options_voting_account,
+             "delegating_account": options_delegating_account, "num_committee": options_num_committee,
+             "votes": options_votes, "extensions": options_extensions})
+        if debug_mode:
+            lcc.log_debug("Create account operation: \n{}".format(json.dumps(account_create_props, indent=4)))
+        if signer is None:
+            return [operation_id, account_create_props, registrar]
+        return [operation_id, account_create_props, signer]
+
     def get_asset_create_operation(self, echo, issuer, symbol, precision=0, fee_amount=0, fee_asset_id="1.3.0",
                                    max_supply="1000000000000000", market_fee_percent=0,
                                    max_market_fee="1000000000000000",
@@ -107,6 +152,22 @@ class EchoOperations(object):
             return [operation_id, asset_issue_props, issuer]
         return [operation_id, asset_issue_props, signer]
 
+    def get_balance_claim_operation(self, echo, deposit_to_account, balance_owner_public_key, value_amount,
+                                    balance_owner_private_key, fee_amount=0, fee_asset_id="1.3.0",
+                                    balance_to_claim="1.13.0", value_asset_id="1.3.0", debug_mode=False):
+        operation_id = echo.config.operation_ids.BALANCE_CLAIM
+        balance_claim_operation_props = self.get_operation_json("balance_claim_operation").copy()
+        balance_claim_operation_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        balance_claim_operation_props.update(
+            {"deposit_to_account": deposit_to_account, "balance_to_claim": balance_to_claim,
+             "balance_owner_key": balance_owner_public_key})
+        balance_claim_operation_props["total_claimed"].update({"amount": value_amount, "asset_id": value_asset_id})
+        if debug_mode:
+            lcc.log_debug(
+                "Balance claim operation: \n{}".format(
+                    json.dumps([operation_id, balance_claim_operation_props], indent=4)))
+        return [operation_id, balance_claim_operation_props, balance_owner_private_key]
+
     def get_create_contract_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
                                       value_amount=0, value_asset_id="1.3.0", supported_asset_id="1.3.0",
                                       eth_accuracy=False, signer=None, debug_mode=False):
@@ -138,7 +199,7 @@ class EchoOperations(object):
             return [operation_id, call_contract_props, registrar]
         return [operation_id, call_contract_props, signer]
 
-    def broadcast(self,  echo, list_operations, log_broadcast=True, debug_mode=False):
+    def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))

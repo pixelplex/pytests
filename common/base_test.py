@@ -15,8 +15,9 @@ from common.echo_operation import EchoOperations
 from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
+from pre_run_scripts.pre_deploy import pre_deploy_echo
 
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
 
 
 class BaseTest(object):
@@ -32,9 +33,9 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eeth_asset = "1.3.9"
-        self.echo_acc1 = "echo-acc1"
-        self.echo_acc2 = "echo-acc2"
-        self.echo_acc3 = "echo-acc3"
+        self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
+        self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
+        self.echo_acc3 = DEFAULT_ACCOUNT_PREFIX + "3"
 
     @staticmethod
     def create_connection_to_echo():
@@ -410,6 +411,11 @@ class BaseTest(object):
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
 
+    def check_node_status(self, database_api_identifier):
+        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+                                        database_api_identifier)
+        return self.get_response(response_id)["result"]
+
     @staticmethod
     def _login_status(response):
         # Check authorization status
@@ -444,6 +450,16 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
+    def perform_pre_deploy_setup(self, database_api_identifier):
+        self._connect_to_echopy_lib()
+        lcc.set_step("Pre-run setup")
+        lcc.log_info("Empty node. Start pre-run setup...")
+        if os.path.exists(WALLETS):
+            os.remove(WALLETS)
+        pre_deploy_echo(self, database_api_identifier, lcc)
+        lcc.log_info("Pre-run setup completed successfully")
+        self._disconnect_to_echopy_lib()
+
     def setup_suite(self):
         # Check status of connection
         lcc.set_step("Open connection")
@@ -455,6 +471,9 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
+        database_api_identifier = self.get_identifier("database")
+        if not self.check_node_status(database_api_identifier):
+            self.perform_pre_deploy_setup(database_api_identifier)
 
     def teardown_suite(self):
         # Close connection to WebSocket
