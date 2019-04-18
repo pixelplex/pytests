@@ -258,6 +258,7 @@ class NegativeTesting(BaseTest):
             "Account '{}' has '{}' in '{}' asset".format(self.new_account, all_balance_amount, self.echo_asset))
 
         lcc.set_step("Send all assets to any account, if account balance is not 0")
+        # todo: change to run on a empty node
         if all_balance_amount != 0:
             operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.new_account,
                                                              to_account_id=self.echo_acc2,

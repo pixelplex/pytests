@@ -4,6 +4,7 @@ from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entr
     has_entry, is_not_none
 
 from common.base_test import BaseTest
+from project import DEFAULT_ACCOUNT_PREFIX
 
 SUITE = {
     "description": "Method 'get_asset_holders'"
@@ -67,13 +68,6 @@ class PositiveTesting(BaseTest):
         self.echo_acc1_name = self.echo_acc1
         self.echo_acc2_name = self.echo_acc2
         self.echo_acc3_name = self.echo_acc3
-
-    def get_accounts_ids(self, account_name, account_count):
-        account_ids = []
-        for i in range(account_count):
-            account_ids.append(self.get_account_id(account_name + str(i), self.__database_api_identifier,
-                                                   self.__registration_api_identifier))
-        return account_ids
 
     def get_asset_holders(self, asset_id, start, limit, negative=False):
         lcc.log_info("Get '{}' asset holders".format(asset_id))
@@ -158,16 +152,17 @@ class PositiveTesting(BaseTest):
     @lcc.test("Check work of start and limit params")
     @lcc.depends_on("AssetApi.GetAssetHolders.GetAssetHolders.method_main_check")
     # todo: change to run on a empty node. Remove creation of accounts.
-    def work_of_start_and_limit_params(self):
-        asset_name = "GOD"
-        account_names = "test-acc-"
+    def work_of_start_and_limit_params(self, get_random_valid_asset_name):
+        asset_name = get_random_valid_asset_name
+        account_names = DEFAULT_ACCOUNT_PREFIX
         asset_value = max_limit = 100
         lcc.set_step("Create asset and get id new asset")
         asset_id = self.utils.get_asset_id(self, self.echo, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
         lcc.set_step("Get or register accounts, the number of which is equal to the max limit 'get_asset_holders'")
-        accounts_ids = self.get_accounts_ids(account_names, max_limit)
+        accounts_ids = self.get_accounts_ids(account_names, max_limit, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         lcc.log_info("Accounts count: {}, list:\n{}".format(len(accounts_ids), accounts_ids))
 
         lcc.set_step("Add holders to asset, if needed")

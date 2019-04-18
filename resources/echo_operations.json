@@ -37,6 +37,41 @@
             "extensions": []
         }
     ],
+    "account_create_operation": [
+        5,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "registrar": "1.2.0",
+            "referrer": "1.2.0",
+            "referrer_percent": 0,
+            "name": "",
+            "owner": {
+                "weight_threshold": 0,
+                "account_auths": [],
+                "key_auths": [],
+                "address_auths": []
+            },
+            "active": {
+                "weight_threshold": 0,
+                "account_auths": [],
+                "key_auths": [],
+                "address_auths": []
+            },
+            "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
+            "options": {
+                "memo_key": "ECHO1111111111111111111111111111111114T1Anm",
+                "voting_account": "1.2.5",
+                "delegating_account": "1.2.0",
+                "num_committee": 0,
+                "votes": [],
+                "extensions": []
+            },
+            "extensions": {}
+        }
+    ],
     "asset_create_operation": [
         10,
         {
@@ -88,6 +123,22 @@
             },
             "issue_to_account": "1.2.0",
             "extensions": []
+        }
+    ],
+    "balance_claim_operation": [
+        34,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "deposit_to_account": "1.2.0",
+            "balance_to_claim": "1.15.0",
+            "balance_owner_key": "ECHO1111111111111111111111111111111114T1Anm",
+            "total_claimed": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            }
         }
     ],
     "create_contract_operation": [

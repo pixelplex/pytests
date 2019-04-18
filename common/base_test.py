@@ -15,16 +15,9 @@ from common.echo_operation import EchoOperations
 from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
+from pre_run_scripts.pre_deploy import pre_deploy_echo
 
-RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "..//resources")
-if "BASE_URL" not in os.environ:
-    BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
-else:
-    BASE_URL = os.environ["BASE_URL"]
-METHOD = json.load(open(os.path.join(RESOURCES_DIR, "echo_methods.json")))
-EXPECTED = json.load(open(os.path.join(RESOURCES_DIR, "expected_data.json")))
-ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
-WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
 
 
 class BaseTest(object):
@@ -38,13 +31,11 @@ class BaseTest(object):
         self.echo_ops = EchoOperations()
         self.__id = 0
         self.validator = Validator()
-        self.__public_key = None
-        self.__echorand_key = None
         self.echo_asset = "1.3.0"
         self.eeth_asset = "1.3.9"
-        self.echo_acc1 = "echo-acc1"
-        self.echo_acc2 = "echo-acc2"
-        self.echo_acc3 = "echo-acc3"
+        self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
+        self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
+        self.echo_acc3 = DEFAULT_ACCOUNT_PREFIX + "3"
 
     @staticmethod
     def create_connection_to_echo():
@@ -115,15 +106,10 @@ class BaseTest(object):
         # Params must be list
         request = [1, method_name]
         if params is None:
-            request.extend([METHOD[method_name]])
+            request.append([])
             return request
         request.extend([params])
         return request
-
-    @staticmethod
-    def get_expected(variable_name):
-        # Return data from json file
-        return EXPECTED[variable_name]
 
     @staticmethod
     def get_call_template():
@@ -316,29 +302,13 @@ class BaseTest(object):
         if not os.path.exists(WALLETS):
             with open(WALLETS, "w") as file:
                 file.write(json.dumps(account_details))
-            return public_key
+            return [public_key, echorand_key]
         with open(WALLETS, "r") as file:
             data = json.load(file)
             data.update(account_details)
             with open(WALLETS, "w") as new_file:
                 new_file.write(json.dumps(data))
-        self.__public_key = public_key
-        self.__echorand_key = echorand_key
-
-    def register_account(self, account_name, registration_api_identifier, debug_mode=False):
-        self.store_new_account(account_name)
-        self.__id += 1
-        callback = self.__id
-        account_params = [callback, account_name, self.__public_key, self.__public_key, self.__public_key,
-                          self.__echorand_key]
-        response_id = self.send_request(self.get_request("register_account", account_params),
-                                        registration_api_identifier, debug_mode=debug_mode)
-        response = self.get_response(response_id, debug_mode=debug_mode)
-        if response.get("error"):
-            lcc.log_error(
-                "Account '{}' not registered, response:\n{}".format(account_name, json.dumps(response, indent=4)))
-            raise Exception("Account not registered.")
-        return lcc.log_info("Account '{}' registered".format(account_name))
+        return [public_key, echorand_key]
 
     def get_account_by_name(self, account_name, database_api_identifier, debug_mode=False):
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
@@ -349,18 +319,34 @@ class BaseTest(object):
             raise Exception("Error received")
         return response
 
+    def register_account(self, account_name, registration_api_identifier, database_api_identifier, debug_mode=False):
+        public_data = self.store_new_account(account_name)
+        self.__id += 1
+        callback = self.__id
+        account_params = [callback, account_name, public_data[0], public_data[0], public_data[0], public_data[1]]
+        response_id = self.send_request(self.get_request("register_account", account_params),
+                                        registration_api_identifier, debug_mode=debug_mode)
+        response = self.get_response(response_id, debug_mode=debug_mode)
+        if response.get("error"):
+            lcc.log_error(
+                "Account '{}' not registered, response:\n{}".format(account_name, json.dumps(response, indent=4)))
+            raise Exception("Account not registered.")
+        self.get_notice(response_id, debug_mode=debug_mode)
+        response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
+        account_id = response.get("result").get("id")
+        with open(WALLETS, "r") as file:
+            data = json.load(file)
+            data[account_name].update({"id": account_id})
+            with open(WALLETS, "w") as new_file:
+                new_file.write(json.dumps(data))
+        return response
+
     def get_or_register_an_account(self, account_name, database_api_identifier, registration_api_identifier,
                                    debug_mode=False):
         response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
         if response.get("result") is None and self.validator.is_account_name(account_name):
-            self.register_account(account_name, registration_api_identifier, debug_mode=debug_mode)
-            response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
-            account_id = response.get("result").get("id")
-            with open(WALLETS, "r") as file:
-                data = json.load(file)
-                data[account_name].update({"id": account_id})
-                with open(WALLETS, "w") as new_file:
-                    new_file.write(json.dumps(data))
+            response = self.register_account(account_name, registration_api_identifier, database_api_identifier,
+                                             debug_mode=debug_mode)
         if debug_mode:
             lcc.log_debug("Account is {}".format(json.dumps(response, indent=4)))
         return response
@@ -372,6 +358,13 @@ class BaseTest(object):
         if debug_mode:
             lcc.log_debug("Account '{}' with id '{}'".format(account_name, account_id))
         return account_id
+
+    def get_accounts_ids(self, account_name, account_count, database_api_identifier, registration_api_identifier):
+        account_ids = []
+        for i in range(account_count):
+            account_ids.append(self.get_account_id(account_name + str(i), database_api_identifier,
+                                                   registration_api_identifier))
+        return account_ids
 
     def get_required_fee(self, operation, database_api_identifier, asset="1.3.0", debug_mode=False):
         response_id = self.send_request(self.get_request("get_required_fees", [[operation], asset]),
@@ -418,6 +411,11 @@ class BaseTest(object):
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
 
+    def check_node_status(self, database_api_identifier):
+        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+                                        database_api_identifier)
+        return self.get_response(response_id)["result"]
+
     @staticmethod
     def _login_status(response):
         # Check authorization status
@@ -432,7 +430,7 @@ class BaseTest(object):
     def __login_echo(self):
         # Login to Echo
         lcc.set_step("Login to Echo")
-        response_id = self.send_request(self.get_request("login"))
+        response_id = self.send_request(self.get_request("login", ["", ""]))
         response = self.get_response(response_id)
         self._login_status(response)
 
@@ -452,6 +450,16 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
+    def perform_pre_deploy_setup(self, database_api_identifier):
+        self._connect_to_echopy_lib()
+        lcc.set_step("Pre-run setup")
+        lcc.log_info("Empty node. Start pre-run setup...")
+        if os.path.exists(WALLETS):
+            os.remove(WALLETS)
+        pre_deploy_echo(self, database_api_identifier, lcc)
+        lcc.log_info("Pre-run setup completed successfully")
+        self._disconnect_to_echopy_lib()
+
     def setup_suite(self):
         # Check status of connection
         lcc.set_step("Open connection")
@@ -463,6 +471,9 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
+        database_api_identifier = self.get_identifier("database")
+        if not self.check_node_status(database_api_identifier):
+            self.perform_pre_deploy_setup(database_api_identifier)
 
     def teardown_suite(self):
         # Close connection to WebSocket

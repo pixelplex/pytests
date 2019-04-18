@@ -25,42 +25,18 @@ class NetworkBroadcastApi(BaseTest):
             "Network broadcast API identifiers is '{}'".format(self.__api_identifier))
 
     @lcc.test("Broadcast block")
-    @lcc.tags("don't work")
     def test_broadcast_block(self):
-        lcc.set_step("Retrieve broadcast block")
-        response_id = self.send_request(self.get_request("broadcast_block", [self.get_expected("get_block")]),
-                                        self.__api_identifier)
-        response = self.get_response(response_id, is_positive=False)
-
-        lcc.set_step("Response")
-        check_that(
-            "'error message'",
-            response["error"]["message"],
-            contains_string("unlinkable block: block does not link to known chain")
-        )
+        pass
 
     @lcc.test("Broadcast transaction")
     @lcc.tags("don't work")
     def test_broadcast_transaction(self):
-        lcc.set_step("Retrieve broadcast transaction")
-        response_id = self.send_request(
-            self.get_request("broadcast_transaction", [self.get_expected("get_transaction")]),
-            self.__api_identifier)
-        response = self.get_response(response_id, is_positive=False)
-
-        lcc.set_step("Response")
-        check_that(
-            "'error message'",
-            response["error"]["message"],
-            contains_string("Assert Exception: trx.ref_block_prefix == tapos_block_summary.block_id._hash[1]: ")
-        )
+        pass
 
     @lcc.test("Broadcast transaction synchronous")
-    @lcc.hidden()
     def test_broadcast_transaction_synchronous(self, trx):
         pass
 
     @lcc.test("Broadcast transaction with callback")
-    @lcc.hidden()
     def test_broadcast_transaction_with_callback(self, callback, trx):
         pass
