@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
-import os
 
 import lemoncheesecake.api as lcc
 
 from common.validation import Validator
 
-RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "..//resources")
-OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
-WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
+from project import WALLETS, ECHO_OPERATIONS
 
 
 class EchoOperations(object):
@@ -17,28 +14,33 @@ class EchoOperations(object):
         super().__init__()
         self.validator = Validator()
 
-    def get_signer(self, name_or_id):
+    def get_signer(self, signer):
+        """
+        :param signer: name, id or private_key
+        """
+        if self.validator.is_private_key(signer):
+            return signer
         wallets = json.load(open(WALLETS))
-        if self.validator.is_account_name(name_or_id):
-            return wallets[name_or_id]["private_key"]
-        if self.validator.is_account_id(name_or_id):
+        if self.validator.is_account_name(signer):
+            return wallets[signer]["private_key"]
+        if self.validator.is_account_id(signer):
             wallets_keys = list(wallets.keys())
             for key in range(len(wallets_keys)):
-                if wallets[wallets_keys[key]]["id"] == name_or_id:
+                if wallets[wallets_keys[key]]["id"] == signer:
                     return wallets[wallets_keys[key]]["private_key"]
-        lcc.log_error("Try to get invalid signer, get: '{}'".format(name_or_id))
+        lcc.log_error("Try to get invalid signer, get: '{}'".format(signer))
         raise Exception("Try to get invalid signer")
 
     @staticmethod
     def get_operation_json(variable_name, example=False):
         # Return needed operation template from json file
         if example:
-            return OPERATIONS[variable_name]
-        return OPERATIONS[variable_name][1]
+            return ECHO_OPERATIONS[variable_name]
+        return ECHO_OPERATIONS[variable_name][1]
 
     def get_transfer_operation(self, echo, from_account_id, to_account_id, amount=1, fee_amount=0, fee_asset_id="1.3.0",
                                amount_asset_id="1.3.0", with_memo=False, from_memo="", to_memo="", nonce_memo="",
-                               message="", debug_mode=False):
+                               message="", signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.TRANSFER
         if with_memo:
             transfer_props = self.get_operation_json("transfer_operation_with_memo").copy()
@@ -50,7 +52,9 @@ class EchoOperations(object):
         transfer_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
         if debug_mode:
             lcc.log_debug("Transfer operation: \n{}".format(json.dumps(transfer_props, indent=4)))
-        return [operation_id, transfer_props, from_account_id]
+        if signer is None:
+            return [operation_id, transfer_props, from_account_id]
+        return [operation_id, transfer_props, signer]
 
     def get_asset_create_operation(self, echo, issuer, symbol, precision=0, fee_amount=0, fee_asset_id="1.3.0",
                                    max_supply="1000000000000000", market_fee_percent=0,
@@ -58,7 +62,7 @@ class EchoOperations(object):
                                    issuer_permissions=79, flags=0, base_amount=1, base_asset_id="1.3.0",
                                    quote_amount=1, quote_asset_id="1.3.1", whitelist_authorities=None,
                                    blacklist_authorities=None, whitelist_markets=None, blacklist_markets=None,
-                                   description="", is_prediction_market=False, debug_mode=False):
+                                   description="", is_prediction_market=False, signer=None, debug_mode=False):
         if whitelist_authorities is None:
             whitelist_authorities = []
         if blacklist_authorities is None:
@@ -85,10 +89,12 @@ class EchoOperations(object):
         asset_create_props.update({"is_prediction_market": is_prediction_market})
         if debug_mode:
             lcc.log_debug("Create asset operation: \n{}".format(json.dumps(asset_create_props, indent=4)))
-        return [operation_id, asset_create_props, issuer]
+        if signer is None:
+            return [operation_id, asset_create_props, issuer]
+        return [operation_id, asset_create_props, signer]
 
     def get_asset_issue_operation(self, echo, issuer, value_amount, value_asset_id, issue_to_account, fee_amount=0,
-                                  fee_asset_id="1.3.0", debug_mode=False):
+                                  fee_asset_id="1.3.0", signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.ASSET_ISSUE
         asset_issue_props = self.get_operation_json("asset_issue_operation").copy()
         asset_issue_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
@@ -97,11 +103,13 @@ class EchoOperations(object):
         if debug_mode:
             lcc.log_debug(
                 "Asset issue operation: \n{}".format(json.dumps([operation_id, asset_issue_props], indent=4)))
-        return [operation_id, asset_issue_props, issuer]
+        if signer is None:
+            return [operation_id, asset_issue_props, issuer]
+        return [operation_id, asset_issue_props, signer]
 
     def get_create_contract_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
                                       value_amount=0, value_asset_id="1.3.0", supported_asset_id="1.3.0",
-                                      eth_accuracy=False, debug_mode=False):
+                                      eth_accuracy=False, signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.CREATE_CONTRACT
         create_contract_props = self.get_operation_json("create_contract_operation").copy()
         create_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
@@ -112,10 +120,12 @@ class EchoOperations(object):
         if debug_mode:
             lcc.log_debug(
                 "Create contract operation: \n{}".format(json.dumps([operation_id, create_contract_props], indent=4)))
-        return [operation_id, create_contract_props, registrar]
+        if signer is None:
+            return [operation_id, create_contract_props, registrar]
+        return [operation_id, create_contract_props, signer]
 
     def get_call_contract_operation(self, echo, registrar, bytecode, callee, fee_amount=0, fee_asset_id="1.3.0",
-                                    value_amount=0, value_asset_id="1.3.0", debug_mode=False):
+                                    value_amount=0, value_asset_id="1.3.0", signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.CALL_CONTRACT
 
         call_contract_props = self.get_operation_json("call_contract_operation").copy()
@@ -124,7 +134,9 @@ class EchoOperations(object):
         call_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug("Call contract operation: \n{}".format(json.dumps(call_contract_props, indent=4)))
-        return [operation_id, call_contract_props, registrar]
+        if signer is None:
+            return [operation_id, call_contract_props, registrar]
+        return [operation_id, call_contract_props, signer]
 
     def broadcast(self,  echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os.path
 import sys
 
@@ -7,6 +8,17 @@ from lemoncheesecake.validators import MetadataPolicy
 
 project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
+
+RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
+
+if "BASE_URL" not in os.environ:
+    BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
+else:
+    BASE_URL = os.environ["BASE_URL"]
+
+ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
+ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
+WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
 
 
 class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy, HasPreRunHook, HasPostRunHook):

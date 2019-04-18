@@ -86,6 +86,12 @@ class Receiver(object):
                 lcc.log_info(
                     "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
             return notice_params[0]
+        if (notice_params[1].get("block_num")) and (self.validator.is_hex(notice_params[1].get("tx_id"))):
+            if logging:
+                lcc.log_info(
+                    "Received notice about successful creation of new account:\n{}".format(
+                        json.dumps(response, indent=4)))
+            return notice_params[1]
         lcc.log_warn(
             "Not validate response, got params:\n{}".format(json.dumps(response.get("params")[1], indent=4)))
         raise Exception("Not validate response")
