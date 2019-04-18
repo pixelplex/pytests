@@ -32,10 +32,12 @@ class RegistrationApi(object):
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
         echorand_key = generate_keys[2]
-        account_params = [get_random_integer, get_random_valid_account_name, public_key, public_key, public_key,
+        callback = get_random_integer
+        account_params = [callback, get_random_valid_account_name, public_key, public_key, public_key,
                           echorand_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier)
         response = base.get_response(response_id)
+        base.get_notice(callback)
 
         check_that(
             "'call method 'register_account''",
@@ -46,7 +48,7 @@ class RegistrationApi(object):
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
         echorand_key = generate_keys[2]
-        account_params = [get_random_integer, get_random_valid_account_name, public_key, public_key, public_key,
+        account_params = [callback, get_random_valid_account_name, public_key, public_key, public_key,
                           echorand_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier + 1)
         response = base.get_response(response_id, negative=True)
@@ -84,13 +86,15 @@ class PositiveTesting(BaseTest):
     def registration_with_valid_credential(self, get_random_valid_account_name, get_random_integer):
         lcc.set_step("Registration an account")
         new_account = get_random_valid_account_name
+        callback = get_random_integer
         generate_keys = self.generate_keys()
         public_key = generate_keys[1]
         echorand_key = generate_keys[2]
-        account_params = [get_random_integer, new_account, public_key, public_key, public_key, echorand_key]
+        account_params = [callback, new_account, public_key, public_key, public_key, echorand_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         response = self.get_response(response_id)
+        self.get_notice(callback)
         check_that(
             "register account '{}'".format(new_account),
             response["result"], is_none(), quiet=False

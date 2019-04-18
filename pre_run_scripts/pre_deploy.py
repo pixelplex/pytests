@@ -5,14 +5,21 @@ from project import ECHO_POOL, NATHAN, DEFAULT_INIT_ACCOUNTS, DEFAULT_ACCOUNT_PR
 BALANCE_TO_ACCOUNT = ECHO_POOL / (DEFAULT_INIT_ACCOUNTS + MAIN_TEST_ACCOUNT_COUNT + 1)
 
 
-def get_main_test_account_id(base_test, database_api):
-    response_id = base_test.send_request(base_test.get_request("get_account_by_name", [base_test.echo_acc1]),
-                                         database_api)
-    return base_test.get_response(response_id)["result"]["id"]
+def make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
+    list_operations = []
+    for i in range(DEFAULT_ACCOUNT_COUNT - 1):
+        to_account_id = get_account_id(get_account(base_test, DEFAULT_ACCOUNT_PREFIX + str(i + 1), database_api))
+        operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id, 1,
+                                                              signer=NATHAN)
+        collected_operation = base_test.collect_operations(operation, database_api)
+        list_operations.append(collected_operation)
+    broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
+                                                    log_broadcast=False)
+    return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
 def add_balance_to_main_test_account(base_test, nathan_id, database_api):
-    to_account_id = get_main_test_account_id(base_test, database_api)
+    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc1, database_api))
     operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id, BALANCE_TO_ACCOUNT,
                                                           signer=NATHAN)
     collected_operation = base_test.collect_operations(operation, database_api)
@@ -21,31 +28,43 @@ def add_balance_to_main_test_account(base_test, nathan_id, database_api):
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
-def register_default_accounts(base_test, database_api):
+def get_account_count(base_test, database_api):
     response_id = base_test.send_request(base_test.get_request("get_account_count"), database_api)
-    main_account_count = base_test.get_response(response_id)["result"]
-    list_operations = []
+    return base_test.get_response(response_id)["result"]
+
+
+# todo: remove 'registration_api'
+def register_default_accounts(base_test, database_api, registration_api):
+    main_account_count = get_account_count(base_test, database_api)
+
+    # todo: remove
     for i in range(DEFAULT_ACCOUNT_COUNT):
         names = DEFAULT_ACCOUNT_PREFIX + str(i + 1)
-        public_data = base_test.store_new_account(names)
-        operation = base_test.echo_ops.get_account_create_operation(base_test.echo, names, public_data[0],
-                                                                    public_data[0], public_data[1], public_data[0],
-                                                                    signer=NATHAN, debug_mode=True)
-        collected_operation = base_test.collect_operations(operation, database_api)
-        list_operations.append(collected_operation)
-    broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
-                                                    log_broadcast=True)  # todo !!!
-    if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
-        raise Exception("Default accounts are not created")
-    response_id = base_test.send_request(base_test.get_request("get_account_count"), database_api)
-    response = base_test.get_response(response_id)["result"]
-    return (response - main_account_count) == DEFAULT_ACCOUNT_COUNT
+        base_test.register_account(names, registration_api, database_api, debug_mode=True)
+
+    # todo: add when fixed bug in echopy-lib with 'account_create_operation'
+    # list_operations = []
+    # for i in range(DEFAULT_ACCOUNT_COUNT):
+    #     names = DEFAULT_ACCOUNT_PREFIX + str(i + 1)
+    #     public_data = base_test.store_new_account(names)
+    #     operation = base_test.echo_ops.get_account_create_operation(base_test.echo, names, public_data[0],
+    #                                                                 public_data[0], public_data[1], public_data[0],
+    #                                                                 signer=NATHAN, debug_mode=True)
+    #     collected_operation = base_test.collect_operations(operation, database_api)
+    #     list_operations.append(collected_operation)
+    # broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
+    #                                                 log_broadcast=False)
+    # if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+
+    #   raise Exception("Default accounts are not created")
+    after_creation_count = get_account_count(base_test, database_api)
+    return (after_creation_count - main_account_count) == DEFAULT_ACCOUNT_COUNT
 
 
 def distribute_balance_between_main_accounts(base_test, nathan_id, database_api):
     list_operations = []
     for i in range(DEFAULT_INIT_ACCOUNTS):
-        to_account_id = get_init_id(base_test, "init" + str(i), database_api)
+        to_account_id = get_account_id(get_account(base_test, "init" + str(i), database_api))
         operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id,
                                                               BALANCE_TO_ACCOUNT, signer=NATHAN)
         collected_operation = base_test.collect_operations(operation, database_api)
@@ -55,13 +74,17 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
-def get_init_id(base_test, init, database_api):
-    response_id = base_test.send_request(base_test.get_request("get_account_by_name", [init]), database_api)
-    return base_test.get_response(response_id)["result"]["id"]
+def get_public_key(account):
+    return account["result"]["owner"]["key_auths"][0][0]
 
 
-def get_nathan(base_test, database_api):
-    response_id = base_test.send_request(base_test.get_request("get_account_by_name", ["nathan"]), database_api)
+def get_account_id(account):
+    return account["result"]["id"]
+
+
+def get_account(base_test, account_name, database_api):
+    response_id = base_test.send_request(base_test.get_request("get_account_by_name", [account_name]),
+                                         database_api)
     return base_test.get_response(response_id)
 
 
@@ -74,19 +97,24 @@ def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_a
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
-def pre_deploy_echo(base_test, database_api, lcc):
-    nathan = get_nathan(base_test, database_api)
-    nathan_id = nathan["result"]["id"]
-    nathan_public_key = nathan["result"]["owner"]["key_auths"][0][0]
+# todo: remove 'registration_api'
+def pre_deploy_echo(base_test, database_api, lcc, register_api):
+    nathan = get_account(base_test, "nathan", database_api)
+    nathan_id = get_account_id(nathan)
+    nathan_public_key = get_public_key(nathan)
     if not import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
         raise Exception("Broadcast failed")
     lcc.log_info("Balance to nathan imported successfully")
     if not distribute_balance_between_main_accounts(base_test, nathan_id, database_api):
         raise Exception("Balance is not distributed")
     lcc.log_info("Balance distributed between main accounts successfully")
-    if not register_default_accounts(base_test, database_api):
+    # todo: remove 'registration_api'
+    if not register_default_accounts(base_test, database_api, register_api):
         raise Exception("Default accounts are not created")
     lcc.log_info("Default accounts created successfully. Accounts count: '{}'".format(DEFAULT_ACCOUNT_COUNT))
     if not add_balance_to_main_test_account(base_test, nathan_id, database_api):
         raise Exception("Balance to main test account is not credited")
-    lcc.log_info("Balance added to main test account ({}) successfully. Accounts count: '{}'".format(DEFAULT_ACCOUNT_COUNT))
+    lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.echo_acc1))
+    if not make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
+        raise Exception("Default accounts did not become asset echo holders")
+    lcc.log_info("All default accounts became echo holders successfully")

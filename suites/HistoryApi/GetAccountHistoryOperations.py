@@ -39,11 +39,10 @@ class GetAccountHistoryOperations(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_account_history_operations'")
-    # todo: change to run on an empty node.
     def method_main_check(self):
-        operation_id = 0
+        operation_id = self.echo.config.operation_ids.ACCOUNT_CREATE
         start = stop = "1.10.0"
-        limit = 10
+        limit = 1
         lcc.set_step("Get account history operations")
         params = [self.echo_acc1, operation_id, start, stop, limit]
         response_id = self.send_request(self.get_request("get_account_history_operations", params),
@@ -163,10 +162,9 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check that transfer operation added to account history")
         if self.is_operation_completed(broadcast_result, expected_static_variant=0):
             response = self.get_account_history_operations(new_account, transfer_operation_id, start, stop, limit)
-            # todo: remove '+ 1' ("transfer_operation: faucet") to run on an empty node.
             check_that(
                 "'number of history results'",
-                len(response["result"]), is_(operation_count + 1)
+                len(response["result"]), is_(operation_count)
             )
 
         lcc.set_step("Perform asset create operation using a new account")
@@ -188,17 +186,16 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check limit number of operations to retrieve")
-    @lcc.tags("Bug: 'ECHO-700'")
     @lcc.depends_on("HistoryApi.GetAccountHistoryOperations.GetAccountHistoryOperations.method_main_check")
     def limit_operations_to_retrieve(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
         operation_id = 0
         stop = start = "1.10.0"
         min_limit = 1
-        # todo: change '6' to '100' . Bug: "ECHO-700"
+        # todo: change '6' to '100'. Bug: "ECHO-700"
         max_limit = 6
-        # todo: add 'get_random_integer_up_to_hundred' fixture to run on an empty node.
-        operation_count = 5
+        # todo: change 'max_limit' to  'get_random_integer_up_to_hundred' fixture. Bug: "ECHO-700"
+        operation_count = max_limit
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
@@ -215,8 +212,7 @@ class PositiveTesting(BaseTest):
         response = self.get_account_history_operations(new_account, operation_id, start, stop, max_limit)
         check_that(
             "'number of history results'",
-            # todo: remove '+ 1' ("transfer_operation: faucet") to run on an empty node.
-            len(response["result"]), is_(operation_count + 1)
+            len(response["result"]), is_(operation_count)
         )
 
         lcc.set_step("Check minimum list length account history")
@@ -227,13 +223,12 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Perform operations using a new account to create max_limit operations")
-        # todo: remove max_limit and '+ 1' ("transfer_operation: faucet") to run on an empty node.
         max_limit = 100
         self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc1,
                                                                  self.__database_api_identifier,
-                                                                 operation_count=max_limit - operation_count - 1)
+                                                                 operation_count=max_limit - operation_count)
         lcc.log_info(
-            "Fill account history with '{}' number of transfer operations".format(max_limit - operation_count - 1))
+            "Fill account history with '{}' number of transfer operations".format(max_limit - operation_count))
 
         lcc.set_step(
             "Check that count of new account history with the limit = max_limit is equal to max_limit")

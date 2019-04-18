@@ -21,36 +21,46 @@ class GetContractHistory(BaseTest):
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
+        self.__registration_api_identifier = None
         self.__history_api_identifier = None
-        self.contract_id = None
-
-    def get_sidechain_contract(self):
-        response_id = self.send_request(self.get_request("get_global_properties"), self.__database_api_identifier)
-        return self.get_response(response_id)["result"]["parameters"]["sidechain_config"]["echo_contract_id"]
+        self.contract = self.get_byte_code("piggy_code")
 
     def setup_suite(self):
         super().setup_suite()
+        self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
         self.__history_api_identifier = self.get_identifier("history")
         lcc.log_info(
-            "API identifiers are: database='{}', history='{}'".format(self.__database_api_identifier,
-                                                                      self.__history_api_identifier))
-        self.contract_id = self.get_sidechain_contract()
-        lcc.log_info("Echo sidechain contract id is '{}'".format(self.contract_id))
+            "API identifiers are: database='{}', registration='{}', "
+            "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
+                                  self.__history_api_identifier))
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_contract_history'")
-    # todo: change to run on an empty node.
     def method_main_check(self):
         stop = start = "1.10.0"
-        limit = 2
+        limit = 1
+
+        lcc.set_step("Perform create contract operation")
+        bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc1, self.contract,
+                                               self.__database_api_identifier, need_broadcast=True)
+        contract_id = bd_result[0]
+
         lcc.set_step("Get contract history")
-        params = [self.contract_id, stop, limit, start]
+        params = [contract_id, stop, limit, start]
         response_id = self.send_request(self.get_request("get_contract_history", params), self.__history_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_contract_history' with: contract_id='{}', stop='{}', limit='{}', start='{}' "
-                     "parameters".format(self.contract_id, stop, limit, start))
+                     "parameters".format(contract_id, stop, limit, start))
 
         lcc.set_step("Check response from method 'get_contract_history'")
         result = response["result"]

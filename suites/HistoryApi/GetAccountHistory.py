@@ -39,7 +39,6 @@ class GetAccountHistory(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_account_history'")
-    # todo: change to run on an empty node.
     def method_main_check(self):
         stop = start = "1.10.0"
         limit = 1
@@ -125,21 +124,27 @@ class PositiveTesting(BaseTest):
         response = self.get_account_history(new_account, stop, limit, start)
 
         lcc.set_step("Check new account history")
-        check_that(
+        expected_number_of_operations = 1
+        require_that(
             "'new account history'",
-            response["result"], is_list([])
+            len(response["result"]), is_(expected_number_of_operations)
+        )
+        check_that(
+            "'id single operation'",
+            response["result"][0]["op"][0],
+            is_(self.echo.config.operation_ids.ACCOUNT_CREATE)
         )
 
     @lcc.prop("type", "method")
     @lcc.test("Check limit number of operations to retrieve")
     @lcc.depends_on("HistoryApi.GetAccountHistory.GetAccountHistory.method_main_check")
-    def limit_operations_to_retrieve(self, get_random_valid_account_name):
+    def limit_operations_to_retrieve(self, get_random_valid_account_name, get_random_integer_up_to_hundred):
         new_account = get_random_valid_account_name
         stop = start = "1.10.0"
         min_limit = 1
         max_limit = 100
-        # todo: add 'get_random_integer_up_to_hundred' fixture to run on an empty node.
-        operation_count = 50
+        default_account_create_operation = 1
+        operation_count = get_random_integer_up_to_hundred
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
@@ -156,8 +161,7 @@ class PositiveTesting(BaseTest):
         response = self.get_account_history(new_account, stop, max_limit, start)
         check_that(
             "'number of history results'",
-            # todo: remove '+ 2' ("account_create_operation" и "transfer_operation: faucet") to run on an empty node.
-            len(response["result"]), is_(operation_count + 2)
+            len(response["result"]), is_(operation_count + default_account_create_operation)
         )
 
         lcc.set_step("Check minimum list length account history")
@@ -168,12 +172,12 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Perform operations using a new account to create max_limit operations")
-        # todo: remove '- 2' ("account_create_operation" и "transfer_operation: faucet") to run on an empty node.
+        operation_count = max_limit - operation_count - default_account_create_operation
         self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc1,
                                                                  self.__database_api_identifier,
-                                                                 operation_count=max_limit - operation_count - 2)
+                                                                 operation_count=operation_count)
         lcc.log_info(
-            "Fill account history with '{}' number of transfer operations".format(max_limit - operation_count - 2))
+            "Fill account history with '{}' number of transfer operations".format(operation_count))
 
         lcc.set_step(
             "Check that count of new account history with the limit = max_limit is equal to max_limit")

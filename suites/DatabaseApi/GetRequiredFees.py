@@ -125,7 +125,6 @@ class NegativeTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.amount = 1
-        self.new_account = "empty-account"
         self.transfer_operation_ex = None
         self.transfer_operation = None
         self.contract = self.get_byte_code("piggy_code")
@@ -152,10 +151,8 @@ class NegativeTesting(BaseTest):
                                              self.__registration_api_identifier)
         self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.new_account = self.get_account_id(self.new_account, self.__database_api_identifier,
-                                               self.__registration_api_identifier)
         lcc.log_info(
-            "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc1, self.echo_acc2, self.new_account))
+            "Echo accounts are: #1='{}', #2='{}''".format(self.echo_acc1, self.echo_acc2))
         self.transfer_operation_ex = self.echo_ops.get_operation_json("transfer_operation", example=True)
         lcc.log_info("Transfer operation example: '{}'".format(str(self.transfer_operation_ex)))
         self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
@@ -247,19 +244,26 @@ class NegativeTesting(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Sender don't have enough fee")
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
-    def sender_do_not_have_enough_fee(self):
+    def sender_do_not_have_enough_fee(self, get_random_valid_account_name):
+        lcc.set_step("Get account id")
+        account_name = get_random_valid_account_name
+        account_id = self.get_account_id(account_name, self.__database_api_identifier,
+                                         self.__registration_api_identifier)
+        lcc.log_info("New account created, account_id='{}'".format(account_id))
+
         lcc.set_step("Get account balance")
-        params = [self.new_account, [self.echo_asset]]
+
+        params = [account_id, [self.echo_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         all_balance_amount = response.get("result")[0].get("amount")
         lcc.log_info(
-            "Account '{}' has '{}' in '{}' asset".format(self.new_account, all_balance_amount, self.echo_asset))
+            "Account '{}' has '{}' in '{}' asset".format(account_id, all_balance_amount, self.echo_asset))
 
         lcc.set_step("Send transfer transaction with a fee equal to the 'get_required_fee', "
                      "but sender don't have enough fee")
-        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.new_account,
+        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=account_id,
                                                          to_account_id=self.echo_acc2, amount=self.amount)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         try:

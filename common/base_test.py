@@ -130,10 +130,10 @@ class BaseTest(object):
             for i in range(1, len(method)):
                 call_template["params"].append(method[i])
             return call_template
-        except KeyError:
-            lcc.log_error("That key does not exist!")
-        except IndexError:
-            lcc.log_error("This index does not exist!")
+        except KeyError as key:
+            lcc.log_error("Call method: That key does not exist: '{}'".format(key))
+        except IndexError as index:
+            lcc.log_error("Call method: This index does not exist: '{}'".format(index))
 
     def send_request(self, request, api_identifier=None, debug_mode=False):
         # Send request to server
@@ -158,10 +158,10 @@ class BaseTest(object):
                 lcc.log_debug("Received:\n{}".format(json.dumps(response, indent=4)))
                 return response
             return self.receiver.get_response(id_response, negative, log_response)
-        except KeyError:
-            lcc.log_error("That key does not exist!")
-        except IndexError:
-            lcc.log_error("This index does not exist!")
+        except KeyError as key:
+            lcc.log_error("Response: That key does not exist: '{}'".format(key))
+        except IndexError as index:
+            lcc.log_error("Response: This index does not exist: '{}'".format(index))
 
     def get_notice(self, id_response, object_id=None, log_block_id=True, log_response=False, debug_mode=False):
         # Receive notice from server
@@ -172,10 +172,10 @@ class BaseTest(object):
                 lcc.log_debug("Received:\n{}".format(json.dumps(response, indent=4)))
                 return response
             return self.receiver.get_notice(id_response, object_id, log_block_id, log_response)
-        except KeyError:
-            lcc.log_error("That key does not exist!")
-        except IndexError:
-            lcc.log_error("This index does not exist!")
+        except KeyError as key:
+            lcc.log_error("Notice: That key does not exist: '{}'".format(key))
+        except IndexError as index:
+            lcc.log_error("Notice: This index does not exist: '{}'".format(index))
 
     def get_trx_completed_response(self, id_response, debug_mode=False):
         # Receive answer from server that transaction completed
@@ -331,7 +331,7 @@ class BaseTest(object):
             lcc.log_error(
                 "Account '{}' not registered, response:\n{}".format(account_name, json.dumps(response, indent=4)))
             raise Exception("Account not registered.")
-        self.get_notice(response_id, debug_mode=debug_mode)
+        self.get_notice(callback, debug_mode=debug_mode)
         response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
         account_id = response.get("result").get("id")
         with open(WALLETS, "r") as file:
@@ -384,10 +384,10 @@ class BaseTest(object):
                 return fee
             operation[1]["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
             return fee_amount
-        except KeyError:
-            lcc.log_error("That key does not exist!")
-        except IndexError:
-            lcc.log_error("This index does not exist!")
+        except KeyError as key:
+            lcc.log_error("Add fee: That key does not exist: '{}'".format(key))
+        except IndexError as index:
+            lcc.log_error("Add fee: This index does not exist: '{}'".format(index))
 
     def collect_operations(self, list_operations, database_api_identifier, fee_amount=None, fee_asset_id="1.3.0",
                            debug_mode=False):
@@ -396,7 +396,7 @@ class BaseTest(object):
         if type(list_operations) is list:
             list_operations = [list_operations]
         for i in range(len(list_operations)):
-            self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id)
+            self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id, debug_mode=True)
         return list_operations
 
     def get_contract_result(self, broadcast_result, database_api_identifier, debug_mode=False):
@@ -424,7 +424,7 @@ class BaseTest(object):
                 lcc.log_error("Login failed!")
                 raise Exception("Login failed!")
             lcc.log_info("Login successful")
-        except KeyError:
+        except KeyError as key:
             lcc.log_error("This key does not exist!")
 
     def __login_echo(self):
@@ -450,14 +450,16 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
-    def perform_pre_deploy_setup(self, database_api_identifier):
+    # todo: remove 'registration_api'
+    def perform_pre_deploy_setup(self, database_api_identifier, registration_api):
         self._connect_to_echopy_lib()
-        lcc.set_step("Pre-run setup")
+        lcc.set_step("Pre-deploy setup")
         lcc.log_info("Empty node. Start pre-run setup...")
         if os.path.exists(WALLETS):
             os.remove(WALLETS)
-        pre_deploy_echo(self, database_api_identifier, lcc)
-        lcc.log_info("Pre-run setup completed successfully")
+        # todo: remove 'registration_api'
+        pre_deploy_echo(self, database_api_identifier, lcc, registration_api)
+        lcc.log_info("Pre-deploy setup completed successfully")
         self._disconnect_to_echopy_lib()
 
     def setup_suite(self):
@@ -473,7 +475,8 @@ class BaseTest(object):
         self.__login_echo()
         database_api_identifier = self.get_identifier("database")
         if not self.check_node_status(database_api_identifier):
-            self.perform_pre_deploy_setup(database_api_identifier)
+            # todo: remove 'registration_api'
+            self.perform_pre_deploy_setup(database_api_identifier, self.get_identifier("registration"))
 
     def teardown_suite(self):
         # Close connection to WebSocket
