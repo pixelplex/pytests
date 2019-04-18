@@ -17,7 +17,7 @@ The project is intended for testing Echo. Includes testing:
 ## Usage
 
     
-**Filter**                       | **lcc commands**
+Filter                       | lcc commands
 ---------------------------------|----------------------
 Run all tests                    | `$ lcc run`
 Run tests with special tag       | `$ lcc run -a tag_name`
@@ -31,7 +31,7 @@ Run only disabled tests          | `$ lcc run --disabled`
 Run only enabled tests           | `$ lcc run --enabled`
 Run tests from special report    | `$ lcc run --from-report path_to_report`
 
-**_note:_** can combine run options, for example - `$ lcc run --failed --from-report reports/report-2`
+_note:_ can combine run options, for example - `$ lcc run --failed --from-report reports/report-2`
 
 ## To Do Lists
 
@@ -39,26 +39,26 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [Login API](https://echo-dev.io/developers/apis/login-api/#login-api)
 
-- [x] **[login](https://echo-dev.io/developers/apis/login-api/#loginstring-user-string-password)**
-**_note:_** `only positive`
+- [x] [login](https://echo-dev.io/developers/apis/login-api/#loginstring-user-string-password)
+_note:_ `only positive`
 
 #### [Asset API](https://echo-dev.io/developers/apis/asset-api/#asset-api)
 
-- [x] **[get_asset_holders](https://echo-dev.io/developers/apis/asset-api/#get_asset_holdersstring-asset_id-int-start-int-limit)**
-**_note:_** `positive and negative tests`
-- [x] **[get_asset_holders_count](https://echo-dev.io/developers/apis/asset-api/#get_asset_holders_countstring-asset_id)**
-**_note:_** `positive and negative tests`  
-- [x] **[get_all_asset_holders](https://echo-dev.io/developers/apis/asset-api/#get_all_asset_holders)**
-**_note:_** `positive and negative tests`
+- [x] [get_asset_holders](https://echo-dev.io/developers/apis/asset-api/#get_asset_holdersstring-asset_id-int-start-int-limit)
+_note:_ `positive and negative tests`
+- [x] [get_asset_holders_count](https://echo-dev.io/developers/apis/asset-api/#get_asset_holders_countstring-asset_id)
+_note:_ `positive and negative tests`  
+- [x] [get_all_asset_holders](https://echo-dev.io/developers/apis/asset-api/#get_all_asset_holders)
+_note:_ `positive and negative tests`
 
 #### [Database API](https://echo-dev.io/developers/apis/database-api/#database-api)
 
-- [x] **[get_global_properties](https://echo-dev.io/developers/apis/database-api/#get_global_properties)**
-**_note:_** `positive and negative tests`
-- [x] **[get_required_fees](https://echo-dev.io/developers/apis/database-api/#get_required_feesops-id)**
-**_note:_** `positive and negative tests`
+- [x] [get_global_properties](https://echo-dev.io/developers/apis/database-api/#get_global_properties)
+_note:_ `positive and negative tests`
+- [x] [get_required_fees](https://echo-dev.io/developers/apis/database-api/#get_required_feesops-id)
+_note:_ `positive and negative tests`
 
-**Method**                       | **Need to cover**
+Method                       | Need to cover
 ---------------------------------|----------------------
 [get_objects](https://echo-dev.io/developers/apis/database-api/#get_objectsarray-ids) | -
 [set_subscribe_callback](https://echo-dev.io/developers/apis/database-api/#set_subscribe_callbackcallback-notify_remove_create)| -   
@@ -127,18 +127,18 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [History API](https://echo-dev.io/developers/apis/history-api/#history-api)
 
-- [x] **[get_account_history](https://echo-dev.io/developers/apis/history-api/#get_account_historyaccount-stop-limit-100-start)**
-**_note:_** `only positive`
-- [x] **[get_relative_account_history](https://echo-dev.io/developers/apis/history-api/#get_relative_account_historyaccount-stop-0-limit-100-start-0)**
-**_note:_** `only positive`
-- [x] **[get_account_history_operations](https://echo-dev.io/developers/apis/history-api/#get_account_history_operations-account-operation_id-start-stop-limit-100)**
-**_note:_** `only positive`
-- [x] **[get_contract_history](https://echo-dev.io/developers/apis/history-api/#get_contract_history-account-stop-limit-start)**
-**_note:_** `only positive`
+- [x] [get_account_history](https://echo-dev.io/developers/apis/history-api/#get_account_historyaccount-stop-limit-100-start)
+_note:_ `only positive`
+- [x] [get_relative_account_history](https://echo-dev.io/developers/apis/history-api/#get_relative_account_historyaccount-stop-0-limit-100-start-0)
+_note:_ `only positive`
+- [x] [get_account_history_operations](https://echo-dev.io/developers/apis/history-api/#get_account_history_operations-account-operation_id-start-stop-limit-100)
+_note:_ `only positive`
+- [x] [get_contract_history](https://echo-dev.io/developers/apis/history-api/#get_contract_history-account-stop-limit-start)
+_note:_ `only positive`
 
 #### [Network broadcast API](https://echo-dev.io/developers/apis/network-broadcast-api/#network-broadcast-api)
 
-**Method**                       | **Need to cover**
+Method                       | Need to cover
 ---------------------------------|----------------------
 [broadcast_transaction](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transactionsigned_transaction) | - 
 [broadcast_block](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_blocksigned_block) | - 
@@ -147,14 +147,14 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [Registration API](https://echo-dev.io/developers/apis/registration-api/#registration-api)
 
-- [x] **[register_account](https://echo-dev.io/developers/apis/registration-api/#register_accountname-owner_key-active_key-memo_key-echorand_key)**
-**_note:_** `positive and not all negative`
+- [x] [register_account](https://echo-dev.io/developers/apis/registration-api/#register_accountname-owner_key-active_key-memo_key-echorand_key)
+_note:_ `positive and not all negative`
 
 ### Operations:
 
 #### [List of Account Management Operations](https://echo-dev.io/developers/operations/#account-management)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [account_create_operation](https://echo-dev.io/developers/operations/account_management/_account_create_operation/) | -
 [account_update_operation](https://echo-dev.io/developers/operations/account_management/_account_update_operation/) | -
@@ -164,13 +164,13 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
     
 #### [List of Assert Conditions Operations](https://echo-dev.io/developers/operations/#assert-conditions)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [assert_operation](https://echo-dev.io/developers/operations/assert_conditions/_assert_operation/) | -
     
 #### [List of Asset Management Operations](https://echo-dev.io/developers/operations/#asset-management)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [asset_create_operation](https://echo-dev.io/developers/operations/asset_management/_asset_create_operation/) | -
 [asset_global_settle_operation](https://echo-dev.io/developers/operations/asset_management/_asset_global_settle_operation/) | -
@@ -187,13 +187,13 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
     
 #### [List of Balance Object Operations](https://echo-dev.io/developers/operations/#balance-object)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [balance_claim_operation](https://echo-dev.io/developers/operations/balance_object/_balance_claim_operation/) | -
 
 #### [List of For Committee Members Operations](https://echo-dev.io/developers/operations/#for-committee-members)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [committee_member_create_operation](https://echo-dev.io/developers/operations/committee_member/_committee_member_create_operation/) | -
 [committee_member_update_operation](https://echo-dev.io/developers/operations/committee_member/_committee_member_update_operation/) | -
@@ -201,7 +201,7 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
     
 ### [List of Confidential Operations](https://echo-dev.io/developers/operations/#confidential-operations)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [transfer_to_blind_operation](https://echo-dev.io/developers/operations/stealth_transfer/_transfer_to_blind_operation/) | -
 [transfer_from_blind_operation](https://echo-dev.io/developers/operations/stealth_transfer/_transfer_from_blind_operation/) | -
@@ -209,7 +209,7 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
     
 #### [List of Contract Operations](https://echo-dev.io/developers/operations/#contract-operations)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [create_contract_operation](https://echo-dev.io/developers/operations/contracts/_create_contract_operation/) | -
 [call_contract_operation](https://echo-dev.io/developers/operations/contracts/_call_contract_operation/) | -
@@ -217,19 +217,19 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
     
 #### [List of Custom Extension Operations](https://echo-dev.io/developers/operations/#custom-extension)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [custom_operation](https://echo-dev.io/developers/operations/custom/_custom_operation/) | -
 
 #### [List of FBA Operations](https://echo-dev.io/developers/operations/#fba)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [fba_distribute_operation [VIRTUAL]](https://echo-dev.io/developers/operations/fba/_fba_distribute_operation/) | -
 
 #### [List of Assets Market Operations](https://echo-dev.io/developers/operations/#assets-market)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [limit_order_create_operation](https://echo-dev.io/developers/operations/asset_market/_limit_order_create_operation/) | -
 [limit_order_cancel_operation](https://echo-dev.io/developers/operations/asset_market/_limit_order_cancel_operation/) | -
@@ -240,7 +240,7 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [List of Proposal Operations](https://echo-dev.io/developers/operations/#proposal-operations)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [proposal_create_operation](https://echo-dev.io/developers/operations/proposals/_proposal_create_operation/) | -
 [proposal_update_operation](https://echo-dev.io/developers/operations/proposals/_proposal_update_operation/) | -
@@ -248,21 +248,21 @@ Run tests from special report    | `$ lcc run --from-report path_to_report`
 
 #### [List of Asset Transfer Operations](https://echo-dev.io/developers/operations/#asset-transfer)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [transfer_operation](https://echo-dev.io/developers/operations/asset_transfer/_transfer_operation/) | -
 [override_transfer_operation](https://echo-dev.io/developers/operations/asset_transfer/_override_transfer_operation/) | -
     
 #### [List of Vesting Balances Operations](https://echo-dev.io/developers/operations/#vesting-balances)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [vesting_balance_create_operation](https://echo-dev.io/developers/operations/vesting_balances/_vesting_balance_create_operation/) | -
 [vesting_balance_withdraw_operation](https://echo-dev.io/developers/operations/vesting_balances/_vesting_balance_withdraw_operation/) | -
     
 #### [List of Withdrawal Permissions Operations](https://echo-dev.io/developers/operations/#withdrawal-permissions)
 
-**Operation**                       | **Need to cover**
+Operation                       | Need to cover
 ---------------------------------|----------------------
 [withdraw_permission_create_operation](https://echo-dev.io/developers/operations/withdraw_permission/_withdraw_permission_create_operation/) | -
 [withdraw_permission_update_operation](https://echo-dev.io/developers/operations/withdraw_permission/_withdraw_permission_update_operation/) | -
