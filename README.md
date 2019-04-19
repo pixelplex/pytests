@@ -51,8 +51,6 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 
 - [x] [get_global_properties](https://echo-dev.io/developers/apis/database-api/#get_global_properties)
 - [x] [get_required_fees](https://echo-dev.io/developers/apis/database-api/#get_required_feesops-id)
-
-
 - [ ] [get_objects](https://echo-dev.io/developers/apis/database-api/#get_objectsarray-ids)  
 - [ ] [set_subscribe_callback](https://echo-dev.io/developers/apis/database-api/#set_subscribe_callbackcallback-notify_remove_create)     
 - [ ] [set_pending_transaction_callback](https://echo-dev.io/developers/apis/database-api/#set_pending_transaction_callbackcallback)     
