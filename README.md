@@ -58,72 +58,67 @@ _note:_ `positive and negative tests`
 - [x] [get_required_fees](https://echo-dev.io/developers/apis/database-api/#get_required_feesops-id)
 _note:_ `positive and negative tests`
 
-Method                       | Need to cover
----------------------------------|----------------------
-[get_objects](https://echo-dev.io/developers/apis/database-api/#get_objectsarray-ids) | -
-[set_subscribe_callback](https://echo-dev.io/developers/apis/database-api/#set_subscribe_callbackcallback-notify_remove_create)| -   
-[set_pending_transaction_callback](https://echo-dev.io/developers/apis/database-api/#set_pending_transaction_callbackcallback)| -   
-[set_block_applied_callback ](https://echo-dev.io/developers/apis/database-api/#set_block_applied_callbackcallback)| -       
-[cancel_all_subscriptions](https://echo-dev.io/developers/apis/database-api/#cancel_all_subscriptions)| -   
-[get_block_header](https://echo-dev.io/developers/apis/database-api/#get_block_headerblock_num)| -   
-[get_block](https://echo-dev.io/developers/apis/database-api/#get_blockblock_num)| -  
-[get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)| -  
-[get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)| -  
-[get_chain_properties](https://echo-dev.io/developers/apis/database-api/#get_chain_properties)| -  
-[get_config](https://echo-dev.io/developers/apis/database-api/#get_config)| -  
-[get_chain_id](https://echo-dev.io/developers/apis/database-api/#get_chain_id)| - 
-[get_dynamic_global_properties](https://echo-dev.io/developers/apis/database-api/#get_dynamic_global_properties)| -  
-[get_key_references](https://echo-dev.io/developers/apis/database-api/#get_key_referenceskeys)| -  
-[get_accounts](https://echo-dev.io/developers/apis/database-api/#get_accountsaccount_ids)| -  
-[get_full_accounts](https://echo-dev.io/developers/apis/database-api/#get_full_accountsnames_or_ids-subscribe)| -  
-[get_account_by_name](https://echo-dev.io/developers/apis/database-api/#get_account_by_namename)| -      
-[get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)| -      
-[lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)| -  
-[lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)| -  
-[get_account_count](https://echo-dev.io/developers/apis/database-api/#get_account_count)| -      
-[get_account_balances](https://echo-dev.io/developers/apis/database-api/#get_account_balancesid-assets)| -      
-[get_named_account_balances](https://echo-dev.io/developers/apis/database-api/#get_named_account_balancesname-assets)| -  
-[get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)| -  
-[get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)| -  
-[get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)| -  
-[get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)| -  
-[list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)| -  
-[lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)| -  
-[get_order_book](https://echo-dev.io/developers/apis/database-api/#get_order_bookbase-quote-depth-50)| -  
-[get_limit_orders](https://echo-dev.io/developers/apis/database-api/#get_limit_ordersa-b-limit)| -  
-[get_call_orders](https://echo-dev.io/developers/apis/database-api/#get_call_ordersa-limit)| -  
-[get_settle_orders](https://echo-dev.io/developers/apis/database-api/#get_settle_ordersa-limit)| -  
-[get_margin_positions](https://echo-dev.io/developers/apis/database-api/#get_margin_positionsid)| -  
-[subscribe_to_market](https://echo-dev.io/developers/apis/database-api/#subscribe_to_marketcallback-a-b)| -  
-[unsubscribe_from_market](https://echo-dev.io/developers/apis/database-api/#unsubscribe_from_marketa-b)| -      
-[get_ticker](https://echo-dev.io/developers/apis/database-api/#get_tickerbase-quote)| -  
-[get_24_volume](https://echo-dev.io/developers/apis/database-api/#get_24_volumebase-quote)| -      
-[get_trade_history](https://echo-dev.io/developers/apis/database-api/#get_trade_historybase-quote-start-stop-limit-100)| -  
-[get_witnesses](https://echo-dev.io/developers/apis/database-api/#get_witnesseswitness_ids)| -  
-[get_witness_by_account](https://echo-dev.io/developers/apis/database-api/#get_witness_by_accountaccount)| -  
-[lookup_witness_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_witness_accountslower_bound_name-limit)| -  
-[get_witness_count](https://echo-dev.io/developers/apis/database-api/#get_witness_count)| -  
-[get_committee_members](https://echo-dev.io/developers/apis/database-api/#get_committee_memberscommittee_member_ids)| -  
-[get_committee_member_by_account](https://echo-dev.io/developers/apis/database-api/#get_committee_member_by_accountaccount)| -  
-[lookup_committee_member_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_committee_member_accountslower_bound_name-limit)| -  
-[get_workers_by_account](https://echo-dev.io/developers/apis/database-api/#get_workers_by_accountaccount_id)| -  
-[lookup_vote_ids](https://echo-dev.io/developers/apis/database-api/#lookup_vote_idsvotes)| -  
-[get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)| -  
-[get_required_signatures](https://echo-dev.io/developers/apis/database-api/#get_required_signaturestrx-available_keys)| - 
-[get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)| -  
-[get_potential_address_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_address_signaturestrx)| -  
-[verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)| -  
-[verify_account_authority](https://echo-dev.io/developers/apis/database-api/#verify_account_authorityname_or_id-signers)| -  
-[validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)| -  
-[get_proposed_transactions](https://echo-dev.io/developers/apis/database-api/#get_proposed_transactionsid)| -  
-[get_all_contracts](https://echo-dev.io/developers/apis/database-api/#get_all_contracts)| -  
-[get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)| -  
-[subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)| -  
-[get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)| -  
-[get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)| -  
-[call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)| -  
-[get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)| -  
-[get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)| -  
+Method                           |  Need to cover         | Is covered       |
+---------------------------------|:----------------------:|:----------------:|
+[get_objects](https://echo-dev.io/developers/apis/database-api/#get_objectsarray-ids) | ✔ | ➕
+[set_subscribe_callback](https://echo-dev.io/developers/apis/database-api/#set_subscribe_callbackcallback-notify_remove_create)| ✔ | ❌
+[set_pending_transaction_callback](https://echo-dev.io/developers/apis/database-api/#set_pending_transaction_callbackcallback)| ✔ | ❌
+[set_block_applied_callback ](https://echo-dev.io/developers/apis/database-api/#set_block_applied_callbackcallback)| ✔ | ❌
+[cancel_all_subscriptions](https://echo-dev.io/developers/apis/database-api/#cancel_all_subscriptions)| ✔ | ❌
+[get_block_header](https://echo-dev.io/developers/apis/database-api/#get_block_headerblock_num)| ✔ | ❌
+[get_block](https://echo-dev.io/developers/apis/database-api/#get_blockblock_num)| ✔ | ❌
+[get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)| ✔ | ❌  
+[get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)| ✔ | ❌  
+[get_chain_properties](https://echo-dev.io/developers/apis/database-api/#get_chain_properties)| ✔ | ❌
+[get_config](https://echo-dev.io/developers/apis/database-api/#get_config)| ✔ | ❌
+[get_chain_id](https://echo-dev.io/developers/apis/database-api/#get_chain_id)| ✔ | ❌
+[get_dynamic_global_properties](https://echo-dev.io/developers/apis/database-api/#get_dynamic_global_properties)| ✔ | ❌
+[get_key_references](https://echo-dev.io/developers/apis/database-api/#get_key_referenceskeys)| ✔ | ❌
+[get_accounts](https://echo-dev.io/developers/apis/database-api/#get_accountsaccount_ids)| ✔ | ❌
+[get_full_accounts](https://echo-dev.io/developers/apis/database-api/#get_full_accountsnames_or_ids-subscribe)| ✔ | ❌
+[get_account_by_name](https://echo-dev.io/developers/apis/database-api/#get_account_by_namename)| ✔ | ❌
+[get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)| ✔ | ❌
+[lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)| ✔ | ❌
+[lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)| ✔ | ❌
+[get_account_count](https://echo-dev.io/developers/apis/database-api/#get_account_count)| ✔ | ❌
+[get_account_balances](https://echo-dev.io/developers/apis/database-api/#get_account_balancesid-assets)| ✔ | ❌
+[get_named_account_balances](https://echo-dev.io/developers/apis/database-api/#get_named_account_balancesname-assets)| ✔ | ❌
+[get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)| ✔ | ❌
+[get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)| ✔ | ❌
+[get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)| ✔ | ❌
+[get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)| ✔ | ❌
+[list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)| ✔ | ❌
+[lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)| ✔ | ❌
+[get_order_book](https://echo-dev.io/developers/apis/database-api/#get_order_bookbase-quote-depth-50)| ➖ | 
+[get_limit_orders](https://echo-dev.io/developers/apis/database-api/#get_limit_ordersa-b-limit)| ✔ | ❌
+[get_call_orders](https://echo-dev.io/developers/apis/database-api/#get_call_ordersa-limit)| ➖ | 
+[get_settle_orders](https://echo-dev.io/developers/apis/database-api/#get_settle_ordersa-limit)| ➖ | 
+[get_margin_positions](https://echo-dev.io/developers/apis/database-api/#get_margin_positionsid)| ➖ | 
+[subscribe_to_market](https://echo-dev.io/developers/apis/database-api/#subscribe_to_marketcallback-a-b)| ➖ | 
+[unsubscribe_from_market](https://echo-dev.io/developers/apis/database-api/#unsubscribe_from_marketa-b)| ➖ | 
+[get_ticker](https://echo-dev.io/developers/apis/database-api/#get_tickerbase-quote)| ➖ | 
+[get_24_volume](https://echo-dev.io/developers/apis/database-api/#get_24_volumebase-quote)| ➖ | 
+[get_trade_history](https://echo-dev.io/developers/apis/database-api/#get_trade_historybase-quote-start-stop-limit-100)| ➖ | 
+[get_committee_members](https://echo-dev.io/developers/apis/database-api/#get_committee_memberscommittee_member_ids)| ✔ | ❌
+[get_committee_member_by_account](https://echo-dev.io/developers/apis/database-api/#get_committee_member_by_accountaccount)| ✔ | ❌
+[lookup_committee_member_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_committee_member_accountslower_bound_name-limit)| ✔ | ❌
+[lookup_vote_ids](https://echo-dev.io/developers/apis/database-api/#lookup_vote_idsvotes)| ✔ | ❌
+[get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)| ✔ | ❌
+[get_required_signatures](https://echo-dev.io/developers/apis/database-api/#get_required_signaturestrx-available_keys)| ✔ | ❌
+[get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)| ✔ | ❌
+[get_potential_address_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_address_signaturestrx)| ➖ | 
+[verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)| ✔ | ❌
+[verify_account_authority](https://echo-dev.io/developers/apis/database-api/#verify_account_authorityname_or_id-signers)| ✔ | ❌
+[validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)| ✔ | ❌
+[get_proposed_transactions](https://echo-dev.io/developers/apis/database-api/#get_proposed_transactionsid)| ✔ | ❌
+[get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)| ✔ | ❌
+[subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)| ✔ | ❌
+[get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)| ✔ | ❌
+[get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)| ✔ | ❌
+[call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)| ✔ | ❌
+[get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)| ✔ | ❌
+[get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)| ✔ | ❌
+[subscribe_contracts](https://echo-dev.io/developers/apis/database-api/)| ✔ | ❌
 
 #### [History API](https://echo-dev.io/developers/apis/history-api/#history-api)
 
