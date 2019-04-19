@@ -69,14 +69,14 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc1, self.echo_acc2))
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
         self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                       from_account_id=self.echo_acc1,
-                                                                       to_account_id=self.echo_acc2,
+                                                                       from_account_id=self.echo_acc0,
+                                                                       to_account_id=self.echo_acc1,
                                                                        amount=self.amount)
         lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
         self.required_fee = self.get_required_fee(self.transfer_operation, self.__database_api_identifier)
@@ -147,20 +147,20 @@ class NegativeTesting(BaseTest):
                                                                            self.__registration_api_identifier))
         self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
         lcc.log_info(
-            "Echo accounts are: #1='{}', #2='{}''".format(self.echo_acc1, self.echo_acc2))
+            "Echo accounts are: #1='{}', #2='{}''".format(self.echo_acc0, self.echo_acc1))
         self.transfer_operation_ex = self.echo_ops.get_operation_json("transfer_operation", example=True)
         lcc.log_info("Transfer operation example: '{}'".format(str(self.transfer_operation_ex)))
         self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                       from_account_id=self.echo_acc1,
-                                                                       to_account_id=self.echo_acc2,
+                                                                       from_account_id=self.echo_acc0,
+                                                                       to_account_id=self.echo_acc1,
                                                                        amount=self.amount)
         lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
-        self.valid_contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc1, self.contract,
+        self.valid_contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
                                                             self.__database_api_identifier)
         lcc.log_info("New Echo contract created, contract_id='{}".format(self.valid_contract_id))
 
@@ -264,7 +264,7 @@ class NegativeTesting(BaseTest):
         lcc.set_step("Send transfer transaction with a fee equal to the 'get_required_fee', "
                      "but sender don't have enough fee")
         operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=account_id,
-                                                         to_account_id=self.echo_acc2, amount=self.amount)
+                                                         to_account_id=self.echo_acc1, amount=self.amount)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         try:
             self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -280,8 +280,8 @@ class NegativeTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def fee_in_eth_asset(self):
         lcc.set_step("Get in eETH asset")
-        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc1,
-                                                         to_account_id=self.echo_acc2, amount=self.amount,
+        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
+                                                         to_account_id=self.echo_acc1, amount=self.amount,
                                                          fee_asset_id=self.eeth_asset)
         response = self.get_required_fees(operation, self.eeth_asset, negative=True)
         check_that(
@@ -296,7 +296,7 @@ class NegativeTesting(BaseTest):
         not_valid_contract = "6e5964425a64326457664a44516474594a615878"
 
         lcc.set_step("Get required fee for 'create_contract_operation' with nonexistent byte code")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=not_valid_contract)
         response = self.get_required_fees(operation, self.echo_asset, negative=True)
         check_that(
@@ -309,7 +309,7 @@ class NegativeTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def nonexistent_asset_id_in_operation(self):
         lcc.set_step("Get required fee for 'create_contract_operation' with nonexistent asset in operation")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract, value_amount=self.amount,
                                                                 value_asset_id=self.nonexistent_asset_id)
         response = self.get_required_fees(operation, self.echo_asset, negative=True)
@@ -323,7 +323,7 @@ class NegativeTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def nonexistent_method_byte_code(self, get_random_hex_string):
         lcc.set_step("Get required fee for 'call_contract_operation' with nonexistent method byte code")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=get_random_hex_string,
                                                               callee=self.valid_contract_id)
         response = self.get_required_fees(operation, self.echo_asset, negative=True)

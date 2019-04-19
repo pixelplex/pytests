@@ -35,9 +35,9 @@ class HelloWorld(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -48,7 +48,7 @@ class HelloWorld(BaseTest):
               "and invoking a contract on the Echo network, written in Solidity.")
     def hello_world_scenario(self):
         lcc.set_step("Create 'Piggy' contract in the Echo network")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract,
                                                                 value_amount=self.value_amount,
                                                                 value_asset_id=self.echo_asset)
@@ -58,7 +58,7 @@ class HelloWorld(BaseTest):
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'greet' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -84,7 +84,7 @@ class HelloWorld(BaseTest):
         contract_balance = response["result"][0]["amount"]
 
         lcc.set_step("Get owner balance and store")
-        params = [self.echo_acc1, [self.echo_asset]]
+        params = [self.echo_acc0, [self.echo_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -94,7 +94,7 @@ class HelloWorld(BaseTest):
         owner_balance = response["result"][0]["amount"]
 
         lcc.set_step("Call 'getPennie' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_pennie, callee=contract_id)
         fee = self.get_required_fee(operation, self.__database_api_identifier)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -111,7 +111,7 @@ class HelloWorld(BaseTest):
         )
 
         lcc.set_step("Get owner balance. Amount should be reduced by fee and increase by one.")
-        params = [self.echo_acc1, [self.echo_asset]]
+        params = [self.echo_acc0, [self.echo_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -126,7 +126,7 @@ class HelloWorld(BaseTest):
         )
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)

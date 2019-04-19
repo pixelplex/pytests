@@ -33,9 +33,9 @@ class GetRelativeAccountHistory(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_relative_account_history'")
@@ -43,12 +43,12 @@ class GetRelativeAccountHistory(BaseTest):
         stop = start = 0
         limit = 1
         lcc.set_step("Get relative account history")
-        params = [self.echo_acc1, stop, limit, start]
+        params = [self.echo_acc0, stop, limit, start]
         response_id = self.send_request(self.get_request("get_relative_account_history", params),
                                         self.__history_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call method 'get_relative_account_history' with: account='{}', stop='{}', limit='{}', start='{}' "
-                     "parameters".format(self.echo_acc1, stop, limit, start))
+                     "parameters".format(self.echo_acc0, stop, limit, start))
 
         lcc.set_step("Check response from method 'get_relative_account_history'")
         result = response["result"]
@@ -99,11 +99,11 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc1, self.echo_acc2))
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -125,9 +125,15 @@ class PositiveTesting(BaseTest):
         response = self.get_relative_account_history(new_account, stop, limit, start)
 
         lcc.set_step("Check new account history")
-        check_that(
+        expected_number_of_operations = 1
+        require_that(
             "'new account history'",
-            response["result"], is_list([])
+            len(response["result"]), is_(expected_number_of_operations)
+        )
+        check_that(
+            "'id single operation'",
+            response["result"][0]["op"][0],
+            is_(self.echo.config.operation_ids.ACCOUNT_CREATE)
         )
 
     @lcc.prop("type", "method")
@@ -146,7 +152,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Perform operations using a new account. Operation count equal to limit")
-        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc1,
+        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc0,
                                                                  self.__database_api_identifier,
                                                                  operation_count=operation_count)
         lcc.log_info("Fill account history with '{}' number of transfer operations".format(operation_count))
@@ -168,7 +174,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform operations using a new account to create max_limit operations")
         operation_count = max_limit - operation_count - default_account_create_operation
-        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc1,
+        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc0,
                                                                  self.__database_api_identifier,
                                                                  operation_count=operation_count)
         lcc.log_info(
@@ -196,8 +202,8 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform one operation")
         operation_count = 1
-        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc1,
-                                                                                    self.echo_acc2,
+        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc0,
+                                                                                    self.echo_acc1,
                                                                                     self.__database_api_identifier,
                                                                                     transfer_amount=transfer_amount_1,
                                                                                     operation_count=operation_count)
@@ -207,7 +213,7 @@ class PositiveTesting(BaseTest):
 
         limit = operation_count
         lcc.set_step("Get account history. Limit: '{}'".format(limit))
-        response = self.get_relative_account_history(self.echo_acc1, stop, limit, start)
+        response = self.get_relative_account_history(self.echo_acc0, stop, limit, start)
 
         lcc.set_step("Check account history to see added operation and store operation id")
         require_that(
@@ -217,8 +223,8 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform another operations")
         operation_count = 5
-        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc1,
-                                                                                    self.echo_acc2,
+        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc0,
+                                                                                    self.echo_acc1,
                                                                                     self.__database_api_identifier,
                                                                                     transfer_amount=transfer_amount_2,
                                                                                     operation_count=operation_count)
@@ -230,7 +236,7 @@ class PositiveTesting(BaseTest):
         limit = operation_count
         stop = 1
         lcc.set_step("Get account history. Stop: '{}', limit: '{}'".format(stop, limit))
-        response = self.get_relative_account_history(self.echo_acc1, stop, limit, start)
+        response = self.get_relative_account_history(self.echo_acc0, stop, limit, start)
 
         lcc.set_step("Check account history to see added operations and store operation ids")
         operations.reverse()
@@ -246,7 +252,7 @@ class PositiveTesting(BaseTest):
         # stop = 1
         # start = operation_count
         # lcc.set_step("Get account history. Stop: '{}', limit: '{}' and start: '{}'".format(stop, limit, start))
-        # response = self.call_get_relative_account_history(self.echo_acc1, stop, limit, start)
+        # response = self.call_get_relative_account_history(self.echo_acc0, stop, limit, start)
         #
         # lcc.set_step("Check account history to see operations from the selected ids interval")
         # for i in range(limit):

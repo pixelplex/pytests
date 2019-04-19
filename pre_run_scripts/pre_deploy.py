@@ -8,7 +8,7 @@ BALANCE_TO_ACCOUNT = ECHO_POOL / (DEFAULT_INIT_ACCOUNTS + MAIN_TEST_ACCOUNT_COUN
 def make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
     list_operations = []
     for i in range(DEFAULT_ACCOUNT_COUNT - 1):
-        to_account_id = get_account_id(get_account(base_test, DEFAULT_ACCOUNT_PREFIX + str(i + 1), database_api))
+        to_account_id = get_account_id(get_account(base_test, DEFAULT_ACCOUNT_PREFIX + str(i), database_api))
         operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id, 1,
                                                               signer=NATHAN)
         collected_operation = base_test.collect_operations(operation, database_api)
@@ -19,7 +19,7 @@ def make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
 
 
 def add_balance_to_main_test_account(base_test, nathan_id, database_api):
-    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc1, database_api))
+    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api))
     operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id, BALANCE_TO_ACCOUNT,
                                                           signer=NATHAN)
     collected_operation = base_test.collect_operations(operation, database_api)
@@ -39,13 +39,13 @@ def register_default_accounts(base_test, database_api, registration_api):
 
     # todo: remove
     for i in range(DEFAULT_ACCOUNT_COUNT):
-        names = DEFAULT_ACCOUNT_PREFIX + str(i + 1)
-        base_test.register_account(names, registration_api, database_api, debug_mode=True)
+        names = DEFAULT_ACCOUNT_PREFIX + str(i)
+        base_test.register_account(names, registration_api, database_api)
 
     # todo: add when fixed bug in echopy-lib with 'account_create_operation'
     # list_operations = []
     # for i in range(DEFAULT_ACCOUNT_COUNT):
-    #     names = DEFAULT_ACCOUNT_PREFIX + str(i + 1)
+    #     names = DEFAULT_ACCOUNT_PREFIX + str(i)
     #     public_data = base_test.store_new_account(names)
     #     operation = base_test.echo_ops.get_account_create_operation(base_test.echo, names, public_data[0],
     #                                                                 public_data[0], public_data[1], public_data[0],
@@ -114,7 +114,7 @@ def pre_deploy_echo(base_test, database_api, lcc, register_api):
     lcc.log_info("Default accounts created successfully. Accounts count: '{}'".format(DEFAULT_ACCOUNT_COUNT))
     if not add_balance_to_main_test_account(base_test, nathan_id, database_api):
         raise Exception("Balance to main test account is not credited")
-    lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.echo_acc1))
+    lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.echo_acc0))
     if not make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
         raise Exception("Default accounts did not become asset echo holders")
     lcc.log_info("All default accounts became echo holders successfully")

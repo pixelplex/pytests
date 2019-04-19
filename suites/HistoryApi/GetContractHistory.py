@@ -36,9 +36,9 @@ class GetContractHistory(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -51,7 +51,7 @@ class GetContractHistory(BaseTest):
         limit = 1
 
         lcc.set_step("Perform create contract operation")
-        bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc1, self.contract,
+        bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
                                                self.__database_api_identifier, need_broadcast=True)
         contract_id = bd_result[0]
 
@@ -113,11 +113,11 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc1, self.echo_acc2))
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -221,7 +221,7 @@ class PositiveTesting(BaseTest):
         operation_ids = []
 
         lcc.set_step("Perform create contract operation")
-        bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc1, self.contract,
+        bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
                                                self.__database_api_identifier, value_amount=value_amount,
                                                need_broadcast=True)
         contract_id = bd_result[0]
@@ -230,7 +230,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform one call contract operation")
         create_contract_op_count = call_contract_op_count = transfer_op_count = 1
-        bd_result = self.utils.fill_account_history_with_contract_transfer_operation(self, self.echo, self.echo_acc1,
+        bd_result = self.utils.fill_account_history_with_contract_transfer_operation(self, self.echo, self.echo_acc0,
                                                                                      self.get_pennie,
                                                                                      self.__database_api_identifier,
                                                                                      contract_id,
@@ -238,7 +238,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Fill contract history with '{}' number of contract transfer operations".format(transfer_op_count))
 
         call_contract_operation = bd_result["trx"]["operations"][0]
-        contract_transfer_operation[1].update({"from": contract_id, "to": self.echo_acc1})
+        contract_transfer_operation[1].update({"from": contract_id, "to": self.echo_acc0})
         contract_transfer_operation[1]["amount"].update({"amount": 1})
         operations.append(contract_transfer_operation)
         operations.append(call_contract_operation)
@@ -263,7 +263,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Perform another operations")
         call_contract_op_count = transfer_op_count = get_random_integer_up_to_fifty
         bd_result = self.utils.fill_account_history_with_contract_transfer_operation(self, self.echo,
-                                                                                     self.echo_acc1,
+                                                                                     self.echo_acc0,
                                                                                      self.get_pennie,
                                                                                      self.__database_api_identifier,
                                                                                      contract_id,
@@ -273,7 +273,7 @@ class PositiveTesting(BaseTest):
         operations.remove(create_contract_operation)
         for i in range(transfer_op_count):
             call_contract_operation = bd_result["trx"]["operations"][0]
-            contract_transfer_operation[1].update({"from": contract_id, "to": self.echo_acc1})
+            contract_transfer_operation[1].update({"from": contract_id, "to": self.echo_acc0})
             contract_transfer_operation[1]["amount"].update({"amount": 1})
             operations.append(contract_transfer_operation)
             operations.append(call_contract_operation)

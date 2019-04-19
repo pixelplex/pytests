@@ -33,9 +33,9 @@ class GetAccountHistoryOperations(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_account_history_operations'")
@@ -44,13 +44,13 @@ class GetAccountHistoryOperations(BaseTest):
         start = stop = "1.10.0"
         limit = 1
         lcc.set_step("Get account history operations")
-        params = [self.echo_acc1, operation_id, start, stop, limit]
+        params = [self.echo_acc0, operation_id, start, stop, limit]
         response_id = self.send_request(self.get_request("get_account_history_operations", params),
                                         self.__history_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info(
             "Call method 'get_account_history_operations' with: account='{}', operation_id='{}', stop='{}', start='{}',"
-            " limit='{}' parameters".format(self.echo_acc1, operation_id, stop, start, limit))
+            " limit='{}' parameters".format(self.echo_acc0, operation_id, stop, start, limit))
 
         lcc.set_step("Check response from method 'get_account_history_operations'")
         result = response["result"]
@@ -105,11 +105,11 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc1, self.echo_acc2))
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -202,7 +202,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}".format(new_account))
 
         lcc.set_step("Perform operations using a new account. Operation count equal to limit")
-        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc1,
+        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc0,
                                                                  self.__database_api_identifier,
                                                                  operation_count=operation_count)
         lcc.log_info("Fill account history with '{}' number of transfer operations".format(operation_count))
@@ -224,7 +224,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform operations using a new account to create max_limit operations")
         max_limit = 100
-        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc1,
+        self.utils.fill_account_history_with_transfer_operations(self, self.echo, new_account, self.echo_acc0,
                                                                  self.__database_api_identifier,
                                                                  operation_count=max_limit - operation_count)
         lcc.log_info(
@@ -252,8 +252,8 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform one operation")
         operation_count = 1
-        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc1,
-                                                                                    self.echo_acc2,
+        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc0,
+                                                                                    self.echo_acc1,
                                                                                     self.__database_api_identifier,
                                                                                     transfer_amount=transfer_amount_1,
                                                                                     operation_count=operation_count)
@@ -263,7 +263,7 @@ class PositiveTesting(BaseTest):
 
         limit = operation_count
         lcc.set_step("Get account history. Limit: '{}'".format(limit))
-        response = self.get_account_history_operations(self.echo_acc1, operation_identifier, start, stop, limit)
+        response = self.get_account_history_operations(self.echo_acc0, operation_identifier, start, stop, limit)
 
         lcc.set_step("Check account history to see added operation and store operation id")
         require_that(
@@ -274,8 +274,8 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform another operations")
         operation_count = 5
-        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc1,
-                                                                                    self.echo_acc2,
+        broadcast_result = self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc0,
+                                                                                    self.echo_acc1,
                                                                                     self.__database_api_identifier,
                                                                                     transfer_amount=transfer_amount_2,
                                                                                     operation_count=operation_count)
@@ -287,7 +287,7 @@ class PositiveTesting(BaseTest):
         limit = operation_count
         stop = operation_id
         lcc.set_step("Get account history. Stop: '{}', limit: '{}'".format(stop, limit))
-        response = self.get_account_history_operations(self.echo_acc1, operation_identifier, start, stop, limit)
+        response = self.get_account_history_operations(self.echo_acc0, operation_identifier, start, stop, limit)
 
         lcc.set_step("Check account history to see added operations and store operation ids")
         operations.reverse()
@@ -302,7 +302,7 @@ class PositiveTesting(BaseTest):
         stop = operation_id
         start = operation_ids[0]
         lcc.set_step("Get account history. Start: '{}', stop: '{}' and limit: '{}'".format(start, stop, limit))
-        response = self.get_account_history_operations(self.echo_acc1, operation_identifier, start, stop, limit)
+        response = self.get_account_history_operations(self.echo_acc0, operation_identifier, start, stop, limit)
 
         lcc.set_step("Check account history to see operations from the selected ids interval")
         for i in range(len(response["result"])):

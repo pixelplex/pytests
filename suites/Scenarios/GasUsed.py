@@ -53,9 +53,9 @@ class GasUsed(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.create_contract_id = self.echo.config.operation_ids.CREATE_CONTRACT
         self.call_contract_id = self.echo.config.operation_ids.CALL_CONTRACT
         lcc.log_info("Echo operation ids are: create_contract='{}', call_contract='{}'".format(self.create_contract_id,
@@ -82,7 +82,7 @@ class GasUsed(BaseTest):
                 default_fee_for_contract_creation, default_fee_for_call_contract, gas_price, gas_amount))
 
         lcc.set_step("Get required fee for create_contract operation and store")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract)
         required_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
         lcc.log_info("Required fee for contract create: {}".format(required_fee))
@@ -105,7 +105,7 @@ class GasUsed(BaseTest):
 
         lcc.set_step("Get required fee for call_contract operation and store")
         contract_id = self.get_contract_id(response)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy, callee=contract_id)
         required_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
         lcc.log_info("Required fee for call contract: {}".format(required_fee))

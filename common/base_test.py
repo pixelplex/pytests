@@ -33,9 +33,9 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eeth_asset = "1.3.9"
+        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "0"
         self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
         self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
-        self.echo_acc3 = DEFAULT_ACCOUNT_PREFIX + "3"
 
     @staticmethod
     def create_connection_to_echo():
@@ -394,7 +394,7 @@ class BaseTest(object):
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))
         if type(list_operations) is list:
-            list_operations = [list_operations]
+            list_operations = [list_operations.copy()]
         for i in range(len(list_operations)):
             self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id)
         return list_operations
