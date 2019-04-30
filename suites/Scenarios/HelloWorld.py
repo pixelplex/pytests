@@ -4,7 +4,6 @@ from lemoncheesecake.matching import check_that, is_, is_integer, is_str, check_
     check_that_entry
 
 from common.base_test import BaseTest
-from common.echo_operation import EchoOperations
 
 SUITE = {
     "description": "Testing contract creation and calling its methods"

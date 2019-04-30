@@ -17,7 +17,7 @@ from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
+from project import RESOURCES_DIR, BASE_URL, EMPTY_NODE, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
 
 
 class BaseTest(object):
@@ -163,15 +163,15 @@ class BaseTest(object):
         except IndexError as index:
             lcc.log_error("Response: This index does not exist: '{}'".format(index))
 
-    def get_notice(self, id_response, object_id=None, log_block_id=True, log_response=False, debug_mode=False):
+    def get_notice(self, id_response, object_id=None, log_response=False, debug_mode=False):
         # Receive notice from server
         try:
             if debug_mode:
-                lcc.log_debug("Parameters: object_id={}, log_block_id={}".format(object_id, log_block_id))
+                lcc.log_debug("Parameters: object_id={}".format(object_id))
                 response = json.loads(self.ws.recv())
                 lcc.log_debug("Received:\n{}".format(json.dumps(response, indent=4)))
                 return response
-            return self.receiver.get_notice(id_response, object_id, log_block_id, log_response)
+            return self.receiver.get_notice(id_response, object_id, log_response)
         except KeyError as key:
             lcc.log_error("Notice: That key does not exist: '{}'".format(key))
         except IndexError as index:
@@ -323,7 +323,7 @@ class BaseTest(object):
         public_data = self.store_new_account(account_name)
         self.__id += 1
         callback = self.__id
-        account_params = [callback, account_name, public_data[0], public_data[0], public_data[0], public_data[1]]
+        account_params = [callback, account_name, public_data[1], public_data[1], public_data[0], public_data[1]]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         registration_api_identifier, debug_mode=debug_mode)
         response = self.get_response(response_id, debug_mode=debug_mode)
@@ -425,7 +425,7 @@ class BaseTest(object):
                 raise Exception("Login failed!")
             lcc.log_info("Login successful")
         except KeyError as key:
-            lcc.log_error("This key does not exist!")
+            lcc.log_error("This key does not exist: '{}'".format(key))
 
     def __login_echo(self):
         # Login to Echo
@@ -473,10 +473,11 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
-        database_api_identifier = self.get_identifier("database")
-        if not self.check_node_status(database_api_identifier):
-            # todo: remove 'registration_api'
-            self.perform_pre_deploy_setup(database_api_identifier, self.get_identifier("registration"))
+        if EMPTY_NODE:
+            database_api_identifier = self.get_identifier("database")
+            if not self.check_node_status(database_api_identifier):
+                # todo: remove 'registration_api'
+                self.perform_pre_deploy_setup(database_api_identifier, self.get_identifier("registration"))
 
     def teardown_suite(self):
         # Close connection to WebSocket

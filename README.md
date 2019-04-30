@@ -16,6 +16,13 @@ The project is intended for testing Echo. Includes testing:
 
 ## Usage
 
+### Note:
+Before running the tests, you can specify a environment variables *BASE_URL*, *EMPTY_NODE*, *NATHAN*, *ECHO_POOL*. 
+For this you need, example:
+* Linux OS: export BASE_URL=_[needed_url]()_
+* Windows OS: set BASE_URL=_[needed_url]()_
+
+After that you can use following commands:
     
 Filter                       | lcc commands
 ---------------------------------|----------------------

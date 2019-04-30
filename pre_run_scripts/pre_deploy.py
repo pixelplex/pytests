@@ -75,7 +75,8 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 
 
 def get_public_key(account):
-    return account["result"]["owner"]["key_auths"][0][0]
+    print("\n {} \n".format(account["result"]["active"]["key_auths"][0][0]))
+    return account["result"]["active"]["key_auths"][0][0]
 
 
 def get_account_id(account):

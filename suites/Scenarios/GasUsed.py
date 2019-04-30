@@ -5,7 +5,6 @@ from lemoncheesecake.matching import check_that, equal_to
 import math
 
 from common.base_test import BaseTest
-from common.echo_operation import EchoOperations
 
 SUITE = {
     "description": "Testing work of counting 'gas_used'"

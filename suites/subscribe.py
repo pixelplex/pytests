@@ -55,7 +55,7 @@ class SubscribeMethods(BaseTest):
 
         lcc.set_step("Subscription check for object updates '2.1.0'")
         object_keys = list(response)[:]
-        self.get_notice(subscription_callback_id, object_id="1.18.", log_block_id=False)
+        self.get_notice(subscription_callback_id, object_id="1.18.")
         response_notice = self.get_notice(subscription_callback_id, object_id=param)
 
         lcc.set_step("Check object format")

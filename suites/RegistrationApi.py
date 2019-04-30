@@ -48,7 +48,7 @@ class RegistrationApi(object):
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
         echorand_key = generate_keys[2]
-        account_params = [callback, get_random_valid_account_name, public_key, public_key, public_key,
+        account_params = [callback, get_random_valid_account_name, echorand_key, echorand_key, public_key,
                           echorand_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier + 1)
         response = base.get_response(response_id, negative=True)
@@ -90,7 +90,7 @@ class PositiveTesting(BaseTest):
         generate_keys = self.generate_keys()
         public_key = generate_keys[1]
         echorand_key = generate_keys[2]
-        account_params = [callback, new_account, public_key, public_key, public_key, echorand_key]
+        account_params = [callback, new_account, echorand_key, echorand_key, public_key, echorand_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         response = self.get_response(response_id)
@@ -146,7 +146,7 @@ class NegativeTesting(BaseTest):
             public_key = generate_keys[1]
         if echorand_key is None:
             echorand_key = generate_keys[2]
-        account_params = [callback, new_account, public_key, public_key, public_key, echorand_key]
+        account_params = [callback, new_account, echorand_key, echorand_key, public_key, echorand_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         return self.get_response(response_id, negative=True)
