@@ -13,7 +13,7 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
-@lcc.tags("get_global_properties")
+@lcc.tags("database_api", "get_global_properties")
 @lcc.suite("Check work of method 'get_global_properties'", rank=1)
 class GetGlobalProperties(BaseTest):
 
@@ -99,13 +99,16 @@ class GetGlobalProperties(BaseTest):
     def method_main_check(self):
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_global_properties'")
 
-        lcc.set_step("Check field 'id'")
+        lcc.set_step("Check main fields")
         with this_dict(response["result"]):
             if check_that("global_properties", response["result"], has_length(4)):
-                check_that_entry("id", is_str(), quiet=True)
+                if not self.validator.is_global_object_id(response["result"]["id"]):
+                    lcc.log_error("Wrong format of 'id', got: {}".format(response["result"]["id"]))
+                else:
+                    lcc.log_info("'id' has correct format: global_property_object_type")
                 check_that_entry("parameters", is_dict(), quiet=True)
                 check_that_entry("next_available_vote_id", is_integer(), quiet=True)
                 check_that_entry("active_committee_members", is_list(), quiet=True)
@@ -227,7 +230,7 @@ class GetGlobalProperties(BaseTest):
 
 
 @lcc.prop("testing", "negative")
-@lcc.tags("get_global_properties")
+@lcc.tags("database_api", "get_global_properties")
 @lcc.suite("Negative testing of method 'get_global_properties'", rank=2)
 class NegativeTesting(BaseTest):
 

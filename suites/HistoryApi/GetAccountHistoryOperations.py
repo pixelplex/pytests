@@ -65,9 +65,10 @@ class GetAccountHistoryOperations(BaseTest):
                 list_operations["op"][0], is_(operation_id)
             )
             with this_dict(list_operations):
-                if check_that_entry("id", is_str(), quiet=True):
-                    if not self.validator.is_operation_history_id(list_operations["id"]):
-                        lcc.log_error("Wrong format of operation id, got")
+                if not self.validator.is_operation_history_id(list_operations["id"]):
+                    lcc.log_error("Wrong format of 'operation id', got: {}".format(list_operations["id"]))
+                else:
+                    lcc.log_info("'operation_id' has correct format: operation_history_id")
                 check_that_entry("op", is_list(), quiet=True)
                 check_that_entry("result", is_list(), quiet=True)
                 check_that_entry("block_num", is_integer(), quiet=True)

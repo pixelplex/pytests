@@ -14,7 +14,7 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
-@lcc.tags("get_required_fees")
+@lcc.tags("database_api", "get_required_fees")
 @lcc.suite("Check work of method 'get_required_fees'", rank=1)
 class GetRequiredFees(BaseTest):
 
@@ -48,7 +48,7 @@ class GetRequiredFees(BaseTest):
 
 
 @lcc.prop("testing", "positive")
-@lcc.tags("get_required_fees")
+@lcc.tags("database_api", "get_required_fees")
 @lcc.suite("Positive testing of method 'get_required_fees'", rank=2)
 class PositiveTesting(BaseTest):
 
@@ -116,7 +116,7 @@ class PositiveTesting(BaseTest):
 
 
 @lcc.prop("testing", "negative")
-@lcc.tags("get_required_fees")
+@lcc.tags("database_api", "get_required_fees")
 @lcc.suite("Negative testing of method 'get_required_fees'", rank=3)
 class NegativeTesting(BaseTest):
 
