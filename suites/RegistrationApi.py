@@ -31,10 +31,9 @@ class RegistrationApi(object):
         lcc.set_step("Check Registration api identifier. Call registration api method 'register_account'")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
-        echorand_key = generate_keys[2]
+        memo_key = generate_keys[2]
         callback = get_random_integer
-        account_params = [callback, get_random_valid_account_name, public_key, public_key, public_key,
-                          echorand_key]
+        account_params = [callback, get_random_valid_account_name, public_key, public_key, memo_key, public_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier)
         response = base.get_response(response_id)
         base.get_notice(callback)
@@ -47,9 +46,8 @@ class RegistrationApi(object):
         lcc.set_step("Check that Registration api identifier is unique")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
-        echorand_key = generate_keys[2]
-        account_params = [callback, get_random_valid_account_name, echorand_key, echorand_key, public_key,
-                          echorand_key]
+        memo_key = generate_keys[2]
+        account_params = [callback, get_random_valid_account_name, public_key, public_key, memo_key, public_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier + 1)
         response = base.get_response(response_id, negative=True)
 
@@ -89,8 +87,8 @@ class PositiveTesting(BaseTest):
         callback = get_random_integer
         generate_keys = self.generate_keys()
         public_key = generate_keys[1]
-        echorand_key = generate_keys[2]
-        account_params = [callback, new_account, echorand_key, echorand_key, public_key, echorand_key]
+        memo_key = generate_keys[2]
+        account_params = [callback, new_account, public_key, public_key, memo_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         response = self.get_response(response_id)
@@ -140,13 +138,13 @@ class NegativeTesting(BaseTest):
             random.SystemRandom().choice(string.ascii_lowercase) for _ in range(random_num))
         return random_string
 
-    def _register_account(self, callback, new_account, public_key=None, echorand_key=None):
+    def _register_account(self, callback, new_account, public_key=None, memo_key=None):
         generate_keys = self.generate_keys()
         if public_key is None:
             public_key = generate_keys[1]
-        if echorand_key is None:
-            echorand_key = generate_keys[2]
-        account_params = [callback, new_account, echorand_key, echorand_key, public_key, echorand_key]
+        if memo_key is None:
+            memo_key = generate_keys[2]
+        account_params = [callback, new_account, public_key, public_key, memo_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         return self.get_response(response_id, negative=True)

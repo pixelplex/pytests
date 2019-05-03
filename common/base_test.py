@@ -5,7 +5,6 @@ import os
 import time
 
 from echopy import Echo
-from echopy.echobase import BrainKey
 from lemoncheesecake.matching import is_str, is_integer, check_that_entry
 from websocket import create_connection
 
@@ -33,7 +32,7 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eeth_asset = "1.3.9"
-        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "0"
+        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "7"  # todo: change to 0
         self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
         self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
 
@@ -59,8 +58,17 @@ class BaseTest(object):
         return int(str_value[str_value.rfind('.') + 1:])
 
     @staticmethod
-    def get_byte_code(variable_name):
-        return ECHO_CONTRACTS[variable_name]
+    def get_byte_code(contract_name, code_or_method_name):
+        return ECHO_CONTRACTS[contract_name][code_or_method_name]
+
+    def get_byte_code_param(self, param):
+        if self.validator.is_object_id(param):
+            param = hex(int(param.split('.')[2])).split('x')[-1]
+            hex_param = "0000000000000000000000000000000000000000000000000000000000000000"
+            hex_param = hex_param[:-len(param)] + param
+            return hex_param
+        lcc.log_error("Param not valid, got: {}".format(param))
+        raise Exception("Param not valid")
 
     @staticmethod
     def get_file_attachment_path(file_name):
@@ -272,43 +280,56 @@ class BaseTest(object):
         return transfer_id
 
     @staticmethod
-    def get_contract_output(response, in_hex=False):
+    def get_contract_output(response, output_type, in_hex=False, debug_mode=False):
+        contract_output = str(response["result"][1].get("exec_res").get("output"))
+        if debug_mode:
+            lcc.log_debug("Output is '{}'".format(str(contract_output)))
         if in_hex:
-            contract_output = str(response["result"][1].get("exec_res").get("output"))
             return contract_output
-        contract_output = str(
-            codecs.decode(str(response["result"][1].get("exec_res").get("output")), "hex").decode('utf-8'))
-        return contract_output.replace("\u0000", "").replace("\u000e", "")
+        if output_type == str:
+            contract_output = str(codecs.decode(contract_output, "hex").decode('utf-8'))
+            return contract_output.replace("\u0000", "").replace("\u000e", "")
+        if output_type == int:
+            contract_output = int(contract_output, 16)
+            return contract_output
 
     @staticmethod
-    def get_account_details_template(account_name, private_key, public_key, echorand_key):
+    def get_account_details_template(account_name, private_key, public_key, memo_key, brain_key):
+        # todo: remove memo_key later
         return {account_name: {"id": "", "private_key": private_key, "public_key": public_key,
-                               "echorand_key": echorand_key}}
+                               "memo_key": memo_key, "brain_key": brain_key}}
 
+    # todo: remove later
     @staticmethod
-    def generate_keys():
-        brain_key = BrainKey()
-        private_key = str(brain_key.get_private_key())
-        public_key = str(brain_key.get_public_key())
-        echorand_key = str(brain_key.get_echorand_key())
-        return [private_key, public_key, echorand_key]
+    def get_memo_key():
+        return "ECHO7JgjnMroepiCCWyrG3jhWCRswG8CwEkthAZzEpA6HATSqLxduT"
+
+    def generate_keys(self):
+        brain_key_object = self.echo.brain_key()
+        brain_key = brain_key_object.brain_key
+        private_key_base58 = brain_key_object.get_private_key_base58()
+        public_key_base58 = brain_key_object.get_public_key_base58()
+        memo_key = self.get_memo_key()
+        return [private_key_base58, public_key_base58, memo_key, brain_key]
 
     def store_new_account(self, account_name):
         keys = self.generate_keys()
-        private_key = str(keys[0])
-        public_key = str(keys[1])
-        echorand_key = str(keys[2])
-        account_details = self.get_account_details_template(account_name, private_key, public_key, echorand_key)
+        private_key = keys[0]
+        public_key = keys[1]
+        # todo: remove memo_key later
+        memo_key = keys[2]
+        brain_key = keys[3]
+        account_details = self.get_account_details_template(account_name, private_key, public_key, memo_key, brain_key)
         if not os.path.exists(WALLETS):
             with open(WALLETS, "w") as file:
                 file.write(json.dumps(account_details))
-            return [public_key, echorand_key]
+            return [public_key, memo_key]
         with open(WALLETS, "r") as file:
             data = json.load(file)
             data.update(account_details)
             with open(WALLETS, "w") as new_file:
                 new_file.write(json.dumps(data))
-        return [public_key, echorand_key]
+        return [public_key, memo_key]
 
     def get_account_by_name(self, account_name, database_api_identifier, debug_mode=False):
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
@@ -323,7 +344,7 @@ class BaseTest(object):
         public_data = self.store_new_account(account_name)
         self.__id += 1
         callback = self.__id
-        account_params = [callback, account_name, public_data[1], public_data[1], public_data[0], public_data[1]]
+        account_params = [callback, account_name, public_data[0], public_data[0], public_data[1], public_data[0]]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         registration_api_identifier, debug_mode=debug_mode)
         response = self.get_response(response_id, debug_mode=debug_mode)
@@ -399,7 +420,7 @@ class BaseTest(object):
             self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id)
         return list_operations
 
-    def get_contract_result(self, broadcast_result, database_api_identifier, debug_mode=False):
+    def get_contract_result(self, broadcast_result, database_api_identifier, bug=False, debug_mode=False):
         contract_result = self.get_operation_results_ids(broadcast_result)
         if len([contract_result]) != 1:
             lcc.log_error("Need one contract id, got:\n{}".format(contract_result))
@@ -407,6 +428,9 @@ class BaseTest(object):
         if not self.validator.is_contract_result_id(contract_result):
             lcc.log_error("Wrong format of contract result id, got {}".format(contract_result))
             raise Exception("Wrong format of contract result id")
+        # todo: remove split. Bug ECHO-811
+        if bug:
+            contract_result = "1.15." + str((int(contract_result.split('.')[2]) - 1))
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)

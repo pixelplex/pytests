@@ -127,7 +127,7 @@ class NegativeTesting(BaseTest):
         self.amount = 1
         self.transfer_operation_ex = None
         self.transfer_operation = None
-        self.contract = self.get_byte_code("piggy_code")
+        self.contract = self.get_byte_code("piggy", "code")
         self.valid_contract_id = None
         self.nonexistent_asset_id = None
 

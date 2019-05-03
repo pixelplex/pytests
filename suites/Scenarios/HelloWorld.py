@@ -19,10 +19,10 @@ class HelloWorld(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
-        self.contract = self.get_byte_code("piggy_code")
-        self.greet = self.get_byte_code("piggy_greet")
-        self.get_pennie = self.get_byte_code("piggy_getPennie")
-        self.break_piggy = self.get_byte_code("piggy_breakPiggy")
+        self.contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
         self.value_amount = 10
 
     def setup_suite(self):
@@ -53,7 +53,8 @@ class HelloWorld(BaseTest):
                                                                 value_asset_id=self.echo_asset)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        # todo: remove bug=True. Bug ECHO-811
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, bug=True)
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'greet' method")
@@ -64,7 +65,7 @@ class HelloWorld(BaseTest):
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 
         lcc.set_step("Check get 'Hello World!!!'")
-        contract_output = self.get_contract_output(contract_result, in_hex=False)[1:]
+        contract_output = self.get_contract_output(contract_result, output_type=str)[1:]
         check_that(
             "return of method 'greet'",
             contract_output,
