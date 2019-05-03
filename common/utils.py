@@ -57,11 +57,12 @@ class Utils(object):
                                                                      value_amount=value_amount)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
-                                                        log_broadcast=False)
-        contract_result = base_test.get_operation_results_ids(broadcast_result)
+                                                        log_broadcast=True)
+        # todo: remove bug=True. Bug ECHO-811
+        contract_result = base_test.get_operation_results_ids(broadcast_result, bug=True)
         response_id = base_test.send_request(base_test.get_request("get_contract_result", [contract_result]),
                                              database_api_id)
-        contract_id_16 = base_test.get_trx_completed_response(response_id)
+        contract_id_16 = base_test.get_trx_completed_response(response_id, debug_mode=True)
         if not need_broadcast:
             return base_test.get_contract_id(contract_id_16)
         return [base_test.get_contract_id(contract_id_16), broadcast_result]
@@ -143,7 +144,8 @@ class Utils(object):
                                                                       symbol=symbol)
             collected_operation = base_test.collect_operations(operation, database_api_id)
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation)
-            return base_test.get_operation_results_ids(broadcast_result)
+            # todo: remove bug=True. Bug ECHO-811
+            return base_test.get_operation_results_ids(broadcast_result, bug=True)
         return response["result"][0]["id"]
 
     @staticmethod

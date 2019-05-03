@@ -142,7 +142,7 @@
         }
     ],
     "create_contract_operation": [
-        44,
+        40,
         {
             "fee": {
                 "amount": 0,
@@ -159,7 +159,7 @@
         }
     ],
     "call_contract_operation": [
-        45,
+        41,
         {
             "fee": {
                 "amount": 0,
@@ -175,7 +175,7 @@
         }
     ],
     "contract_transfer_operation": [
-        46,
+        42,
         {
             "fee": {
                 "amount": 0,

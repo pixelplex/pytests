@@ -3,7 +3,6 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, equal_to
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Pass asset parameter to solidity, asset integer type"
@@ -51,21 +50,6 @@ class AssetInt(BaseTest):
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, bug=True)
         contract_id = self.get_contract_id(contract_result)
 
-        lcc.set_step("Call 'assetBalance' method")
-        method_params = self.get_byte_code_param(self.echo_acc0) + self.get_byte_code_param(self.echo_asset)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.asset_balance + method_params,
-                                                              callee=contract_id)
-        required_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-
-        lcc.set_step("Get contract output, asset balance")
-        contract_output = self.get_contract_output(contract_result, output_type=int)
-        lcc.log_info("Output: asset balance of '{}' account is '{}' in '{}'".format(self.echo_acc0, contract_output,
-                                                                                    self.echo_asset))
-
         lcc.set_step("Get account balances using database_api")
         params = [self.echo_acc0, [self.echo_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
@@ -77,9 +61,23 @@ class AssetInt(BaseTest):
             "'get_account_balances' method return '{}' balance of '{}' account in '{}'".format(amount, self.echo_acc0,
                                                                                                asset_id))
 
+        lcc.set_step("Call 'assetBalance' method")
+        method_params = self.get_byte_code_param(self.echo_acc0) + self.get_byte_code_param(self.echo_asset)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.asset_balance + method_params,
+                                                              callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier, debug_mode=True)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+
+        lcc.set_step("Get contract output, asset balance")
+        contract_output = self.get_contract_output(contract_result, output_type=int)
+        lcc.log_info("Output: asset balance of '{}' account is '{}' in '{}'".format(self.echo_acc0, contract_output,
+                                                                                    self.echo_asset))
+
         lcc.set_step("Check matching asset balances")
         check_that(
             "asset balances of '{}' account in '{}'".format(self.echo_acc0, self.echo_asset),
-            contract_output - required_fee,
+            contract_output,
             equal_to(amount),
         )

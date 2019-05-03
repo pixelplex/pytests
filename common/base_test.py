@@ -244,14 +244,19 @@ class BaseTest(object):
         if expected_static_variant == 1:
             return self.is_completed_operation_return_id(response)
 
+    # todo: remove bug=False. Bug ECHO-811
     @staticmethod
-    def get_operation_results_ids(response):
+    def get_operation_results_ids(response, bug=False):
         operations_count = response.get("trx").get("operations")
         if len(operations_count) == 1:
             operation_result = response.get("trx").get("operation_results")[0]
             if operation_result[0] != 1:
                 lcc.log_error("Wrong format of operation result, need [0] = 1, got {}".format(operation_result))
                 raise Exception("Wrong format of operation result")
+        # todo: remove bug, split. Bug ECHO-811
+            if bug:
+                result = "1.15." + str((int(operation_result[1].split('.')[2]) - 1))
+                return result
             return operation_result[1]
         operation_results = []
         for i in range(len(operations_count)):
@@ -264,11 +269,11 @@ class BaseTest(object):
     def get_contract_id(self, response, log_response=True):
         contract_identifier_hex = response["result"][1].get("exec_res").get("new_address")
         contract_id = "1.14.{}".format(int(str(contract_identifier_hex)[2:], 16))
-        if log_response:
-            lcc.log_info("Contract identifier is {}".format(contract_id))
         if not self.validator.is_contract_id(contract_id):
             lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
             raise Exception("Wrong format of contract id")
+        if log_response:
+            lcc.log_info("Contract identifier is {}".format(contract_id))
         return contract_id
 
     @staticmethod
@@ -290,8 +295,10 @@ class BaseTest(object):
             contract_output = str(codecs.decode(contract_output, "hex").decode('utf-8'))
             return contract_output.replace("\u0000", "").replace("\u000e", "")
         if output_type == int:
-            contract_output = int(contract_output, 16)
-            return contract_output
+            return int(contract_output, 16)
+        if output_type == "contract_address":
+            contract_id = "1.14.{}".format(int(str(contract_output[contract_output.find("1") + 1:]), 16))
+            return contract_id
 
     @staticmethod
     def get_account_details_template(account_name, private_key, public_key, memo_key, brain_key):
@@ -417,9 +424,10 @@ class BaseTest(object):
         if type(list_operations) is list:
             list_operations = [list_operations.copy()]
         for i in range(len(list_operations)):
-            self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id)
+            self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id, debug_mode)
         return list_operations
 
+    # todo: remove bug=False. Bug ECHO-811
     def get_contract_result(self, broadcast_result, database_api_identifier, bug=False, debug_mode=False):
         contract_result = self.get_operation_results_ids(broadcast_result)
         if len([contract_result]) != 1:
@@ -428,7 +436,7 @@ class BaseTest(object):
         if not self.validator.is_contract_result_id(contract_result):
             lcc.log_error("Wrong format of contract result id, got {}".format(contract_result))
             raise Exception("Wrong format of contract result id")
-        # todo: remove split. Bug ECHO-811
+        # todo: remove split and bug. Bug ECHO-811
         if bug:
             contract_result = "1.15." + str((int(contract_result.split('.')[2]) - 1))
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),

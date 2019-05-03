@@ -151,7 +151,7 @@ class PositiveTesting(BaseTest):
         )
         check_that(
             "'operation id'",
-            response["result"][0]["op"][0], is_integer(44)
+            response["result"][0]["op"][0], is_integer(self.echo.config.operation_ids.CREATE_CONTRACT)
         )
 
     @lcc.prop("type", "method")
