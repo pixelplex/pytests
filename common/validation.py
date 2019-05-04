@@ -31,6 +31,7 @@ class Validator(object):
     transaction_id_regex = re.compile(r"^2\.7\.[1-9]\d*$")
     block_summary_id_regex = re.compile(r"^2\.8\.[1-9]\d*$")
     account_transaction_history_id_regex = re.compile(r"^2\.9\.[1-9]\d*$")
+    contract_history_id_regex = re.compile(r"^2\.16\.[1-9]\d*$")
     hex_regex = re.compile(r"^[0-9a-fA-F]+")
     bytecode_regex = re.compile(r"^[\da-fA-F]{8}([\da-fA-F]{64})*$")
     vote_id_type_regex = re.compile(r"^[0-3]:[0-9]+")
@@ -177,6 +178,10 @@ class Validator(object):
     def is_account_transaction_history_id(self, value):
         if self.is_string(value):
             return bool(self.account_transaction_history_id_regex.match(value))
+
+    def is_contract_history_id(self, value):
+        if self.is_string(value):
+            return bool(self.contract_history_id_regex.match(value))
 
     def is_vote_id(self, value):
         if self.is_string(value):

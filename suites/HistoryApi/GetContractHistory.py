@@ -52,7 +52,7 @@ class GetContractHistory(BaseTest):
 
         lcc.set_step("Perform create contract operation")
         bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
-                                               self.__database_api_identifier, need_broadcast=True)
+                                               self.__database_api_identifier, need_broadcast_result=True)
         contract_id = bd_result[0]
 
         lcc.set_step("Get contract history")
@@ -139,7 +139,6 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Perform create contract operation")
         contract_id = self.utils.get_contract_id(self, self.echo, new_account, self.contract,
                                                  self.__database_api_identifier)
-        lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
 
         lcc.set_step("Get new contract history")
         response = self.get_contract_history(contract_id, stop, limit, start)
@@ -171,7 +170,6 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Perform create contract operation")
         contract_id = self.utils.get_contract_id(self, self.echo, new_account, self.contract,
                                                  self.__database_api_identifier, value_amount=max_limit)
-        lcc.log_info("New Echo contract created, contract_id='{}".format(contract_id))
 
         lcc.set_step("Perform operations using a new account. Call contract operation count equal to limit")
         self.utils.fill_account_history_with_contract_transfer_operation(self, self.echo, new_account, self.get_pennie,
@@ -224,9 +222,8 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Perform create contract operation")
         bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
                                                self.__database_api_identifier, value_amount=value_amount,
-                                               need_broadcast=True)
+                                               need_broadcast_result=True)
         contract_id = bd_result[0]
-        lcc.log_info("New Echo contract created, contract_id='{}".format(contract_id))
         create_contract_operation = bd_result[1]["trx"]["operations"][0]
 
         lcc.set_step("Perform one call contract operation")

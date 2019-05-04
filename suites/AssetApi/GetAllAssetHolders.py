@@ -84,8 +84,7 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("New asset in 'get_all_asset_holders' without holders")
-    @lcc.tags("qa")
-    # @lcc.depends_on("AssetApi.GetAllAssetHolders.GetAllAssetHolders.method_main_check")
+    @lcc.depends_on("AssetApi.GetAllAssetHolders.GetAllAssetHolders.method_main_check")
     def new_asset_without_holders(self, get_random_valid_asset_name):
         self.new_asset_name = get_random_valid_asset_name
         lcc.set_step("Create a new asset and get id new asset")

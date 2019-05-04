@@ -128,7 +128,7 @@ class NegativeTesting(BaseTest):
     def get_random_character(self, random_def, not_hyphen=False):
         character = random_def
         if not_hyphen and character == "-":
-            return self.get_random_character(random_def)
+            return self.get_random_character(random_def, not_hyphen=True)
         return character
 
     @staticmethod

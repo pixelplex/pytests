@@ -55,6 +55,12 @@ class Receiver(object):
                     "The object with the results of the implementation of contracts of the block:\n{}".format(
                         json.dumps(response, indent=4)))
             return notice_obj
+        if (self.validator.is_contract_history_id(actual_id)) and (actual_id.startswith(expected_id)):
+            if logging:
+                lcc.log_info(
+                    "Received notice about the update of contract history object:\n{}".format(
+                        json.dumps(response, indent=4)))
+            return notice_obj
         lcc.log_error(
             "Not valid object id, got '{}' but expected '{}', response: {}".format(actual_id, expected_id,
                                                                                    json.dumps(response, indent=4)))

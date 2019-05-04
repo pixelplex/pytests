@@ -44,7 +44,7 @@ class Utils(object):
         return "1.3.{}".format(str(int(sorted_list_asset_ids[-1][4:]) + 1))
 
     def get_contract_id(self, base_test, echo, registrar, contract_bytecode, database_api_id, value_amount=0,
-                        operation_count=1, need_broadcast=False):
+                        operation_count=1, need_broadcast_result=False):
         if registrar != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, echo, registrar, database_api_id,
                                                                contract_bytecode=contract_bytecode,
@@ -62,8 +62,8 @@ class Utils(object):
         contract_result = base_test.get_operation_results_ids(broadcast_result, bug=True)
         response_id = base_test.send_request(base_test.get_request("get_contract_result", [contract_result]),
                                              database_api_id)
-        contract_id_16 = base_test.get_trx_completed_response(response_id, debug_mode=True)
-        if not need_broadcast:
+        contract_id_16 = base_test.get_trx_completed_response(response_id)
+        if not need_broadcast_result:
             return base_test.get_contract_id(contract_id_16)
         return [base_test.get_contract_id(contract_id_16), broadcast_result]
 

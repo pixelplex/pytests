@@ -40,6 +40,12 @@ class BaseTest(object):
     def create_connection_to_echo():
         return create_connection(url=BASE_URL)
 
+    def get_object_type(self, object_types):
+        return "{}.{}.".format(self.echo.config.reserved_spaces.PROTOCOL_IDS, object_types)
+
+    def get_implementation_object_type(self, implementation_object_types):
+        return "{}.{}.".format(self.echo.config.reserved_spaces.IMPLEMENTATION_IDS, implementation_object_types)
+
     def check_uint64_numbers(self, response, key, quiet=False):
         if type(response.get(key)) is str:
             self.validator.is_uint64(response.get(key))
@@ -171,7 +177,7 @@ class BaseTest(object):
         except IndexError as index:
             lcc.log_error("Response: This index does not exist: '{}'".format(index))
 
-    def get_notice(self, id_response, object_id=None, log_response=False, debug_mode=False):
+    def get_notice(self, id_response, object_id=None, notices_list=False, log_response=True, debug_mode=False):
         # Receive notice from server
         try:
             if debug_mode:
@@ -179,6 +185,11 @@ class BaseTest(object):
                 response = json.loads(self.ws.recv())
                 lcc.log_debug("Received:\n{}".format(json.dumps(response, indent=4)))
                 return response
+            if notices_list:
+                notice = json.loads(self.ws.recv())
+                if log_response:
+                    lcc.log_info("Received notice with list of notifications:\n{}".format(json.dumps(notice, indent=4)))
+                return notice["params"][1][0]
             return self.receiver.get_notice(id_response, object_id, log_response)
         except KeyError as key:
             lcc.log_error("Notice: That key does not exist: '{}'".format(key))
@@ -253,7 +264,7 @@ class BaseTest(object):
             if operation_result[0] != 1:
                 lcc.log_error("Wrong format of operation result, need [0] = 1, got {}".format(operation_result))
                 raise Exception("Wrong format of operation result")
-        # todo: remove bug, split. Bug ECHO-811
+            # todo: remove bug, split. Bug ECHO-811
             if bug:
                 result = "1.15." + str((int(operation_result[1].split('.')[2]) - 1))
                 return result
@@ -273,7 +284,7 @@ class BaseTest(object):
             lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
             raise Exception("Wrong format of contract id")
         if log_response:
-            lcc.log_info("Contract identifier is {}".format(contract_id))
+            lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
     @staticmethod

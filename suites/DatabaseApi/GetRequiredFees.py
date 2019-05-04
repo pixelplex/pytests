@@ -162,7 +162,6 @@ class NegativeTesting(BaseTest):
         lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
         self.valid_contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
                                                             self.__database_api_identifier)
-        lcc.log_info("New Echo contract created, contract_id='{}".format(self.valid_contract_id))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
