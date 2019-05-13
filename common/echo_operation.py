@@ -19,7 +19,7 @@ class EchoOperations(object):
         """
         :param signer: name, id or private_key
         """
-        if self.validator.is_private_key(signer):
+        if self.validator.is_echo_rand_key(signer):
             return signer
         wallets = json.load(open(WALLETS))
         if self.validator.is_account_name(signer):
@@ -57,25 +57,16 @@ class EchoOperations(object):
             return [operation_id, transfer_props, from_account_id]
         return [operation_id, transfer_props, signer]
 
-    def get_account_create_operation(self, echo, name, owner_key_auths, active_key_auths, ed_key, options_memo_key,
+    def get_account_create_operation(self, echo, name, active_key_auths, ed_key, options_memo_key,
                                      fee_amount=0, fee_asset_id="1.3.0", registrar="1.2.12", referrer="1.2.12",
-                                     referrer_percent=7500, owner_weight_threshold=1, owner_account_auths=None,
-                                     owner_address_auths=None, active_weight_threshold=1, active_account_auths=None,
-                                     active_address_auths=None, options_voting_account="1.2.5",
-                                     options_delegating_account="1.2.12", options_num_committee=0, options_votes=None,
-                                     options_extensions=None, signer=None, debug_mode=False):
-        if isinstance(owner_key_auths, str):
-            owner_key_auths = [[owner_key_auths, 1]]
-        if owner_account_auths is None:
-            owner_account_auths = []
-        if owner_address_auths is None:
-            owner_address_auths = []
+                                     referrer_percent=7500, active_weight_threshold=1, active_account_auths=None,
+                                     options_voting_account="1.2.5", options_delegating_account="1.2.12",
+                                     options_num_committee=0, options_votes=None, options_extensions=None, signer=None,
+                                     debug_mode=False):
         if isinstance(active_key_auths, str):
             active_key_auths = [[active_key_auths, 1]]
         if active_account_auths is None:
             active_account_auths = []
-        if active_address_auths is None:
-            active_address_auths = []
         if options_votes is None:
             options_votes = []
         if options_extensions is None:
@@ -86,12 +77,9 @@ class EchoOperations(object):
         account_create_props.update(
             {"registrar": registrar, "referrer": referrer, "referrer_percent": referrer_percent, "name": name,
              "ed_key": ed_key})
-        account_create_props["owner"].update(
-            {"weight_threshold": owner_weight_threshold, "account_auths": owner_account_auths,
-             "key_auths": owner_key_auths, "address_auths": owner_address_auths})
         account_create_props["active"].update(
             {"weight_threshold": active_weight_threshold, "account_auths": active_account_auths,
-             "key_auths": active_key_auths, "address_auths": active_address_auths})
+             "key_auths": active_key_auths})
         account_create_props["options"].update(
             {"memo_key": options_memo_key, "voting_account": options_voting_account,
              "delegating_account": options_delegating_account, "num_committee": options_num_committee,

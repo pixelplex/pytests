@@ -46,8 +46,7 @@ class AssetInt(BaseTest):
                                                                 bytecode=self.contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        # todo: remove bug=True. Bug ECHO-811
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, bug=True)
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Get account balances using database_api")
@@ -56,6 +55,8 @@ class AssetInt(BaseTest):
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         amount = response["result"][0]["amount"]
+        if isinstance(amount, str):
+            amount = int(amount)
         asset_id = response["result"][0]["asset_id"]
         lcc.log_info(
             "'get_account_balances' method return '{}' balance of '{}' account in '{}'".format(amount, self.echo_acc0,
@@ -66,7 +67,7 @@ class AssetInt(BaseTest):
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.asset_balance + method_params,
                                                               callee=contract_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier, debug_mode=True)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 

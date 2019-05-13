@@ -53,8 +53,7 @@ class HelloWorld(BaseTest):
                                                                 value_asset_id=self.echo_asset)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        # todo: remove bug=True. Bug ECHO-811
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, bug=True)
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'greet' method")

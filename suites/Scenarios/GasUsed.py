@@ -89,8 +89,7 @@ class GasUsed(BaseTest):
         lcc.set_step("Create 'Piggy' contract in the Echo network. Store gas_used")
         self.add_fee_to_operation(operation, self.__database_api_identifier, fee_amount=self.enough_fee_amount)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=operation)
-        # todo: remove bug=True. Bug ECHO-811
-        contract_result = self.get_operation_results_ids(broadcast_result, bug=True)
+        contract_result = self.get_operation_results_ids(broadcast_result)
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         self.__database_api_identifier)
         response = self.get_trx_completed_response(response_id)

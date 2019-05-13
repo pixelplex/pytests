@@ -58,7 +58,7 @@ class GetContractHistory(BaseTest):
         lcc.set_step("Get contract history")
         params = [contract_id, stop, limit, start]
         response_id = self.send_request(self.get_request("get_contract_history", params), self.__history_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
         lcc.log_info("Call method 'get_contract_history' with: contract_id='{}', stop='{}', limit='{}', start='{}' "
                      "parameters".format(contract_id, stop, limit, start))
 

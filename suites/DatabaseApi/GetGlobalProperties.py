@@ -20,8 +20,7 @@ class GetGlobalProperties(BaseTest):
     def __init__(self):
         super().__init__()
         self.__api_identifier = None
-        # todo: change to 'self.echo.config.operation_ids.__dict__' when update echopy-lib (echo v.0.4.0)
-        self.all_operations = None
+        self.all_operations = self.echo.config.operation_ids.__dict__
 
     @staticmethod
     def no_fee(actual_fee):
@@ -71,12 +70,6 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("fee", is_integer(), quiet=True)
                 check_that_entry("price_per_output", is_integer(), quiet=True)
 
-    # todo: remove when update echopy-lib (echo v.0.4.0)
-    def get_operations_in_current_fees(self):
-        operations = dict(self.echo.config.operation_ids.__dict__)
-        del operations["CHANGE_SIDECHAIN_CONFIG"]
-        return operations
-
     def check_default_fee_for_operation(self, current_fees, operations, check_kind):
         for i in range(len(operations)):
             for j in range(len(current_fees)):
@@ -91,8 +84,6 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__api_identifier = self.get_identifier("database")
         lcc.log_info("Database API identifier is '{}'".format(self.__api_identifier))
-        # todo: remove when update echopy-lib (echo v.0.4.0)
-        self.all_operations = self.get_operations_in_current_fees()
 
     @lcc.prop("type", "method")
     @lcc.test("Check all fields in global properties")
@@ -157,7 +148,8 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            len(current_fees["parameters"]), is_(len(self.all_operations))
+            # todo: Delete '+1' when 43 operation will be deleted
+            len(current_fees["parameters"]), is_(len(self.all_operations) + 1)
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")

@@ -23,6 +23,7 @@ class Validator(object):
     contract_result_id_regex = re.compile(r"^1\.15\.[1-9]\d*$")
     block_id_regex = re.compile(r"^1\.16\.[1-9]\d*$")
     transfer_id_regex = re.compile(r"^1\.17\.[1-9]\d*$")
+    global_object_id_regex = re.compile(r"^2.0.0$")
     dynamic_global_object_id_regex = re.compile(r"^2.1.0$")
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
     bit_asset_id_regex = re.compile(r"^2\.4\.(0|[1-9]\d*)$")
@@ -31,6 +32,7 @@ class Validator(object):
     transaction_id_regex = re.compile(r"^2\.7\.[1-9]\d*$")
     block_summary_id_regex = re.compile(r"^2\.8\.[1-9]\d*$")
     account_transaction_history_id_regex = re.compile(r"^2\.9\.[1-9]\d*$")
+    chain_property_object_id_regex = re.compile(r"^2.10.0$")
     contract_history_id_regex = re.compile(r"^2\.16\.[1-9]\d*$")
     hex_regex = re.compile(r"^[0-9a-fA-F]+")
     bytecode_regex = re.compile(r"^[\da-fA-F]{8}([\da-fA-F]{64})*$")
@@ -147,6 +149,10 @@ class Validator(object):
         if self.is_string(value):
             return bool(self.transfer_id_regex.match(value))
 
+    def is_global_object_id(self, value):
+        if self.is_string(value):
+            return bool(self.global_object_id_regex.match(value))
+
     def is_dynamic_global_object_id(self, value):
         if self.is_string(value):
             return bool(self.dynamic_global_object_id_regex.match(value))
@@ -179,6 +185,10 @@ class Validator(object):
         if self.is_string(value):
             return bool(self.account_transaction_history_id_regex.match(value))
 
+    def is_chain_property_object_id(self, value):
+        if self.is_string(value):
+            return bool(self.chain_property_object_id_regex.match(value))
+
     def is_contract_history_id(self, value):
         if self.is_string(value):
             return bool(self.contract_history_id_regex.match(value))
@@ -201,6 +211,9 @@ class Validator(object):
 
     def is_int64(self, value):
         return self.is_int(value, 64)
+
+    def is_uint256(self, value):
+        return self.is_int(value, 256)
 
     @staticmethod
     def is_asset_name(value):

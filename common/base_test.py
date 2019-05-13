@@ -32,7 +32,7 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eeth_asset = "1.3.9"
-        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "7"  # todo: change to 0
+        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "0"
         self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
         self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
 
@@ -255,19 +255,14 @@ class BaseTest(object):
         if expected_static_variant == 1:
             return self.is_completed_operation_return_id(response)
 
-    # todo: remove bug=False. Bug ECHO-811
     @staticmethod
-    def get_operation_results_ids(response, bug=False):
+    def get_operation_results_ids(response):
         operations_count = response.get("trx").get("operations")
         if len(operations_count) == 1:
             operation_result = response.get("trx").get("operation_results")[0]
             if operation_result[0] != 1:
                 lcc.log_error("Wrong format of operation result, need [0] = 1, got {}".format(operation_result))
                 raise Exception("Wrong format of operation result")
-            # todo: remove bug, split. Bug ECHO-811
-            if bug:
-                result = "1.15." + str((int(operation_result[1].split('.')[2]) - 1))
-                return result
             return operation_result[1]
         operation_results = []
         for i in range(len(operations_count)):
@@ -317,7 +312,7 @@ class BaseTest(object):
         return {account_name: {"id": "", "private_key": private_key, "public_key": public_key,
                                "memo_key": memo_key, "brain_key": brain_key}}
 
-    # todo: remove later
+    # todo: remove get_memo_key later
     @staticmethod
     def get_memo_key():
         return "ECHO7JgjnMroepiCCWyrG3jhWCRswG8CwEkthAZzEpA6HATSqLxduT"
@@ -370,7 +365,7 @@ class BaseTest(object):
             lcc.log_error(
                 "Account '{}' not registered, response:\n{}".format(account_name, json.dumps(response, indent=4)))
             raise Exception("Account not registered.")
-        self.get_notice(callback, debug_mode=debug_mode)
+        self.get_notice(callback, log_response=debug_mode, debug_mode=debug_mode)
         response = self.get_account_by_name(account_name, database_api_identifier, debug_mode=debug_mode)
         account_id = response.get("result").get("id")
         with open(WALLETS, "r") as file:
@@ -438,8 +433,7 @@ class BaseTest(object):
             self.add_fee_to_operation(list_operations[i], database_api_identifier, fee_amount, fee_asset_id, debug_mode)
         return list_operations
 
-    # todo: remove bug=False. Bug ECHO-811
-    def get_contract_result(self, broadcast_result, database_api_identifier, bug=False, debug_mode=False):
+    def get_contract_result(self, broadcast_result, database_api_identifier, debug_mode=False):
         contract_result = self.get_operation_results_ids(broadcast_result)
         if len([contract_result]) != 1:
             lcc.log_error("Need one contract id, got:\n{}".format(contract_result))
@@ -447,9 +441,6 @@ class BaseTest(object):
         if not self.validator.is_contract_result_id(contract_result):
             lcc.log_error("Wrong format of contract result id, got {}".format(contract_result))
             raise Exception("Wrong format of contract result id")
-        # todo: remove split and bug. Bug ECHO-811
-        if bug:
-            contract_result = "1.15." + str((int(contract_result.split('.')[2]) - 1))
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
@@ -493,15 +484,13 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
-    # todo: remove 'registration_api'
-    def perform_pre_deploy_setup(self, database_api_identifier, registration_api):
+    def perform_pre_deploy_setup(self, database_api_identifier):
         self._connect_to_echopy_lib()
         lcc.set_step("Pre-deploy setup")
-        lcc.log_info("Empty node. Start pre-run setup...")
+        lcc.log_info("Empty node. Start pre-deploy setup...")
         if os.path.exists(WALLETS):
             os.remove(WALLETS)
-        # todo: remove 'registration_api'
-        pre_deploy_echo(self, database_api_identifier, lcc, registration_api)
+        pre_deploy_echo(self, database_api_identifier, lcc)
         lcc.log_info("Pre-deploy setup completed successfully")
         self._disconnect_to_echopy_lib()
 
@@ -519,8 +508,7 @@ class BaseTest(object):
         if EMPTY_NODE:
             database_api_identifier = self.get_identifier("database")
             if not self.check_node_status(database_api_identifier):
-                # todo: remove 'registration_api'
-                self.perform_pre_deploy_setup(database_api_identifier, self.get_identifier("registration"))
+                self.perform_pre_deploy_setup(database_api_identifier)
 
     def teardown_suite(self):
         # Close connection to WebSocket

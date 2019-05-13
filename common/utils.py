@@ -58,8 +58,7 @@ class Utils(object):
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
                                                         log_broadcast=True)
-        # todo: remove bug=True. Bug ECHO-811
-        contract_result = base_test.get_operation_results_ids(broadcast_result, bug=True)
+        contract_result = base_test.get_operation_results_ids(broadcast_result)
         response_id = base_test.send_request(base_test.get_request("get_contract_result", [contract_result]),
                                              database_api_id)
         contract_id_16 = base_test.get_trx_completed_response(response_id)
@@ -144,8 +143,7 @@ class Utils(object):
                                                                       symbol=symbol)
             collected_operation = base_test.collect_operations(operation, database_api_id)
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation)
-            # todo: remove bug=True. Bug ECHO-811
-            return base_test.get_operation_results_ids(broadcast_result, bug=True)
+            return base_test.get_operation_results_ids(broadcast_result)
         return response["result"][0]["id"]
 
     @staticmethod
