@@ -16,6 +16,12 @@ The project is intended for testing Echo. Includes testing:
 
 ## Usage
 
+### Attention:
+Before running the tests, you must specify a environment variable '*BASE_URL*'. For this you need:
+* Linux OS: export BASE_URL=_[needed_url]()_
+* Windows OS: set BASE_URL=_[needed_url]()_
+
+After that you can use following commands:
     
 **Filter**                       | **lcc commands**
 ---------------------------------|----------------------

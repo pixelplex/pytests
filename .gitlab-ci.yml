@@ -1,0 +1,13 @@
+test:
+  before_script:
+    - $(aws ecr get-login --no-include-email --region eu-central-1)
+  script:
+    - docker-compose pull
+    - docker-compose up --build --exit-code-from=pytests
+  after_script:
+    - docker-compose rm -fv
+  tags:
+    - echo-linux
+  only:
+    - web
+    - trigger
