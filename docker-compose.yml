@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+
+  pytests:
+    environment:
+      - BASE_URL=ws://echo:6311/ws
+    build: .
+    container_name: '631.echo.pytests.${ENV}'
+
+  echo:
+    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
+    container_name: '631.echo.node.${ENV}'
+    hostname: 'echo'
+    command: "/echo/echo_node --echorand --data-dir=/echo/datadir/
+      --rpc-endpoint=0.0.0.0:6311
+      --start-echorand --account-info=[\\\"1.2.6\\\",\\\"DET3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy\\\"]
+      --account-info=[\\\"1.2.7\\\",\\\"DETGcaFAkALQkcgQs6x6QcYW57VhA6bENV8uS3HtPXWZpZC\\\"]
+      --account-info=[\\\"1.2.8\\\",\\\"DETECPcpfciywCVugxq99PSGLs6rARHwL4VG9D6hs4WxkF3\\\"]
+      --account-info=[\\\"1.2.9\\\",\\\"DETBqxxGJpc3iMER81cFhnKZFAHB4fmjP4dv1WykZAefg9v\\\"]
+      --account-info=[\\\"1.2.10\\\",\\\"DET5oLTA94JqbUGVskymaykqudd7DM6sjmEjrYvzZjSRsRt\\\"]
+      --account-info=[\\\"1.2.11\\\",\\\"DET4ov3GEahUVkVdARNKFZVfsaZgJof8oQyB8nZB5K44i3t\\\"]
+      --account-info=[\\\"1.2.12\\\",\\\"DET9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw\\\"]
+      --registrar-account=\\\"1.2.8\\\"
+      --api-access=/echo/access.json"
+    ports:
+      - 56451:6311
