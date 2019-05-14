@@ -51,8 +51,7 @@
             "active": {
                 "weight_threshold": 0,
                 "account_auths": [],
-                "key_auths": [],
-                "address_auths": []
+                "key_auths": []
             },
             "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
             "options": {
@@ -77,8 +76,7 @@
             "active": {
                 "weight_threshold": 0,
                 "account_auths": [],
-                "key_auths": [],
-                "address_auths": []
+                "key_auths": []
             },
             "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
             "new_options": {

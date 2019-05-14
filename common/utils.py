@@ -66,8 +66,8 @@ class Utils(object):
             return base_test.get_contract_id(contract_id_16)
         return [base_test.get_contract_id(contract_id_16), broadcast_result]
 
-    def fill_account_history_with_contract_transfer_operation(self, base_test, echo, registrar, method_bytecode,
-                                                              database_api_id, contract_id, operation_count=1):
+    def perform_contract_transfer_operation(self, base_test, echo, registrar, method_bytecode, database_api_id,
+                                            contract_id, operation_count=1):
         if registrar != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, echo, registrar, database_api_id,
                                                                method_bytecode=method_bytecode, callee=contract_id,
@@ -88,8 +88,8 @@ class Utils(object):
                                                         log_broadcast=True)
         return broadcast_result
 
-    def fill_account_history_with_transfer_operations(self, base_test, echo, account_1, account_2, database_api_id,
-                                                      transfer_amount=1, operation_count=1):
+    def perform_transfer_operations(self, base_test, echo, account_1, account_2, database_api_id, transfer_amount=1,
+                                    operation_count=1):
         add_balance_operation = 0
         if account_1 != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, echo, account_1, database_api_id,
@@ -112,8 +112,8 @@ class Utils(object):
                                                         log_broadcast=False)
         return broadcast_result
 
-    def fill_account_history_with_asset_create_operation(self, base_test, echo, registrar, asset_name, database_api_id,
-                                                         operation_count=1):
+    def perform_asset_create_operation(self, base_test, echo, registrar, asset_name, database_api_id,
+                                       operation_count=1):
         if registrar != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, echo, registrar, database_api_id,
                                                                asset_name=asset_name,

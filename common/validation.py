@@ -217,8 +217,8 @@ class Validator(object):
 
     @staticmethod
     def is_asset_name(value):
-        return bool(value is not None and len(value.split(".")) <= 2 and 3 <= len(value) <= 16 and
-                    re.match(r"^[A-Z][A-Z\d.]*[A-Z]$", value))
+        return bool(value is not None and len(value.split(".")) <= 2 and 3 <= len(value) <= 16 and re.match(
+            r"^[A-Z][A-Z\d.]*[A-Z]$", value))
 
     def is_account_name(self, value):
         if not self.is_string(value):

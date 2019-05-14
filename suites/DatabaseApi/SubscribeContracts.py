@@ -144,19 +144,26 @@ class PositiveTesting(BaseTest):
         return response
 
     @staticmethod
-    def check_operations_ids_in_notice(response, notice):
+    def check_operations_ids_in_notice(response, notice, contract_id):
         counter = 0
         for i in range(len(response)):
             operation_history_id = response[i]["id"]
             for j in range(len(response)):
+                notice_id = notice[j]["id"]
+                notice_contract_id = notice[j]["contract"]
                 notice_operation_history_id = notice[j]["operation_id"]
                 if notice_operation_history_id != operation_history_id:
                     if counter != len(response):
                         counter += 1
                         continue
                     lcc.log_error("No '{}' operation in the notice".format(operation_history_id))
-                lcc.log_info("Operations are the same. Object #{} has operation '{}' like contract history='{}'".format(
-                    i, notice_operation_history_id, operation_history_id))
+                if notice_contract_id != contract_id:
+                    lcc.log_error("Notice has incorrect contract id, got '{}', but need '{}'".format(notice_contract_id,
+                                                                                                     contract_id))
+                lcc.log_info("Received and check notice with id '{}'".format(notice_id))
+                lcc.log_info("Notice has correct contract id: '{}'".format(notice_contract_id))
+                lcc.log_info("Operations are the same: notice has operation '{}' like contract history='{}'".format(
+                    notice_operation_history_id, operation_history_id))
                 break
 
     def setup_suite(self):
@@ -227,11 +234,7 @@ class PositiveTesting(BaseTest):
         response = self.get_contract_history(contract_id, limit=2)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        for i in range(len(response)):
-            lcc.log_info("Check object #{} in notice".format(i))
-            with this_dict(notice[i]):
-                check_that_entry("contract", equal_to(contract_id))
-        self.check_operations_ids_in_notice(response, notice)
+        self.check_operations_ids_in_notice(response, notice, contract_id)
 
         lcc.set_step("Call 'breakPiggy' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
@@ -246,11 +249,7 @@ class PositiveTesting(BaseTest):
         response = self.get_contract_history(contract_id, limit=2)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        for i in range(len(response)):
-            lcc.log_info("Check object #{} in notice".format(i))
-            with this_dict(notice[i]):
-                check_that_entry("contract", equal_to(contract_id))
-        self.check_operations_ids_in_notice(response, notice)
+        self.check_operations_ids_in_notice(response, notice, contract_id)
 
     @lcc.prop("type", "method")
     @lcc.test("Check notices of contract created by another contract")
@@ -311,8 +310,4 @@ class PositiveTesting(BaseTest):
         response = self.get_contract_history(created_contract_id, limit=2, log_response=True)["result"]
 
         lcc.set_step("Check notice about updated contract history created by another contract")
-        for i in range(len(response)):
-            lcc.log_info("Check object #{} in notice".format(i))
-            with this_dict(notice[i]):
-                check_that_entry("contract", equal_to(contract_id))
-        self.check_operations_ids_in_notice(response, notice)
+        self.check_operations_ids_in_notice(response, notice, created_contract_id)

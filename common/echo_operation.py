@@ -90,6 +90,33 @@ class EchoOperations(object):
             return [operation_id, account_create_props, registrar]
         return [operation_id, account_create_props, signer]
 
+    def get_account_update_operation(self, echo, account, weight_threshold=None, account_auths=None, key_auths=None,
+                                     ed_key=None, memo_key=None, voting_account=None, delegating_account=None,
+                                     num_committee=None, votes=None, fee_amount=0, fee_asset_id="1.3.0",
+                                     debug_mode=False):
+        operation_id = echo.config.operation_ids.ACCOUNT_UPDATE
+        account_update_props = deepcopy(self.get_operation_json("account_update_operation"))
+        account_update_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        account_update_props.update({"account": account})
+        if weight_threshold is not None:
+            account_update_props["active"].update(
+                {"weight_threshold": weight_threshold, "account_auths": account_auths, "key_auths": key_auths})
+        else:
+            del account_update_props["active"]
+        if ed_key is not None:
+            account_update_props.update({"ed_key": ed_key})
+        else:
+            del account_update_props["ed_key"]
+        if voting_account is not None:
+            account_update_props["new_options"].update(
+                {"memo_key": memo_key, "voting_account": voting_account, "delegating_account": delegating_account,
+                 "num_committee": num_committee, "votes": votes})
+        else:
+            del account_update_props["new_options"]
+        if debug_mode:
+            lcc.log_debug("Update account operation: \n{}".format(json.dumps(account_update_props, indent=4)))
+        return [operation_id, account_update_props, account]
+
     def get_asset_create_operation(self, echo, issuer, symbol, precision=0, fee_amount=0, fee_asset_id="1.3.0",
                                    max_supply="1000000000000000", market_fee_percent=0,
                                    max_market_fee="1000000000000000",

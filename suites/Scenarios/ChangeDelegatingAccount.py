@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, not_equal_to, equal_to
+from lemoncheesecake.matching import check_that, not_equal_to, equal_to, require_that
 
 from common.base_test import BaseTest
 
@@ -54,32 +54,43 @@ class ChangeDelegatingAccount(BaseTest):
         lcc.log_info("Current delegating account of '{}' is '{}'".format(new_account, current_delegating_account))
 
         lcc.set_step("Add assets to a new account to pay a fee")
-        operation = [
-            6,
-            {
-                "fee": {
-                    "amount": 0,
-                    "asset_id": "1.3.0"
-                },
-                "account": new_account,
-                "new_options": {
-                    "memo_key": response["result"][0]["options"]["memo_key"],
-                    "voting_account": response["result"][0]["options"]["voting_account"],
-                    "delegating_account": self.echo_acc0,
-                    "num_committee": response["result"][0]["options"]["num_committee"],
-                    "votes": response["result"][0]["options"]["votes"],
-                },
-            }
-            ,
-            new_account]
+        # operation = [
+        #     6,
+        #     {
+        #         "fee": {
+        #             "amount": 0,
+        #             "asset_id": "1.3.0"
+        #         },
+        #         "account": new_account,
+        #         "new_options": {
+        #             "memo_key": response["result"][0]["options"]["memo_key"],
+        #             "voting_account": response["result"][0]["options"]["voting_account"],
+        #             "delegating_account": self.echo_acc0,
+        #             "num_committee": response["result"][0]["options"]["num_committee"],
+        #             "votes": response["result"][0]["options"]["votes"],
+        #         },
+        #     }
+        #     ,
+        #     new_account]
+        old_options = response["result"][0]["options"]
+        operation = self.echo_ops.get_account_update_operation(echo=self.echo, account=new_account,
+                                                               memo_key=old_options["memo_key"],
+                                                               voting_account=old_options["voting_account"],
+                                                               delegating_account=self.echo_acc0,
+                                                               num_committee=old_options["num_committee"],
+                                                               votes=old_options["votes"])
+
         fee = self.get_required_fee(operation, self.__database_api_identifier)[0].get("amount")
-        self.utils.fill_account_history_with_transfer_operations(self, self.echo, self.echo_acc0, new_account,
-                                                                 self.__database_api_identifier,
-                                                                 transfer_amount=fee)
-        operation[1].get("fee").update({"amount": fee})
+        self.utils.perform_transfer_operations(self, self.echo, self.echo_acc0, new_account,
+                                               self.__database_api_identifier, transfer_amount=fee)
+        lcc.log_info("Needed amount '{}' to pay fee added to account '{}'".format(fee, new_account))
 
         lcc.set_step("Perform 'account_update_operation' to change delegating_account")
-        self.echo_ops.broadcast(echo=self.echo, list_operations=operation, debug_mode=True)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier, debug_mode=True)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        if not self.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception("Account '{}' did not updated".format(new_account))
+        lcc.log_info("Account '{}' successfully updated".format(new_account))
 
         lcc.set_step("Get info about account and store new 'delegating_account'")
         response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
@@ -89,7 +100,7 @@ class ChangeDelegatingAccount(BaseTest):
         lcc.log_info("New delegating account of '{}' is '{}'".format(new_account, new_delegating_account))
 
         lcc.set_step("Check that 'delegating_account' is updated")
-        check_that(
+        require_that(
             "new 'delegating_account'",
             new_delegating_account, not_equal_to(current_delegating_account)
         )
