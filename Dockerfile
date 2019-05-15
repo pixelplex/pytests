@@ -18,4 +18,4 @@ RUN pip3 install -r requirements.txt
 
 RUN git clone https://github.com/vishnubob/wait-for-it.git
 
-CMD ["lcc", "run", "--exit-error-on-failure", "||", "lcc", "report", "--failed"]
+CMD ["lcc", "run", "--exit-error-on-failure"]
