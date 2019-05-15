@@ -46,7 +46,7 @@ def register_default_accounts(base_test, database_api):
         collected_operation = base_test.collect_operations(operation, database_api)
         list_operations.append(collected_operation)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
-                                                    log_broadcast=True)
+                                                    log_broadcast=False)
     if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
         raise Exception("Default accounts are not created")
     for i in range(DEFAULT_ACCOUNT_COUNT):
