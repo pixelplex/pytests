@@ -140,7 +140,7 @@ class HelloWorld(BaseTest):
             is_integer(0)
         )
 
-        lcc.set_step("Check that contract to be 'suicided=True'")
+        lcc.set_step("Check that contract to be 'destroyed=True'")
         response_id = self.send_request(self.get_request("get_objects", [[contract_id]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
