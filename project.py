@@ -13,10 +13,8 @@ RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
 
 if "BASE_URL" not in os.environ:
     BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
-    print("\n!!! {}\n".format(BASE_URL))
 else:
     BASE_URL = os.environ["BASE_URL"]
-    print("\n??? {}\n".format(BASE_URL))
 
 if "EMPTY_NODE" in os.environ and os.environ["EMPTY_NODE"] == "False":
     EMPTY_NODE = False

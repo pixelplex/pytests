@@ -114,7 +114,7 @@ class GetGlobalProperties(BaseTest):
     def method_main_check(self):
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_global_properties'")
 
         lcc.set_step("Check main fields")
@@ -172,8 +172,8 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            # todo: Delete '+1' when 43 operation will be deleted
-            len(current_fees["parameters"]), is_(len(self.all_operations) + 1)
+            # todo: Delete '-7' when 44 for 50 operations will be added
+            len(current_fees["parameters"]), is_(len(self.all_operations) - 7)
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
@@ -189,7 +189,8 @@ class GetGlobalProperties(BaseTest):
                       "withdraw_permission_update", "withdraw_permission_delete", "committee_member_create",
                       "committee_member_update", "committee_member_update_global_parameters", "vesting_balance_create",
                       "vesting_balance_withdraw", "worker_create", "assert", "transfer_from_blind", "asset_claim_fees",
-                      "bid_collateral", "create_contract", "call_contract", "contract_transfer"]
+                      "bid_collateral", "create_contract", "call_contract", "contract_transfer",
+                      "change_sidechain_config"]
         self.check_default_fee_for_operation(current_fees["parameters"], operations, self.only_fee)
 
         lcc.set_step("Check 'no_fee' for operations")
