@@ -9,6 +9,7 @@ class Validator(object):
     id_regex = re.compile(r"^(0|([1-9]\d*\.)){2}(0|([1-9]\d*))$")
     account_id_regex = re.compile(r"^1\.2\.(0|[1-9]\d*)$")
     asset_id_regex = re.compile(r"^1\.3\.(0|[1-9]\d*)$")
+    eth_asset_id_regex = re.compile(r"^1.3.1$")
     force_settlement_id_regex = re.compile(r"^1\.4\.[1-9]\d*$")
     committee_member_id_regex = re.compile(r"^1\.5\.(0|[1-9]\d*)$")
     limit_order_id_regex = re.compile(r"^1\.6\.[1-9]\d*$")
@@ -28,7 +29,7 @@ class Validator(object):
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
     bit_asset_id_regex = re.compile(r"^2\.4\.(0|[1-9]\d*)$")
     account_balance_id_regex = re.compile(r"^2\.5\.[1-9]\d*$")
-    account_statistics_id_regex = re.compile(r"^2\.6\.[1-9]\d*$")
+    account_statistics_id_regex = re.compile(r"^2\.6\.[0|1-9]\d*$")
     transaction_id_regex = re.compile(r"^2\.7\.[1-9]\d*$")
     block_summary_id_regex = re.compile(r"^2\.8\.[1-9]\d*$")
     account_transaction_history_id_regex = re.compile(r"^2\.9\.[1-9]\d*$")
@@ -96,6 +97,10 @@ class Validator(object):
     def is_asset_id(self, value):
         if self.is_string(value):
             return bool(self.asset_id_regex.match(value))
+
+    def is_eth_asset_id(self, value):
+        if self.is_string(value):
+            return bool(self.eth_asset_id_regex.match(value))
 
     def is_force_settlement_id(self, value):
         if self.is_string(value):
@@ -272,7 +277,7 @@ class Validator(object):
         return True
 
     def is_public_key(self, value, address_prefix="ECHO"):
-        if not self.is_hex(value) or len(value) != 50 + len(address_prefix):
+        if not self.is_hex(value) or len(value) != 39 + len(address_prefix):
             return False
         prefix = value[0:len(address_prefix)]
         return address_prefix == prefix

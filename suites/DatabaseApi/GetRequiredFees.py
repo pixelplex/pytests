@@ -7,7 +7,7 @@ from lemoncheesecake.matching import check_that, is_not_none, this_dict, check_t
 from common.base_test import BaseTest
 
 SUITE = {
-    "description": "Method 'get_required_fee'"
+    "description": "Method 'get_required_fees'"
 }
 
 

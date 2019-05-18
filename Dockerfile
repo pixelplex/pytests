@@ -13,9 +13,8 @@ COPY ./.flake8 /home/
 COPY ./__init__.py /home/
 COPY ./project.py /home/
 COPY ./requirements.txt /home/
+COPY ./test_runner.py /home/
 
 RUN pip3 install -r requirements.txt
 
 RUN git clone https://github.com/vishnubob/wait-for-it.git
-
-CMD ["lcc", "run", "--exit-error-on-failure"]

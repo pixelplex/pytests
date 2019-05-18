@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import is_integer, check_that_entry, this_dict, is_str, check_that, is_list, \
+from lemoncheesecake.matching import is_integer, check_that_entry, this_dict, check_that, is_list, \
     require_that, is_, has_length, is_bool, is_dict, has_entry
 
 from common.base_test import BaseTest
@@ -78,6 +78,30 @@ class GetGlobalProperties(BaseTest):
                                  "operation_id is '{}'".format(operations[i], current_fees[j][0]))
                     check_kind(current_fees[j][1])
                     break
+
+    def check_sidechain_config(self, sidechain_config, eth_params, eth_methods):
+        with this_dict(sidechain_config):
+            if check_that("sidechain_config", sidechain_config, has_length(9)):
+                for i in range(len(eth_params)):
+                    if not self.validator.is_hex(sidechain_config[eth_params[i]]):
+                        lcc.log_error(
+                            "Wrong format of '{}', got: {}".format(eth_params[i], sidechain_config[eth_params[i]]))
+                    else:
+                        lcc.log_info("'{}' has correct format: hex".format(eth_params[i]))
+                for i in range(len(eth_methods)):
+                    if check_that_entry([eth_methods[i]], is_dict(), quiet=True):
+                        with this_dict(sidechain_config[eth_methods[i]]):
+                            if not self.validator.is_hex(sidechain_config[eth_methods[i]]["method"]):
+                                lcc.log_error(
+                                    "Wrong format of '{}', got: {}".format(eth_methods[i],
+                                                                           sidechain_config[eth_methods[i]]))
+                            else:
+                                lcc.log_info("'{}' has correct format: hex".format(eth_methods[i]))
+                            check_that_entry("gas", is_integer(), quiet=True)
+                if not self.validator.is_eth_asset_id(sidechain_config["ETH_asset_id"]):
+                    lcc.log_error("Wrong format of 'ETH_asset_id', got: {}".format(sidechain_config["ETH_asset_id"]))
+                else:
+                    lcc.log_info("'ETH_asset_id' has correct format: eth_asset_id")
 
     def setup_suite(self):
         super().setup_suite()
@@ -202,16 +226,10 @@ class GetGlobalProperties(BaseTest):
 
         lcc.set_step("Check global parameters: 'sidechain_config' field")
         sidechain_config = parameters["sidechain_config"]
-        with this_dict(sidechain_config):
-            if check_that("sidechain_config", sidechain_config, has_length(8)):
-                check_that_entry("echo_contract_id", is_str(), quiet=True)
-                check_that_entry("echo_vote_method", is_str(), quiet=True)
-                check_that_entry("echo_sign_method", is_str(), quiet=True)
-                check_that_entry("echo_transfer_topic", is_str(), quiet=True)
-                check_that_entry("echo_transfer_ready_topic", is_str(), quiet=True)
-                check_that_entry("eth_contract_address", is_str(), quiet=True)
-                check_that_entry("eth_committee_method", is_str(), quiet=True)
-                check_that_entry("eth_transfer_topic", is_str(), quiet=True)
+        eth_params = ["eth_contract_address", "eth_committee_updated_topic", "eth_gen_address_topic",
+                      "eth_deposit_topic", "eth_withdraw_topic"]
+        eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method"]
+        self.check_sidechain_config(sidechain_config, eth_params, eth_methods)
 
         lcc.set_step("Check global parameters: 'gas_price' field")
         gas_price = parameters["gas_price"]

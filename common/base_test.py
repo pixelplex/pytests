@@ -270,7 +270,7 @@ class BaseTest(object):
             if operation_results[i][0] != 1:
                 lcc.log_error("Wrong format of operation results, need [0] = 1, got {}".format(operation_results))
                 raise Exception("Wrong format of operation results")
-        return operation_results[1]
+        return operation_results
 
     def get_contract_id(self, response, log_response=True):
         contract_identifier_hex = response["result"][1].get("exec_res").get("new_address")
