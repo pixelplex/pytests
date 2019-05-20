@@ -31,7 +31,7 @@ class BaseTest(object):
         self.__id = 0
         self.validator = Validator()
         self.echo_asset = "1.3.0"
-        self.eeth_asset = "1.3.9"
+        self.eth_asset = "1.3.1"
         self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "0"
         self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
         self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
@@ -344,8 +344,7 @@ class BaseTest(object):
         # todo: remove memo_key later
         memo_key = keys[2]
         brain_key = keys[3]
-        account_details = self.get_account_details_template(account_name, private_key, public_key, memo_key,
-                                                            brain_key)
+        account_details = self.get_account_details_template(account_name, private_key, public_key, memo_key, brain_key)
         if not os.path.exists(WALLETS):
             with open(WALLETS, "w") as file:
                 file.write(json.dumps(account_details))
