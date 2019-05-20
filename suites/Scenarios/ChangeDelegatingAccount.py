@@ -54,24 +54,6 @@ class ChangeDelegatingAccount(BaseTest):
         lcc.log_info("Current delegating account of '{}' is '{}'".format(new_account, current_delegating_account))
 
         lcc.set_step("Add assets to a new account to pay a fee")
-        # operation = [
-        #     6,
-        #     {
-        #         "fee": {
-        #             "amount": 0,
-        #             "asset_id": "1.3.0"
-        #         },
-        #         "account": new_account,
-        #         "new_options": {
-        #             "memo_key": response["result"][0]["options"]["memo_key"],
-        #             "voting_account": response["result"][0]["options"]["voting_account"],
-        #             "delegating_account": self.echo_acc0,
-        #             "num_committee": response["result"][0]["options"]["num_committee"],
-        #             "votes": response["result"][0]["options"]["votes"],
-        #         },
-        #     }
-        #     ,
-        #     new_account]
         old_options = response["result"][0]["options"]
         operation = self.echo_ops.get_account_update_operation(echo=self.echo, account=new_account,
                                                                memo_key=old_options["memo_key"],
