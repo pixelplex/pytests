@@ -5,8 +5,12 @@ services:
   pytests:
     environment:
       - BASE_URL=ws://echo:6311/ws
+      - NATHAN=DET9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw
     build: .
+    command: ["./wait-for-it/wait-for-it.sh", "echo:6311", "--", "python3", "test_runner.py"]
     container_name: '631.echo.pytests.${ENV}'
+    depends_on:
+      - echo
 
   echo:
     image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest

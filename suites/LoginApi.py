@@ -22,7 +22,7 @@ class LoginApi(object):
         base.ws = base.create_connection_to_echo()
         base.receiver = Receiver(web_socket=base.ws)
         lcc.set_step("Login to the Full Node with empty credential")
-        response_id = base.send_request(base.get_request("login"))
+        response_id = base.send_request(base.get_request("login", ["", ""]))
         response = base.get_response(response_id)
 
         lcc.set_step("Check that login successful")

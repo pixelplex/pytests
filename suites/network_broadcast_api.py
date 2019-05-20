@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, contains_string
 
 from common.base_test import BaseTest
 

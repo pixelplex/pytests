@@ -71,14 +71,14 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                 self.__asset_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc3 = self.get_account_id(self.echo_acc3, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
         lcc.log_info(
-            "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc1, self.echo_acc2, self.echo_acc3))
+            "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0, self.echo_acc1, self.echo_acc2))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -104,7 +104,7 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Add new asset holders")
-        new_holders = [self.echo_acc1, self.echo_acc2, self.echo_acc3]
+        new_holders = [self.echo_acc0, self.echo_acc1, self.echo_acc2]
         for i in range(len(new_holders)):
             self.utils.add_assets_to_account(self, self.echo, value, new_asset_id, new_holders[i],
                                              self.__database_api_identifier)
