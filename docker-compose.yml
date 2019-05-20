@@ -7,7 +7,7 @@ services:
       - BASE_URL=ws://echo:6311/ws
       - NATHAN=DET9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw
     build: .
-    command: ["python3", "test_runner.py"]  # "./wait-for-it/wait-for-it.sh", "echo:6311", "--",
+    command: ["python3", "test_runner.py"]
     container_name: '631.echo.pytests.${ENV}'
     depends_on:
       - echo
