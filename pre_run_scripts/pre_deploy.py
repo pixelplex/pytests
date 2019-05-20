@@ -31,10 +31,10 @@ def add_balance_to_main_test_account(base_test, nathan_id, database_api):
 
 
 def upgrade_main_test_account_to_lifetime_member(base_test, database_api):
-    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api), a=True)
+    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api))
     operation = base_test.echo_ops.get_account_upgrade_operation(base_test.echo, to_account_id,
-                                                                 upgrade_to_lifetime_member=True, debug_mode=True)
-    collected_operation = base_test.collect_operations(operation, database_api, debug_mode=True)
+                                                                 upgrade_to_lifetime_member=True)
+    collected_operation = base_test.collect_operations(operation, database_api)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                     log_broadcast=False)
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
