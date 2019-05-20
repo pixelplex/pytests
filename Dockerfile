@@ -6,15 +6,15 @@ RUN apt-get update && apt-get install -y git make gcc g++ libffi-dev libssl-dev 
 
 COPY ./common /home/common
 COPY ./fixtures /home/fixtures
+COPY ./pre_run_scripts /home/pre_run_scripts
 COPY ./resources /home/resources
 COPY ./suites /home/suites
 COPY ./.flake8 /home/
 COPY ./__init__.py /home/
 COPY ./project.py /home/
 COPY ./requirements.txt /home/
+COPY ./test_runner.py /home/
 
 RUN pip3 install -r requirements.txt
 
 RUN git clone https://github.com/vishnubob/wait-for-it.git
-
-CMD ["lcc", "run", "--exit-error-on-failure"]

@@ -16,9 +16,29 @@ if "BASE_URL" not in os.environ:
 else:
     BASE_URL = os.environ["BASE_URL"]
 
+if "EMPTY_NODE" in os.environ and os.environ["EMPTY_NODE"] == "False":
+    EMPTY_NODE = False
+else:
+    EMPTY_NODE = True
+
+if "NATHAN" not in os.environ:
+    NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "nathan.json")))["NATHAN"]
+else:
+    NATHAN = os.environ["NATHAN"]
+
+if "ECHO_POOL" not in os.environ:
+    ECHO_POOL = 1000000000000000
+else:
+    ECHO_POOL = os.environ["ECHO_POOL"]
+
 ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
 WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
+DEFAULT_INIT_ACCOUNTS = 6
+DEFAULT_ACCOUNT_PREFIX = "account"
+DEFAULT_ACCOUNT_COUNT = 100
+MAIN_TEST_ACCOUNT_COUNT = 1
+BLOCK_RELEASE_INTERVAL = 3
 
 
 class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy, HasPreRunHook, HasPostRunHook):

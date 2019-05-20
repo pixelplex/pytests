@@ -4,7 +4,6 @@ from lemoncheesecake.matching import check_that, is_, is_integer, is_str, check_
     check_that_entry
 
 from common.base_test import BaseTest
-from common.echo_operation import EchoOperations
 
 SUITE = {
     "description": "Testing contract creation and calling its methods"
@@ -20,10 +19,10 @@ class HelloWorld(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
-        self.contract = self.get_byte_code("piggy_code")
-        self.greet = self.get_byte_code("piggy_greet")
-        self.get_pennie = self.get_byte_code("piggy_getPennie")
-        self.break_piggy = self.get_byte_code("piggy_breakPiggy")
+        self.contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
         self.value_amount = 10
 
     def setup_suite(self):
@@ -35,9 +34,9 @@ class HelloWorld(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -48,7 +47,7 @@ class HelloWorld(BaseTest):
               "and invoking a contract on the Echo network, written in Solidity.")
     def hello_world_scenario(self):
         lcc.set_step("Create 'Piggy' contract in the Echo network")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract,
                                                                 value_amount=self.value_amount,
                                                                 value_asset_id=self.echo_asset)
@@ -58,14 +57,14 @@ class HelloWorld(BaseTest):
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'greet' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 
         lcc.set_step("Check get 'Hello World!!!'")
-        contract_output = self.get_contract_output(contract_result, in_hex=False)[1:]
+        contract_output = self.get_contract_output(contract_result, output_type=str)[1:]
         check_that(
             "return of method 'greet'",
             contract_output,
@@ -84,7 +83,7 @@ class HelloWorld(BaseTest):
         contract_balance = response["result"][0]["amount"]
 
         lcc.set_step("Get owner balance and store")
-        params = [self.echo_acc1, [self.echo_asset]]
+        params = [self.echo_acc0, [self.echo_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -94,7 +93,7 @@ class HelloWorld(BaseTest):
         owner_balance = response["result"][0]["amount"]
 
         lcc.set_step("Call 'getPennie' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_pennie, callee=contract_id)
         fee = self.get_required_fee(operation, self.__database_api_identifier)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -111,7 +110,7 @@ class HelloWorld(BaseTest):
         )
 
         lcc.set_step("Get owner balance. Amount should be reduced by fee and increase by one.")
-        params = [self.echo_acc1, [self.echo_asset]]
+        params = [self.echo_acc0, [self.echo_asset]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -126,7 +125,7 @@ class HelloWorld(BaseTest):
         )
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -141,7 +140,7 @@ class HelloWorld(BaseTest):
             is_integer(0)
         )
 
-        lcc.set_step("Check that contract to be 'suicided=True'")
+        lcc.set_step("Check that contract to be 'destroyed=True'")
         response_id = self.send_request(self.get_request("get_objects", [[contract_id]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
