@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from project import NATHAN
 
 
 class Utils(object):
@@ -132,6 +133,41 @@ class Utils(object):
         broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=list_operations,
                                                         log_broadcast=log_broadcast)
         return broadcast_result
+
+    @staticmethod
+    def get_account_id(base_test, echo, account_names, account_keys, database_api_id, signer=NATHAN,
+                       need_operations=False, log_broadcast=False):
+        if len(account_names) == 1:
+            operation = base_test.echo_ops.get_account_create_operation(echo=echo, name=account_names,
+                                                                        active_key_auths=account_keys[1],
+                                                                        ed_key=account_keys[1],
+                                                                        options_memo_key=account_keys[2], signer=signer)
+            collected_operation = base_test.collect_operations(operation, database_api_id)
+            broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
+                                                            log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+                raise Exception("Default accounts are not created")
+            return base_test.get_operation_results_ids(broadcast_result)
+        list_operations = []
+        for i in range(len(account_names)):
+            operation = base_test.echo_ops.get_account_create_operation(echo=echo, name=account_names[i],
+                                                                        active_key_auths=account_keys[i][1],
+                                                                        ed_key=account_keys[i][1],
+                                                                        options_memo_key=account_keys[i][2],
+                                                                        signer=signer)
+            collected_operation = base_test.collect_operations(operation, database_api_id)
+            list_operations.append(collected_operation)
+        broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=list_operations,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception("Default accounts are not created")
+        operation_results = base_test.get_operation_results_ids(broadcast_result)
+        accounts_ids = []
+        for i in range(len(operation_results)):
+            accounts_ids.append(operation_results[i][1])
+            if need_operations:
+                return [accounts_ids, list_operations]
+        return accounts_ids
 
     @staticmethod
     def get_asset_id(base_test, echo, symbol, database_api_id, log_broadcast=False):

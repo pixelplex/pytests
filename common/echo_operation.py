@@ -117,6 +117,17 @@ class EchoOperations(object):
             lcc.log_debug("Update account operation: \n{}".format(json.dumps(account_update_props, indent=4)))
         return [operation_id, account_update_props, account]
 
+    def get_account_upgrade_operation(self, echo, account_to_upgrade, upgrade_to_lifetime_member=False, fee_amount=0,
+                                      fee_asset_id="1.3.0", debug_mode=False):
+        operation_id = echo.config.operation_ids.ACCOUNT_UPGRADE
+        account_upgrade_props = deepcopy(self.get_operation_json("account_upgrade_operation"))
+        account_upgrade_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        account_upgrade_props.update(
+            {"account_to_upgrade": account_to_upgrade, "upgrade_to_lifetime_member": upgrade_to_lifetime_member})
+        if debug_mode:
+            lcc.log_debug("Upgrade account operation: \n{}".format(json.dumps(account_upgrade_props, indent=4)))
+        return [operation_id, account_upgrade_props, account_to_upgrade]
+
     def get_asset_create_operation(self, echo, issuer, symbol, precision=0, fee_amount=0, fee_asset_id="1.3.0",
                                    max_supply="1000000000000000", market_fee_percent=0,
                                    max_market_fee="1000000000000000",

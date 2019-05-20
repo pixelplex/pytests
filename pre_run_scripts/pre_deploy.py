@@ -30,6 +30,16 @@ def add_balance_to_main_test_account(base_test, nathan_id, database_api):
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
+def upgrade_main_test_account_to_lifetime_member(base_test, database_api):
+    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api), a=True)
+    operation = base_test.echo_ops.get_account_upgrade_operation(base_test.echo, to_account_id,
+                                                                 upgrade_to_lifetime_member=True, debug_mode=True)
+    collected_operation = base_test.collect_operations(operation, database_api, debug_mode=True)
+    broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                    log_broadcast=False)
+    return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
+
+
 def get_account_count(base_test, database_api):
     response_id = base_test.send_request(base_test.get_request("get_account_count"), database_api)
     return base_test.get_response(response_id)["result"]
@@ -113,6 +123,9 @@ def pre_deploy_echo(base_test, database_api, lcc):
     if not add_balance_to_main_test_account(base_test, nathan_id, database_api):
         raise Exception("Balance to main test account is not credited")
     lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.echo_acc0))
+    if not upgrade_main_test_account_to_lifetime_member(base_test, database_api):
+        raise Exception("The main test account is not upgraded to the lifetime member")
+    lcc.log_info("The main test account upgraded to the lifetime member")
     if not make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
         raise Exception("Default accounts did not become asset echo holders")
     lcc.log_info("All default accounts became echo holders successfully")
