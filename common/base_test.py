@@ -57,6 +57,13 @@ class BaseTest(object):
         else:
             check_that_entry(key, is_integer(), quiet=quiet)
 
+    def check_uint256_numbers(self, response, key, quiet=False):
+        if type(response.get(key)) is str:
+            self.validator.is_uint256(response.get(key))
+            check_that_entry(key, is_str(), quiet=quiet)
+        else:
+            check_that_entry(key, is_integer(), quiet=quiet)
+
     @staticmethod
     def set_timeout_wait(seconds):
         print("\nBefore sleep: {}".format(time.ctime()))
