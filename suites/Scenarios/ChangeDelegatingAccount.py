@@ -49,7 +49,7 @@ class ChangeDelegatingAccount(BaseTest):
         lcc.set_step("Get info about account and store current 'delegating_account'")
         response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
         current_delegating_account = response["result"][0]["options"]["delegating_account"]
         lcc.log_info("Current delegating account of '{}' is '{}'".format(new_account, current_delegating_account))
 
@@ -68,7 +68,7 @@ class ChangeDelegatingAccount(BaseTest):
         lcc.log_info("Needed amount '{}' to pay fee added to account '{}'".format(fee, new_account))
 
         lcc.set_step("Perform 'account_update_operation' to change delegating_account")
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier, debug_mode=True)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         if not self.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception("Account '{}' did not updated".format(new_account))
@@ -77,7 +77,7 @@ class ChangeDelegatingAccount(BaseTest):
         lcc.set_step("Get info about account and store new 'delegating_account'")
         response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
         new_delegating_account = response["result"][0]["options"]["delegating_account"]
         lcc.log_info("New delegating account of '{}' is '{}'".format(new_account, new_delegating_account))
 
