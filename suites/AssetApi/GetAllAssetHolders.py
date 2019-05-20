@@ -74,9 +74,9 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                 self.__asset_api_identifier))
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -112,10 +112,10 @@ class PositiveTesting(BaseTest):
     def new_asset_with_holders(self):
         value = 100
         lcc.set_step("Add new asset holder")
-        self.utils.add_assets_to_account(self, self.echo, value, self.new_asset_id, self.echo_acc1,
+        self.utils.add_assets_to_account(self, self.echo, value, self.new_asset_id, self.echo_acc0,
                                          self.__database_api_identifier)
         lcc.log_info(
-            "Echo account '{}' became new asset holder of '{}' asset_id".format(self.echo_acc1, self.new_asset_id))
+            "Echo account '{}' became new asset holder of '{}' asset_id".format(self.echo_acc0, self.new_asset_id))
 
         lcc.set_step("Check that the new asset is in the list and its number of holders is zero")
         response = self.get_all_asset_holders()

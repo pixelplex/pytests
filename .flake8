@@ -13,6 +13,10 @@ exclude =
     build,
     # This contains builds of flake8 that we don't want to check
     dist,
-    # This contains list of temp files, that would not added to git
-    debug.py
+    # Docker launch files
+    .gitlab-ci.yml
+    docker-compose.yml
+    Dockerfile
+    # Documentation
+    README.md
 max-complexity = 10

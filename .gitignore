@@ -6,4 +6,3 @@ public
 venv
 resources/wallets.json
 resources/nathan.json
-suites/debug.py

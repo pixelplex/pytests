@@ -48,20 +48,38 @@
             "referrer": "1.2.0",
             "referrer_percent": 0,
             "name": "",
-            "owner": {
-                "weight_threshold": 0,
-                "account_auths": [],
-                "key_auths": [],
-                "address_auths": []
-            },
             "active": {
                 "weight_threshold": 0,
                 "account_auths": [],
-                "key_auths": [],
-                "address_auths": []
+                "key_auths": []
             },
             "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
             "options": {
+                "memo_key": "ECHO1111111111111111111111111111111114T1Anm",
+                "voting_account": "1.2.5",
+                "delegating_account": "1.2.0",
+                "num_committee": 0,
+                "votes": [],
+                "extensions": []
+            },
+            "extensions": {}
+        }
+    ],
+    "account_update_operation": [
+        6,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "account": "1.2.0",
+            "active": {
+                "weight_threshold": 0,
+                "account_auths": [],
+                "key_auths": []
+            },
+            "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
+            "new_options": {
                 "memo_key": "ECHO1111111111111111111111111111111114T1Anm",
                 "voting_account": "1.2.5",
                 "delegating_account": "1.2.0",
@@ -142,7 +160,7 @@
         }
     ],
     "create_contract_operation": [
-        44,
+        40,
         {
             "fee": {
                 "amount": 0,
@@ -159,7 +177,7 @@
         }
     ],
     "call_contract_operation": [
-        45,
+        41,
         {
             "fee": {
                 "amount": 0,
@@ -175,7 +193,7 @@
         }
     ],
     "contract_transfer_operation": [
-        46,
+        42,
         {
             "fee": {
                 "amount": 0,

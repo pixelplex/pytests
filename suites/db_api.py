@@ -58,7 +58,7 @@ class DatabaseApi(BaseTest):
         lcc.set_step("Cancel all subscriptions")
         response_id = self.send_request(self.get_request("cancel_all_subscriptions"), self.__api_identifier)
         self.get_response(response_id, log_response=True)
-        
+
     @lcc.test("Get block")
     def test_get_block(self):
         lcc.set_step("Retrieve a full, signed block")

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import is_integer, check_that_entry, this_dict, is_str, check_that, is_list, \
+from lemoncheesecake.matching import is_integer, check_that_entry, this_dict, check_that, is_list, \
     require_that, is_, has_length, is_bool, is_dict, has_entry
 
 from common.base_test import BaseTest
@@ -13,15 +13,14 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
-@lcc.tags("get_global_properties")
+@lcc.tags("database_api", "get_global_properties")
 @lcc.suite("Check work of method 'get_global_properties'", rank=1)
 class GetGlobalProperties(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__api_identifier = None
-        # todo: change to 'self.echo.config.operation_ids.__dict__' when update echopy-lib (echo v.0.4.0)
-        self.all_operations = None
+        self.all_operations = self.echo.config.operation_ids.__dict__
 
     @staticmethod
     def no_fee(actual_fee):
@@ -71,12 +70,6 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("fee", is_integer(), quiet=True)
                 check_that_entry("price_per_output", is_integer(), quiet=True)
 
-    # todo: remove when update echopy-lib (echo v.0.4.0)
-    def get_operations_in_current_fees(self):
-        operations = dict(self.echo.config.operation_ids.__dict__)
-        del operations["CHANGE_SIDECHAIN_CONFIG"]
-        return operations
-
     def check_default_fee_for_operation(self, current_fees, operations, check_kind):
         for i in range(len(operations)):
             for j in range(len(current_fees)):
@@ -86,26 +79,51 @@ class GetGlobalProperties(BaseTest):
                     check_kind(current_fees[j][1])
                     break
 
+    def check_sidechain_config(self, sidechain_config, eth_params, eth_methods):
+        with this_dict(sidechain_config):
+            if check_that("sidechain_config", sidechain_config, has_length(9)):
+                for i in range(len(eth_params)):
+                    if not self.validator.is_hex(sidechain_config[eth_params[i]]):
+                        lcc.log_error(
+                            "Wrong format of '{}', got: {}".format(eth_params[i], sidechain_config[eth_params[i]]))
+                    else:
+                        lcc.log_info("'{}' has correct format: hex".format(eth_params[i]))
+                for i in range(len(eth_methods)):
+                    if check_that_entry([eth_methods[i]], is_dict(), quiet=True):
+                        with this_dict(sidechain_config[eth_methods[i]]):
+                            if not self.validator.is_hex(sidechain_config[eth_methods[i]]["method"]):
+                                lcc.log_error(
+                                    "Wrong format of '{}', got: {}".format(eth_methods[i],
+                                                                           sidechain_config[eth_methods[i]]))
+                            else:
+                                lcc.log_info("'{}' has correct format: hex".format(eth_methods[i]))
+                            check_that_entry("gas", is_integer(), quiet=True)
+                if not self.validator.is_eth_asset_id(sidechain_config["ETH_asset_id"]):
+                    lcc.log_error("Wrong format of 'ETH_asset_id', got: {}".format(sidechain_config["ETH_asset_id"]))
+                else:
+                    lcc.log_info("'ETH_asset_id' has correct format: eth_asset_id")
+
     def setup_suite(self):
         super().setup_suite()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__api_identifier = self.get_identifier("database")
         lcc.log_info("Database API identifier is '{}'".format(self.__api_identifier))
-        # todo: remove when update echopy-lib (echo v.0.4.0)
-        self.all_operations = self.get_operations_in_current_fees()
 
     @lcc.prop("type", "method")
     @lcc.test("Check all fields in global properties")
     def method_main_check(self):
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_global_properties'")
 
-        lcc.set_step("Check field 'id'")
+        lcc.set_step("Check main fields")
         with this_dict(response["result"]):
             if check_that("global_properties", response["result"], has_length(4)):
-                check_that_entry("id", is_str(), quiet=True)
+                if not self.validator.is_global_object_id(response["result"]["id"]):
+                    lcc.log_error("Wrong format of 'id', got: {}".format(response["result"]["id"]))
+                else:
+                    lcc.log_info("'id' has correct format: global_property_object_type")
                 check_that_entry("parameters", is_dict(), quiet=True)
                 check_that_entry("next_available_vote_id", is_integer(), quiet=True)
                 check_that_entry("active_committee_members", is_list(), quiet=True)
@@ -154,7 +172,8 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            len(current_fees["parameters"]), is_(len(self.all_operations))
+            # todo: Delete '-7' when 44 for 50 operations will be added
+            len(current_fees["parameters"]), is_(len(self.all_operations) - 7)
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
@@ -170,7 +189,8 @@ class GetGlobalProperties(BaseTest):
                       "withdraw_permission_update", "withdraw_permission_delete", "committee_member_create",
                       "committee_member_update", "committee_member_update_global_parameters", "vesting_balance_create",
                       "vesting_balance_withdraw", "worker_create", "assert", "transfer_from_blind", "asset_claim_fees",
-                      "bid_collateral", "create_contract", "call_contract", "contract_transfer"]
+                      "bid_collateral", "create_contract", "call_contract", "contract_transfer",
+                      "change_sidechain_config"]
         self.check_default_fee_for_operation(current_fees["parameters"], operations, self.only_fee)
 
         lcc.set_step("Check 'no_fee' for operations")
@@ -207,16 +227,10 @@ class GetGlobalProperties(BaseTest):
 
         lcc.set_step("Check global parameters: 'sidechain_config' field")
         sidechain_config = parameters["sidechain_config"]
-        with this_dict(sidechain_config):
-            if check_that("sidechain_config", sidechain_config, has_length(8)):
-                check_that_entry("echo_contract_id", is_str(), quiet=True)
-                check_that_entry("echo_vote_method", is_str(), quiet=True)
-                check_that_entry("echo_sign_method", is_str(), quiet=True)
-                check_that_entry("echo_transfer_topic", is_str(), quiet=True)
-                check_that_entry("echo_transfer_ready_topic", is_str(), quiet=True)
-                check_that_entry("eth_contract_address", is_str(), quiet=True)
-                check_that_entry("eth_committee_method", is_str(), quiet=True)
-                check_that_entry("eth_transfer_topic", is_str(), quiet=True)
+        eth_params = ["eth_contract_address", "eth_committee_updated_topic", "eth_gen_address_topic",
+                      "eth_deposit_topic", "eth_withdraw_topic"]
+        eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method"]
+        self.check_sidechain_config(sidechain_config, eth_params, eth_methods)
 
         lcc.set_step("Check global parameters: 'gas_price' field")
         gas_price = parameters["gas_price"]
@@ -227,7 +241,7 @@ class GetGlobalProperties(BaseTest):
 
 
 @lcc.prop("testing", "negative")
-@lcc.tags("get_global_properties")
+@lcc.tags("database_api", "get_global_properties")
 @lcc.suite("Negative testing of method 'get_global_properties'", rank=2)
 class NegativeTesting(BaseTest):
 
