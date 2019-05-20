@@ -29,13 +29,14 @@ class Validator(object):
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
     bit_asset_id_regex = re.compile(r"^2\.4\.(0|[1-9]\d*)$")
     account_balance_id_regex = re.compile(r"^2\.5\.[1-9]\d*$")
-    account_statistics_id_regex = re.compile(r"^2\.6\.[0|1-9]\d*$")
+    account_statistics_id_regex = re.compile(r"^2\.6\.(0|1-9]\d*)$")
     transaction_id_regex = re.compile(r"^2\.7\.[1-9]\d*$")
     block_summary_id_regex = re.compile(r"^2\.8\.[1-9]\d*$")
     account_transaction_history_id_regex = re.compile(r"^2\.9\.[1-9]\d*$")
     chain_property_object_id_regex = re.compile(r"^2.10.0$")
     contract_history_id_regex = re.compile(r"^2\.16\.[1-9]\d*$")
     contract_statistics_id_regex = re.compile(r"^2\.17\.[1-9]\d*$")
+    account_address_id_regex = re.compile(r"^2\.18\.(0|[1-9]\d*)$")
     hex_regex = re.compile(r"^[0-9a-fA-F]+")
     bytecode_regex = re.compile(r"^[\da-fA-F]{8}([\da-fA-F]{64})*$")
     vote_id_type_regex = re.compile(r"^[0-3]:[0-9]+")
@@ -202,6 +203,10 @@ class Validator(object):
     def is_contract_statistics_id(self, value):
         if self.is_string(value):
             return bool(self.contract_statistics_id_regex.match(value))
+
+    def is_account_address_id(self, value):
+        if self.is_string(value):
+            return bool(self.account_address_id_regex.match(value))
 
     def is_vote_id(self, value):
         if self.is_string(value):

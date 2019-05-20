@@ -92,7 +92,7 @@ class EchoOperations(object):
 
     def get_account_update_operation(self, echo, account, weight_threshold=None, account_auths=None, key_auths=None,
                                      ed_key=None, memo_key=None, voting_account=None, delegating_account=None,
-                                     num_committee=None, votes=None, fee_amount=0, fee_asset_id="1.3.0",
+                                     num_committee=None, votes=None, fee_amount=0, fee_asset_id="1.3.0", signer=None,
                                      debug_mode=False):
         operation_id = echo.config.operation_ids.ACCOUNT_UPDATE
         account_update_props = deepcopy(self.get_operation_json("account_update_operation"))
@@ -115,10 +115,12 @@ class EchoOperations(object):
             del account_update_props["new_options"]
         if debug_mode:
             lcc.log_debug("Update account operation: \n{}".format(json.dumps(account_update_props, indent=4)))
-        return [operation_id, account_update_props, account]
+        if signer is None:
+            return [operation_id, account_update_props, account]
+        return [operation_id, account_update_props, signer]
 
     def get_account_upgrade_operation(self, echo, account_to_upgrade, upgrade_to_lifetime_member=False, fee_amount=0,
-                                      fee_asset_id="1.3.0", debug_mode=False):
+                                      fee_asset_id="1.3.0", signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.ACCOUNT_UPGRADE
         account_upgrade_props = deepcopy(self.get_operation_json("account_upgrade_operation"))
         account_upgrade_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
@@ -126,7 +128,9 @@ class EchoOperations(object):
             {"account_to_upgrade": account_to_upgrade, "upgrade_to_lifetime_member": upgrade_to_lifetime_member})
         if debug_mode:
             lcc.log_debug("Upgrade account operation: \n{}".format(json.dumps(account_upgrade_props, indent=4)))
-        return [operation_id, account_upgrade_props, account_to_upgrade]
+        if signer is None:
+            return [operation_id, account_upgrade_props, account_to_upgrade]
+        return [operation_id, account_upgrade_props, signer]
 
     def get_asset_create_operation(self, echo, issuer, symbol, precision=0, fee_amount=0, fee_asset_id="1.3.0",
                                    max_supply="1000000000000000", market_fee_percent=0,
@@ -181,7 +185,7 @@ class EchoOperations(object):
 
     def get_balance_claim_operation(self, echo, deposit_to_account, balance_owner_public_key, value_amount,
                                     balance_owner_private_key, fee_amount=0, fee_asset_id="1.3.0",
-                                    balance_to_claim="1.13.0", value_asset_id="1.3.0", debug_mode=False):
+                                    balance_to_claim="1.13.0", value_asset_id="1.3.0", signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.BALANCE_CLAIM
         balance_claim_operation_props = deepcopy(self.get_operation_json("balance_claim_operation"))
         balance_claim_operation_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
@@ -193,7 +197,9 @@ class EchoOperations(object):
             lcc.log_debug(
                 "Balance claim operation: \n{}".format(
                     json.dumps([operation_id, balance_claim_operation_props], indent=4)))
-        return [operation_id, balance_claim_operation_props, balance_owner_private_key]
+        if signer is None:
+            return [operation_id, balance_claim_operation_props, balance_owner_private_key]
+        return [operation_id, balance_claim_operation_props, signer]
 
     def get_create_contract_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
                                       value_amount=0, value_asset_id="1.3.0", supported_asset_id="1.3.0",
@@ -224,6 +230,33 @@ class EchoOperations(object):
         if signer is None:
             return [operation_id, call_contract_props, registrar]
         return [operation_id, call_contract_props, signer]
+
+    def get_account_address_create_operation(self, echo, owner, label, fee_amount=0, fee_asset_id="1.3.0",
+                                             signer=None, debug_mode=False):
+        operation_id = echo.config.operation_ids.ACCOUNT_ADDRESS_CREATE
+        account_address_create_props = deepcopy(self.get_operation_json("account_address_create_operation"))
+        account_address_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        account_address_create_props.update({"owner": owner, "label": label})
+        if debug_mode:
+            lcc.log_debug(
+                "Account address create operation: \n{}".format(json.dumps(account_address_create_props, indent=4)))
+        if signer is None:
+            return [operation_id, account_address_create_props, owner]
+        return [operation_id, account_address_create_props, signer]
+
+    def get_transfer_to_address_operation(self, echo, from_account_id, to_address, fee_amount=0, fee_asset_id="1.3.0",
+                                          amount=1, amount_asset_id="1.3.0", signer=None, debug_mode=False):
+        operation_id = echo.config.operation_ids.TRANSFER_TO_ADDRESS
+        transfer_to_address_props = deepcopy(self.get_operation_json("transfer_to_address_operation"))
+        transfer_to_address_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        transfer_to_address_props.update({"from": from_account_id, "to": to_address})
+        transfer_to_address_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
+        if debug_mode:
+            lcc.log_debug(
+                "Transfer to address operation: \n{}".format(json.dumps(transfer_to_address_props, indent=4)))
+        if signer is None:
+            return [operation_id, transfer_to_address_props, from_account_id]
+        return [operation_id, transfer_to_address_props, signer]
 
     def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
