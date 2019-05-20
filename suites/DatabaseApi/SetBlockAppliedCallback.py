@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, is_none, not_equal_to
+from lemoncheesecake.matching import check_that, is_none, is_true
 
 from common.base_test import BaseTest
 
@@ -29,6 +29,8 @@ class SetBlockAppliedCallback(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'set_block_applied_callback'")
     def method_main_check(self, get_random_integer):
+        blocks_count = 2
+        notices = []
         lcc.set_step("Set block applied callback")
         subscription_callback_id = get_random_integer
         param = [subscription_callback_id]
@@ -44,10 +46,14 @@ class SetBlockAppliedCallback(BaseTest):
         )
 
         lcc.set_step("Check new block hash number")
-        notice = self.get_notice(subscription_callback_id, log_response=True)
-        notice2 = self.get_notice(subscription_callback_id, log_response=True)
-        check_that(
-            "'block hash and its neighboring block hash do not match'",
-            notice,
-            not_equal_to(notice2),
-        )
+        for i in range(blocks_count):
+            lcc.log_info("Get notice #{}".format(i))
+            notice = self.get_notice(subscription_callback_id, log_response=False)
+            notices.append(notice)
+        for i in range(blocks_count):
+            if i != blocks_count - 1:
+                check_that(
+                    "'block hash and its neighboring block hash do not match'",
+                    notices[i] != notices[i + 1],
+                    is_true(),
+                )
