@@ -65,10 +65,15 @@ class BaseTest(object):
             check_that_entry(key, is_integer(), quiet=quiet)
 
     @staticmethod
-    def set_timeout_wait(seconds):
-        print("\nBefore sleep: {}".format(time.ctime()))
+    def get_time():
+        return time.strftime("%H:%M:%S", time.localtime())
+
+    def set_timeout_wait(self, seconds, print_log):
+        if print_log:
+            lcc.log_info("Start a '{}' second sleep... local_time:'{}'".format(seconds, self.get_time()))
         time.sleep(seconds)
-        print("\nAfter sleep: {}".format(time.ctime()))
+        if print_log:
+            lcc.log_info("Sleep is over, local_time:'{}'".format(self.get_time()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):

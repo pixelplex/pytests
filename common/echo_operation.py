@@ -258,6 +258,19 @@ class EchoOperations(object):
             return [operation_id, transfer_to_address_props, from_account_id]
         return [operation_id, transfer_to_address_props, signer]
 
+    def get_generate_eth_address_operation(self, echo, account_id, fee_amount=0, fee_asset_id="1.3.0", signer=None,
+                                           debug_mode=False):
+        operation_id = echo.config.operation_ids.GENERATE_ETH_ADDRESS
+        generate_eth_address_props = deepcopy(self.get_operation_json("generate_eth_address_operation"))
+        generate_eth_address_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        generate_eth_address_props.update({"account_id": account_id})
+        if debug_mode:
+            lcc.log_debug(
+                "Generate ethereum address operation: \n{}".format(json.dumps(generate_eth_address_props, indent=4)))
+        if signer is None:
+            return [operation_id, generate_eth_address_props, account_id]
+        return [operation_id, generate_eth_address_props, signer]
+
     def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:

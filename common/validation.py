@@ -23,13 +23,13 @@ class Validator(object):
     contract_id_regex = re.compile(r"^1\.14\.(0|[1-9]\d*)$")
     contract_result_id_regex = re.compile(r"^1\.15\.[1-9]\d*$")
     block_id_regex = re.compile(r"^1\.16\.[1-9]\d*$")
-    transfer_id_regex = re.compile(r"^1\.17\.[1-9]\d*$")
+    eth_address_id_regex = re.compile(r"^1\.17\.[1-9]\d*$")
     global_object_id_regex = re.compile(r"^2.0.0$")
     dynamic_global_object_id_regex = re.compile(r"^2.1.0$")
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
     bit_asset_id_regex = re.compile(r"^2\.4\.(0|[1-9]\d*)$")
     account_balance_id_regex = re.compile(r"^2\.5\.[1-9]\d*$")
-    account_statistics_id_regex = re.compile(r"^2\.6\.(0|1-9]\d*)$")
+    account_statistics_id_regex = re.compile(r"^2\.6\.(0|[1-9]\d*)$")
     transaction_id_regex = re.compile(r"^2\.7\.[1-9]\d*$")
     block_summary_id_regex = re.compile(r"^2\.8\.[1-9]\d*$")
     account_transaction_history_id_regex = re.compile(r"^2\.9\.[1-9]\d*$")
@@ -152,9 +152,9 @@ class Validator(object):
         if self.is_string(value):
             return bool(self.contract_result_id_regex.match(value))
 
-    def is_transfer_id(self, value):
+    def is_eth_address_id(self, value):
         if self.is_string(value):
-            return bool(self.transfer_id_regex.match(value))
+            return bool(self.eth_address_id_regex.match(value))
 
     def is_global_object_id(self, value):
         if self.is_string(value):

@@ -142,39 +142,24 @@ class PositiveTesting(BaseTest):
     @lcc.test("Create accounts using account_create operation and get info about them")
     @lcc.depends_on("DatabaseApi.GetAccounts.GetAccounts.method_main_check")
     def get_info_about_created_accounts(self, get_random_valid_account_name):
-        accounts = [get_random_valid_account_name, get_random_valid_account_name]
+        accounts = [get_random_valid_account_name + "0", get_random_valid_account_name + "1"]
         public_data_accounts = [self.generate_keys(), self.generate_keys()]
-        list_operations = []
 
         lcc.set_step("Perform two account creation operations and store accounts ids")
-        for i in range(len(accounts)):
-            operation = self.echo_ops.get_account_create_operation(self.echo, accounts[i] + str(i),
-                                                                   public_data_accounts[i][1],
-                                                                   public_data_accounts[i][1],
-                                                                   public_data_accounts[i][2], registrar=self.echo_acc0,
-                                                                   signer=self.echo_acc0)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            list_operations.append(collected_operation)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations,
-                                                   log_broadcast=False)
-        if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
-            raise Exception("Accounts are not created")
-        operation_results = self.get_operation_results_ids(broadcast_result)
-        accounts_ids = []
-        for i in range(len(operation_results)):
-            accounts_ids.append(operation_results[i][1])
-        lcc.log_info(
-            "Two accounts created, ids: 1='{}', 2='{}'".format(operation_results[0][1], operation_results[1][1]))
+        accounts = self.utils.get_account_id(self, self.echo, accounts, public_data_accounts,
+                                             self.__database_api_identifier, need_operations=True)
+        lcc.log_info("Two accounts created, ids: 1='{}', 2='{}'".format(accounts.get("accounts_ids")[0],
+                                                                        accounts.get("accounts_ids")[1]))
 
         lcc.set_step("Get a list of created accounts by ID")
-        response_id = self.send_request(self.get_request("get_accounts", [accounts_ids]),
+        response_id = self.send_request(self.get_request("get_accounts", [accounts.get("accounts_ids")]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_accounts' with params: {}".format(accounts_ids))
+        lcc.log_info("Call method 'get_accounts' with params: {}".format(accounts.get("accounts_ids")))
 
         for i in range(len(response["result"])):
             lcc.set_step("Checking account #{}".format(i))
-            performed_operations = list_operations[i][0][1]
+            performed_operations = accounts.get("list_operations")[i][0][1]
             account_info = response["result"][i]
             with this_dict(account_info):
                 check_that_entry("registrar", equal_to(performed_operations["registrar"]))
