@@ -25,21 +25,7 @@ class GetEthAddress(BaseTest):
         self.temp_count = 0
         self.block_count = 10
         self.waiting_time_result = 0
-
-    def get_eth_address(self, account_id, timeout=BLOCK_RELEASE_INTERVAL):
-        self.temp_count += 1
-        response_id = self.send_request(self.get_request("get_eth_address", [account_id]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        if response["result"]:
-            self.waiting_time_result = self.waiting_time_result + timeout
-            return response
-        if self.temp_count <= self.block_count:
-            self.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_eth_address(account_id, timeout=timeout)
-        raise Exception("No ethereum address of '{}' account. "
-                        "Waiting time result='{}'".format(account_id, self.waiting_time_result))
+        self.no_address = True
 
     def setup_suite(self):
         super().setup_suite()
@@ -65,7 +51,7 @@ class GetEthAddress(BaseTest):
                                           self.__registration_api_identifier)
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
-        lcc.set_step("Get addresses of created account in the network")
+        lcc.set_step("Get address of created account in the network")
         response_id = self.send_request(self.get_request("get_eth_address", [new_account]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -81,8 +67,18 @@ class GetEthAddress(BaseTest):
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, self.echo, new_account, self.__database_api_identifier)
 
-        lcc.set_step("Get updated list of addresses of created account in the network")
-        response = self.get_eth_address(new_account)
+        lcc.set_step("Get updated ethereum address of created account in the network")
+        while self.no_address:
+            self.temp_count += 1
+            response_id = self.send_request(self.get_request("get_eth_address", [new_account]),
+                                            self.__database_api_identifier)
+            response = self.get_response(response_id)
+            if response["result"]:
+                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
+                self.no_address = False
+            if self.temp_count <= self.block_count:
+                self.set_timeout_wait(BLOCK_RELEASE_INTERVAL, print_log=False)
+                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
         lcc.log_info(
             "Call method 'get_eth_address' of new account. Waiting time result='{}' seconds".format(
                 self.waiting_time_result))
