@@ -234,3 +234,16 @@ class Utils(object):
                 "Error: new eth address of '{}' account is not created, response:\n{}".format(registrar,
                                                                                               broadcast_result))
         return broadcast_result
+
+    @staticmethod
+    def get_account_balances(base_test, account, database_api_id, assets=None):
+        if assets is None:
+            assets = [base_test.echo_asset]
+        params = [account, assets]
+        response_id = base_test.send_request(base_test.get_request("get_account_balances", params), database_api_id)
+        result = base_test.get_response(response_id)["result"]
+        if len(result) > 0:
+            for i in range(len(result)):
+                if result[i]["asset_id"] == base_test.echo_asset or True:
+                    return result[i]
+        return result

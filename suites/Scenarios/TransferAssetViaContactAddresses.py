@@ -26,17 +26,6 @@ class TransferAssetViaContactAddresses(BaseTest):
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         self.is_operation_completed(broadcast_result, expected_static_variant=0)
 
-    def get_account_balances(self, account):
-        params = [account, [self.echo_asset]]
-        response_id = self.send_request(self.get_request("get_account_balances", params),
-                                        self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
-        if len(result) > 0:
-            for i in range(len(result)):
-                if result[i]["asset_id"] == self.echo_asset or True:
-                    return result[i]
-        return result
-
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -71,7 +60,7 @@ class TransferAssetViaContactAddresses(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Get account balance and store")
-        balance_before_transfer = self.get_account_balances(new_account)
+        balance_before_transfer = self.utils.get_account_balances(self, new_account, self.__database_api_identifier)
         lcc.log_info("Account '{}' balance in '{}' asset: '{}'".format(new_account, self.echo_asset,
                                                                        balance_before_transfer["amount"]))
 
@@ -93,7 +82,7 @@ class TransferAssetViaContactAddresses(BaseTest):
         self.transfer_assets_to_account_address(address=account_addresses[0], transfer_amount=transfer_amount)
 
         lcc.set_step("Get account balance after transfer and store")
-        balance_after_transfer = self.get_account_balances(new_account)
+        balance_after_transfer = self.utils.get_account_balances(self, new_account, self.__database_api_identifier)
         lcc.log_info("Account '{}' balance in '{}' asset: '{}'".format(new_account, self.echo_asset,
                                                                        balance_after_transfer["amount"]))
 
@@ -107,7 +96,8 @@ class TransferAssetViaContactAddresses(BaseTest):
         self.transfer_assets_to_account_address(address=account_addresses[1], transfer_amount=amount)
 
         lcc.set_step("Get account balance after second transfer and store")
-        balance_after_second_transfer = self.get_account_balances(new_account)
+        balance_after_second_transfer = self.utils.get_account_balances(self, new_account,
+                                                                        self.__database_api_identifier)
         lcc.log_info("Account '{}' balance in '{}' asset: '{}'".format(new_account, self.echo_asset,
                                                                        balance_after_second_transfer["amount"]))
 
@@ -123,7 +113,7 @@ class TransferAssetViaContactAddresses(BaseTest):
         lcc.log_info("From the account of the recipient transferred assets to the account sender")
 
         lcc.set_step("Get account balance after return to sender")
-        balance = self.get_account_balances(new_account)
+        balance = self.utils.get_account_balances(self, new_account, self.__database_api_identifier)
         with this_dict(balance):
             require_that_entry("amount", equal_to(balance_after_second_transfer["amount"] - withdraw_amount))
             require_that_entry("asset_id", equal_to(balance_before_transfer["asset_id"]))
@@ -133,7 +123,7 @@ class TransferAssetViaContactAddresses(BaseTest):
         self.transfer_assets_to_account_address(address=account_addresses[0], transfer_amount=amount)
 
         lcc.set_step("Get account balance after transfer and store")
-        balance_after_transfer = self.get_account_balances(new_account)
+        balance_after_transfer = self.utils.get_account_balances(self, new_account, self.__database_api_identifier)
         lcc.log_info("Account '{}' balance in '{}' asset: '{}'".format(new_account, self.echo_asset,
                                                                        balance_after_transfer["amount"]))
 
