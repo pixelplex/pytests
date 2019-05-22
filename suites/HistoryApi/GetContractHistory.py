@@ -51,9 +51,8 @@ class GetContractHistory(BaseTest):
         limit = 1
 
         lcc.set_step("Perform create contract operation")
-        bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
-                                               self.__database_api_identifier, need_broadcast_result=True)
-        contract_id = bd_result[0]
+        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
+                                                 self.__database_api_identifier)
 
         lcc.set_step("Get contract history")
         params = [contract_id, stop, limit, start]
@@ -221,8 +220,8 @@ class PositiveTesting(BaseTest):
         bd_result = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
                                                self.__database_api_identifier, value_amount=value_amount,
                                                need_broadcast_result=True)
-        contract_id = bd_result[0]
-        create_contract_operation = bd_result[1]["trx"]["operations"][0]
+        contract_id = bd_result.get("contract_id")
+        create_contract_operation = bd_result.get("broadcast_result")["trx"]["operations"][0]
 
         lcc.set_step("Perform one call contract operation")
         create_contract_op_count = call_contract_op_count = transfer_op_count = 1

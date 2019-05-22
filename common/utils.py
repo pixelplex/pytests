@@ -6,7 +6,7 @@ class Utils(object):
     @staticmethod
     def add_balance_for_operations(base_test, echo, account, database_api_id, contract_bytecode=None, contract_value=0,
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, asset_name=None,
-                                   operation_count=1, log_broadcast=False):
+                                   operation_count=1, label=None, only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=echo, registrar=account,
@@ -16,14 +16,19 @@ class Utils(object):
         if method_bytecode is not None:
             operation = base_test.echo_ops.get_call_contract_operation(echo=echo, registrar=account,
                                                                        bytecode=method_bytecode, callee=callee)
-            amount = amount + (operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"])
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if transfer_amount is not None:
             operation = base_test.echo_ops.get_operation_json("transfer_operation", example=True)
             fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-            amount = amount + ((operation_count * transfer_amount) + (operation_count * fee))
+            if only_in_history:
+                amount = operation_count * transfer_amount
+            amount = amount + (operation_count * fee)
         if asset_name is not None:
             operation = base_test.echo_ops.get_operation_json("asset_create_operation", example=True)
-            amount = amount + (operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"])
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if label is not None:
+            operation = base_test.echo_ops.get_account_address_create_operation(echo=echo, owner=account, label=label)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
         collected_operation = base_test.collect_operations(operation, database_api_id)
@@ -41,7 +46,8 @@ class Utils(object):
             return self.get_nonexistent_asset_id(base_test, echo, database_api_id,
                                                  symbol=response["result"][-1]["symbol"])
         sorted_list_asset_ids = sorted(list_asset_ids, key=base_test.get_value_for_sorting_func)
-        return "1.3.{}".format(str(int(sorted_list_asset_ids[-1][4:]) + 1))
+        return "{}{}".format(base_test.get_implementation_object_type(echo.config.get_object_type.ASSET),
+                             str(int(sorted_list_asset_ids[-1][4:]) + 1))
 
     def get_contract_id(self, base_test, echo, registrar, contract_bytecode, database_api_id, value_amount=0,
                         operation_count=1, need_broadcast_result=False, log_broadcast=False):
@@ -64,7 +70,7 @@ class Utils(object):
         contract_id_16 = base_test.get_trx_completed_response(response_id)
         if not need_broadcast_result:
             return base_test.get_contract_id(contract_id_16)
-        return [base_test.get_contract_id(contract_id_16), broadcast_result]
+        return {"contract_id": base_test.get_contract_id(contract_id_16), "broadcast_result": broadcast_result}
 
     def perform_contract_transfer_operation(self, base_test, echo, registrar, method_bytecode, database_api_id,
                                             contract_id, operation_count=1, log_broadcast=False):
@@ -89,19 +95,20 @@ class Utils(object):
         return broadcast_result
 
     def perform_transfer_operations(self, base_test, echo, account_1, account_2, database_api_id, transfer_amount=1,
-                                    operation_count=1, log_broadcast=False):
+                                    operation_count=1, only_in_history=True, log_broadcast=False):
         add_balance_operation = 0
         if account_1 != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, echo, account_1, database_api_id,
                                                                transfer_amount=transfer_amount,
-                                                               operation_count=operation_count)
+                                                               operation_count=operation_count,
+                                                               only_in_history=only_in_history)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
             add_balance_operation = 1
         operation = base_test.echo_ops.get_transfer_operation(echo=echo, from_account_id=account_1,
                                                               to_account_id=account_2, amount=transfer_amount)
         collected_operation = base_test.collect_operations(operation, database_api_id)
-        if operation_count == 1 or operation_count == 2:
+        if operation_count == 1 or operation_count == 2:  # todo: check work
             broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
                                                             log_broadcast=log_broadcast)
             return broadcast_result
@@ -134,6 +141,47 @@ class Utils(object):
         return broadcast_result
 
     @staticmethod
+    def get_account_id(base_test, echo, account_names, account_keys, database_api_id, signer=None,
+                       need_operations=False, log_broadcast=False):
+        if signer is None:
+            signer = base_test.echo_acc0
+        if type(account_names) is str:
+            operation = base_test.echo_ops.get_account_create_operation(echo=echo, name=account_names,
+                                                                        active_key_auths=account_keys[1],
+                                                                        ed_key=account_keys[1],
+                                                                        options_memo_key=account_keys[2],
+                                                                        registrar=signer, signer=signer)
+            collected_operation = base_test.collect_operations(operation, database_api_id)
+            broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
+                                                            log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+                raise Exception("Default accounts are not created")
+            account_id = base_test.get_operation_results_ids(broadcast_result)
+            if need_operations:
+                return {"account_id": account_id, "operation": collected_operation}
+            return account_id
+        list_operations = []
+        for i in range(len(account_names)):
+            operation = base_test.echo_ops.get_account_create_operation(echo=echo, name=account_names[i],
+                                                                        active_key_auths=account_keys[i][1],
+                                                                        ed_key=account_keys[i][1],
+                                                                        options_memo_key=account_keys[i][2],
+                                                                        registrar=signer, signer=signer)
+            collected_operation = base_test.collect_operations(operation, database_api_id)
+            list_operations.append(collected_operation)
+        broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=list_operations,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception("Default accounts are not created")
+        operation_results = base_test.get_operation_results_ids(broadcast_result)
+        accounts_ids = []
+        for i in range(len(operation_results)):
+            accounts_ids.append(operation_results[i][1])
+        if need_operations:
+            return {"accounts_ids": accounts_ids, "list_operations": list_operations}
+        return accounts_ids
+
+    @staticmethod
     def get_asset_id(base_test, echo, symbol, database_api_id, log_broadcast=False):
         params = [symbol, 1]
         response_id = base_test.send_request(base_test.get_request("list_assets", params), database_api_id)
@@ -159,3 +207,42 @@ class Utils(object):
             raise Exception(
                 "Error: new asset holder '{}' not added, response:\n{}".format(to_account, broadcast_result))
         return broadcast_result
+
+    def perform_account_address_create_operation(self, base_test, echo, registrar, label, database_api_id,
+                                                 log_broadcast=False):
+        if registrar != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, echo, registrar, database_api_id, label=label)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_account_address_create_operation(echo=echo, owner=registrar, label=label)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception(
+                "Error: new address of '{}' account is not created, response:\n{}".format(registrar, broadcast_result))
+        return broadcast_result
+
+    @staticmethod
+    def perform_generate_eth_address_operation(base_test, echo, registrar, database_api_id, log_broadcast=False):
+        operation = base_test.echo_ops.get_generate_eth_address_operation(echo=echo, account_id=registrar)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: new eth address of '{}' account is not created, response:\n{}".format(registrar,
+                                                                                              broadcast_result))
+        return broadcast_result
+
+    @staticmethod
+    def get_account_balances(base_test, account, database_api_id, assets=None):
+        if assets is None:
+            assets = [base_test.echo_asset]
+        elif len(assets) == 1:
+            assets = [assets]
+        params = [account, assets]
+        response_id = base_test.send_request(base_test.get_request("get_account_balances", params), database_api_id)
+        if len(assets) == 1:
+            return base_test.get_response(response_id)["result"][0]
+        return base_test.get_response(response_id)["result"]
