@@ -6,7 +6,7 @@ class Utils(object):
     @staticmethod
     def add_balance_for_operations(base_test, echo, account, database_api_id, contract_bytecode=None, contract_value=0,
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, asset_name=None,
-                                   operation_count=1, label=None, only_in_history=True, log_broadcast=False):
+                                   operation_count=1, label=None, only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=echo, registrar=account,
@@ -244,5 +244,5 @@ class Utils(object):
         params = [account, assets]
         response_id = base_test.send_request(base_test.get_request("get_account_balances", params), database_api_id)
         if len(assets) == 1:
-            return base_test.get_response(response_id)["result"][0]
+            return base_test.get_response(response_id, log_response=True)["result"][0]
         return base_test.get_response(response_id)["result"]
