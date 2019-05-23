@@ -22,6 +22,16 @@ services:
       - testrpc:/ganache_data
 
 
+  migrate:
+    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:latest
+    container_name: '631.echo.contracts.${ENV}'
+    command: /bin/sh -c "sleep 5; npm run migrate -- --network docker;"
+    depends_on:
+      - ganache
+    volumes:
+      - ./genesis.json:/app/genesis.json
+
+
   pytests:
     environment:
       - BASE_URL=ws://echo:6311/ws
@@ -38,20 +48,33 @@ services:
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
     command: '--echorand --data-dir=/echo/datadir/
+      --genesis-json=/echo/genesis.json
       --rpc-endpoint=0.0.0.0:6311
-      --start-echorand --account-info=[\"1.2.6\",\"DET3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy\"]
+      --start-echorand
+      --account-info=[\"1.2.6\",\"DET3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy\"]
       --account-info=[\"1.2.7\",\"DETGcaFAkALQkcgQs6x6QcYW57VhA6bENV8uS3HtPXWZpZC\"]
       --account-info=[\"1.2.8\",\"DETECPcpfciywCVugxq99PSGLs6rARHwL4VG9D6hs4WxkF3\"]
       --account-info=[\"1.2.9\",\"DETBqxxGJpc3iMER81cFhnKZFAHB4fmjP4dv1WykZAefg9v\"]
       --account-info=[\"1.2.10\",\"DET5oLTA94JqbUGVskymaykqudd7DM6sjmEjrYvzZjSRsRt\"]
       --account-info=[\"1.2.11\",\"DET4ov3GEahUVkVdARNKFZVfsaZgJof8oQyB8nZB5K44i3t\"]
       --account-info=[\"1.2.12\",\"DET9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw\"]
+      --sidechain-committeeman=[\"1.2.6\",\"DET3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy\",\"942c314672a5cba316dc03764ea5256ed9302f7704c2dd14db1f40c962accfd9\"]
+      --sidechain-committeeman=[\"1.2.7\",\"DETGcaFAkALQkcgQs6x6QcYW57VhA6bENV8uS3HtPXWZpZC\",\"1e3868b734ac73c6676fd4f5687b0b31d98bd53621bd50e4124906a7d50b1e43\"]
+      --sidechain-committeeman=[\"1.2.8\",\"DETECPcpfciywCVugxq99PSGLs6rARHwL4VG9D6hs4WxkF3\",\"05a00856ddf2527e21249c22a351a093eb40e70732e4e327c01ca07587629138\"]
+      --sidechain-committeeman=[\"1.2.9\",\"DETBqxxGJpc3iMER81cFhnKZFAHB4fmjP4dv1WykZAefg9v\",\"770be2d7d5063fecfd6322f496865d327e11fabdacfdb6e548a6e347234e5821\"]
+      --sidechain-committeeman=[\"1.2.10\",\"DET5oLTA94JqbUGVskymaykqudd7DM6sjmEjrYvzZjSRsRt\",\"f3d900b6ade55834ae039f06390e92f8215e45cdf42faf8d34a005636e944b38\"]
+      --sidechain-committeeman=[\"1.2.11\",\"DET4ov3GEahUVkVdARNKFZVfsaZgJof8oQyB8nZB5K44i3t\",\"a9f4d055d7522ac1b28e84e9c8c4c8cb42924ff72f66f7d3ce00ff99622916eb\"]
       --registrar-account=\"1.2.8\"
-      --api-access=/echo/access.json'
+      --api-access=/echo/access.json
+      --sidechain-enabled
+      --sidechain-eth-node-url=ws://ganache:8545'
     ports:
       - 56451:6311
+    volumes:
+      - ./genesis.json:/echo/genesis.json
     depends_on:
       - ganache
+
 
 volumes:
   testrpc:
