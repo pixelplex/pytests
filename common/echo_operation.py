@@ -271,6 +271,19 @@ class EchoOperations(object):
             return [operation_id, generate_eth_address_props, account_id]
         return [operation_id, generate_eth_address_props, signer]
 
+    def get_withdraw_eth_operation(self, echo, acc_id, eth_addr, value, fee_amount=0, fee_asset_id="1.3.0", signer=None,
+                                   debug_mode=False):
+        operation_id = echo.config.operation_ids.WITHDRAW_ETH
+        withdraw_eth_props = deepcopy(self.get_operation_json("withdraw_eth_operation"))
+        withdraw_eth_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        withdraw_eth_props.update({"acc_id": acc_id, "eth_addr": eth_addr, "value": value})
+        if debug_mode:
+            lcc.log_debug(
+                "Withdraw ethereum operation: \n{}".format(json.dumps(withdraw_eth_props, indent=4)))
+        if signer is None:
+            return [operation_id, withdraw_eth_props, acc_id]
+        return [operation_id, withdraw_eth_props, signer]
+
     def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:

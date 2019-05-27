@@ -236,13 +236,27 @@ class Utils(object):
         return broadcast_result
 
     @staticmethod
+    def perform_withdraw_eth_operation_operation(base_test, echo, registrar, eth_addr, value, database_api_id,
+                                                 log_broadcast=False):
+        operation = base_test.echo_ops.get_withdraw_eth_operation(echo=echo, acc_id=registrar, eth_addr=eth_addr,
+                                                                  value=value)
+        collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
+        broadcast_result = base_test.echo_ops.broadcast(echo=echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: withdraw ethereum from '{}' account is not performed, response:\n{}".format(registrar,
+                                                                                                    broadcast_result))
+        return broadcast_result
+
+    @staticmethod
     def get_account_balances(base_test, account, database_api_id, assets=None):
         if assets is None:
             assets = [base_test.echo_asset]
-        elif len(assets) == 1:
+        elif base_test.validator.is_asset_id(assets):
             assets = [assets]
         params = [account, assets]
         response_id = base_test.send_request(base_test.get_request("get_account_balances", params), database_api_id)
         if len(assets) == 1:
-            return base_test.get_response(response_id)["result"][0]
+            return base_test.get_response(response_id, log_response=True)["result"][0]
         return base_test.get_response(response_id)["result"]
