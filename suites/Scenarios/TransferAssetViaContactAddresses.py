@@ -109,7 +109,7 @@ class TransferAssetViaContactAddresses(BaseTest):
         lcc.set_step("Transfer assets received to account address")
         self.utils.perform_transfer_operations(self, self.echo, new_account, self.echo_acc0,
                                                self.__database_api_identifier, transfer_amount=withdraw_amount,
-                                               log_broadcast=True)
+                                               only_in_history=False, log_broadcast=True)
         lcc.log_info("From the account of the recipient transferred assets to the account sender")
 
         lcc.set_step("Get account balance after return to sender")

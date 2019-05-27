@@ -46,7 +46,7 @@ class Utils(object):
             return self.get_nonexistent_asset_id(base_test, echo, database_api_id,
                                                  symbol=response["result"][-1]["symbol"])
         sorted_list_asset_ids = sorted(list_asset_ids, key=base_test.get_value_for_sorting_func)
-        return "{}{}".format(base_test.get_implementation_object_type(echo.config.get_object_type.ASSET),
+        return "{}{}".format(base_test.get_object_type(echo.config.object_types.ASSET),
                              str(int(sorted_list_asset_ids[-1][4:]) + 1))
 
     def get_contract_id(self, base_test, echo, registrar, contract_bytecode, database_api_id, value_amount=0,
@@ -95,7 +95,7 @@ class Utils(object):
         return broadcast_result
 
     def perform_transfer_operations(self, base_test, echo, account_1, account_2, database_api_id, transfer_amount=1,
-                                    operation_count=1, only_in_history=True, log_broadcast=False):
+                                    operation_count=1, only_in_history=False, log_broadcast=False):
         add_balance_operation = 0
         if account_1 != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, echo, account_1, database_api_id,
