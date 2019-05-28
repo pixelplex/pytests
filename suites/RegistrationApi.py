@@ -28,6 +28,9 @@ class RegistrationApi(object):
         api_identifier = base.get_identifier("registration")
         check_that("'registration api identifier'", api_identifier, is_integer())
 
+        lcc.set_step("Check node status, if empty run pre-deploy")
+        base.check_node_status()
+
         lcc.set_step("Check Registration api identifier. Call registration api method 'register_account'")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
@@ -125,10 +128,11 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "Registration API identifiers is '{}'".format(self.__registration_api_identifier))
 
-    def get_random_character(self, random_def, not_hyphen=False):
+    @staticmethod
+    def get_random_character(random_def, not_hyphen=False):
         character = random_def
         if not_hyphen and character == "-":
-            return self.get_random_character(random_def, not_hyphen=True)
+            return "*"
         return character
 
     @staticmethod

@@ -16,7 +16,7 @@ from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 
-from project import RESOURCES_DIR, BASE_URL, EMPTY_NODE, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
 
 
 class BaseTest(object):
@@ -462,12 +462,6 @@ class BaseTest(object):
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
 
-    def check_node_status(self, database_api_identifier):
-        # Check that the node empty or not
-        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
-                                        database_api_identifier)
-        return self.get_response(response_id)["result"]
-
     @staticmethod
     def _login_status(response):
         # Check authorization status
@@ -515,6 +509,13 @@ class BaseTest(object):
         lcc.log_info("Pre-deploy setup completed successfully")
         self._disconnect_to_echopy_lib()
 
+    def check_node_status(self):
+        database_api_identifier = self.get_identifier("database")
+        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+                                        database_api_identifier)
+        if not self.get_response(response_id)["result"]:
+            self.perform_pre_deploy_setup(database_api_identifier)
+
     def setup_suite(self):
         # Check status of connection
         lcc.set_step("Open connection")
@@ -526,10 +527,7 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
-        if EMPTY_NODE:
-            database_api_identifier = self.get_identifier("database")
-            if not self.check_node_status(database_api_identifier):
-                self.perform_pre_deploy_setup(database_api_identifier)
+        self.check_node_status()
 
     def teardown_suite(self):
         # Close connection to WebSocket

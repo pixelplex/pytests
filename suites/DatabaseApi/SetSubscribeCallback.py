@@ -26,6 +26,8 @@ class SetSubscribeCallback(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
         lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'set_subscribe_callback'")
@@ -100,6 +102,8 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
         lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
 
     @lcc.prop("type", "method")
     @lcc.test("Check notices of dynamic object '2.1.0'")

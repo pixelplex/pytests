@@ -260,3 +260,10 @@ class Utils(object):
         if len(assets) == 1:
             return base_test.get_response(response_id, log_response=True)["result"][0]
         return base_test.get_response(response_id)["result"]
+
+    @staticmethod
+    def cancel_all_subscriptions(base_test, database_api_id):
+        response_id = base_test.send_request(base_test.get_request("cancel_all_subscriptions"), database_api_id)
+        response = base_test.get_response(response_id)
+        if response["result"] is not None:
+            raise Exception("Can't cancel all cancel_all_subscriptions, got:\n{}".format(str(response)))

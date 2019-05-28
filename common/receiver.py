@@ -15,6 +15,8 @@ class Receiver(object):
 
     @staticmethod
     def get_positive_result(response, print_log):
+        if "result" not in response:
+            raise Exception("Need result, but received:\n{}".format(json.dumps(response, indent=4)))
         if print_log:
             lcc.log_info("Received:\n{}".format(json.dumps(response, indent=4)))
         return response

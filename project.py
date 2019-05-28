@@ -16,11 +16,6 @@ if "BASE_URL" not in os.environ:
 else:
     BASE_URL = os.environ["BASE_URL"]
 
-if "EMPTY_NODE" in os.environ and os.environ["EMPTY_NODE"] == "False":
-    EMPTY_NODE = False
-else:
-    EMPTY_NODE = True
-
 if "NATHAN" not in os.environ:
     NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "nathan.json")))["NATHAN"]
 else:
