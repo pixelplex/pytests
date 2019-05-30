@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, equal_to, has_entry
+from lemoncheesecake.matching import this_dict, check_that, has_entry
 
 from common.base_test import BaseTest
 

@@ -5,7 +5,6 @@ from copy import deepcopy
 import lemoncheesecake.api as lcc
 
 from common.validation import Validator
-
 from project import WALLETS, ECHO_OPERATIONS
 
 

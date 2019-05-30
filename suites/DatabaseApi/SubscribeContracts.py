@@ -60,8 +60,8 @@ class SubscribeContracts(BaseTest):
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
-                                                 self.__database_api_identifier, value_amount=10)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier,
+                                                 value_amount=10)
 
         lcc.set_step("Subscribe created contract")
         response_id = self.send_request(self.get_request("subscribe_contracts", [[contract_id]]),
@@ -198,7 +198,7 @@ class PositiveTesting(BaseTest):
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.piggy_contract,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=10)
 
         lcc.set_step("Subscribe created contract")
@@ -264,7 +264,7 @@ class PositiveTesting(BaseTest):
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'contract_create_contract' contract in the Echo network")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.create_contract,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.create_contract,
                                                  self.__database_api_identifier)
 
         lcc.set_step("Call 'deploy_contract' method")

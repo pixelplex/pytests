@@ -71,8 +71,8 @@ class BalanceObjectsInSubscribe(BaseTest):
                 "'{}' balance before transfer: '{}'".format(tracked_accounts[i], accounts_balance_before_transfer[i]))
 
         lcc.set_step("Transfer assets from account to account")
-        broadcast_result = self.utils.perform_transfer_operations(self, self.echo, tracked_accounts[0],
-                                                                  tracked_accounts[1], self.__database_api_identifier,
+        broadcast_result = self.utils.perform_transfer_operations(self, tracked_accounts[0], tracked_accounts[1],
+                                                                  self.__database_api_identifier,
                                                                   transfer_amount=transfer_amount)
         fee = broadcast_result["trx"]["operations"][0][1]["fee"]["amount"]
         lcc.log_info(

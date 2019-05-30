@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, is_list, this_dict, check_that_entry, has_length, is_str, check_that_in
+from lemoncheesecake.matching import check_that, is_list, this_dict, check_that_entry, has_length, is_str
 
 from common.base_test import BaseTest
 
@@ -66,7 +66,7 @@ class GetAccountAddresses(BaseTest):
 
         lcc.set_step("Create account address for new account")
         label = get_random_string
-        broadcast_result = self.utils.perform_account_address_create_operation(self, self.echo, new_account, label,
+        broadcast_result = self.utils.perform_account_address_create_operation(self, new_account, label,
                                                                                self.__database_api_identifier)
         account_address_object = self.get_operation_results_ids(broadcast_result)
 

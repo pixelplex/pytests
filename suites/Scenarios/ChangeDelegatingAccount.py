@@ -63,7 +63,7 @@ class ChangeDelegatingAccount(BaseTest):
                                                                votes=old_options["votes"])
 
         fee = self.get_required_fee(operation, self.__database_api_identifier)[0].get("amount")
-        self.utils.perform_transfer_operations(self, self.echo, self.echo_acc0, new_account,
+        self.utils.perform_transfer_operations(self, self.echo_acc0, new_account,
                                                self.__database_api_identifier, transfer_amount=fee)
         lcc.log_info("Needed amount '{}' to pay fee added to account '{}'".format(fee, new_account))
 

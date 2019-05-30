@@ -53,22 +53,21 @@ class PositiveTesting(object):
 
         base.ws.close()
 
-
 # todo: add when will be validation on login
 # @lcc.prop("testing", "negative")
 # @lcc.tags("login_api")
 # @lcc.suite("Negative testing of method 'login'")
 # class NegativeTesting(object):
 #
-    # @lcc.prop("type", "method")
-    # @lcc.test("Login with wrong credential", rank=3)
-    # @lcc.depends_on("LoginApi.LoginApi.login_with_empty_credential")
-    # def login_with_wrong_credential(self):
-    #     base = BaseTest()
-    #     lcc.set_step("Login to the Full Node with wrong credential")
-    #     credential = [0, 0]
-    #     response_id = base.send_request(base.get_request("login", credential))
-    #     response = base.get_response(response_id, negative=True)
-    #
-    #     lcc.set_step("Check that login not successful")
-    #     check_that("'login status'", response["result"], is_bool(is_false()))
+# @lcc.prop("type", "method")
+# @lcc.test("Login with wrong credential", rank=3)
+# @lcc.depends_on("LoginApi.LoginApi.login_with_empty_credential")
+# def login_with_wrong_credential(self):
+#     base = BaseTest()
+#     lcc.set_step("Login to the Full Node with wrong credential")
+#     credential = [0, 0]
+#     response_id = base.send_request(base.get_request("login", credential))
+#     response = base.get_response(response_id, negative=True)
+#
+#     lcc.set_step("Check that login not successful")
+#     check_that("'login status'", response["result"], is_bool(is_false()))

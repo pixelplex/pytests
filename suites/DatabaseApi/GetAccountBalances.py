@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict, check_that, equal_to
+from lemoncheesecake.matching import this_dict, check_that_entry, equal_to
 
 from common.base_test import BaseTest
 
@@ -104,8 +103,8 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Call method 'get_account_balances' in '{}' assets".format(self.echo_asset))
 
         lcc.set_step("Perform transfer operation to add assets to new account")
-        self.utils.perform_transfer_operations(self, self.echo, self.echo_acc0, new_account,
-                                               self.__database_api_identifier, transfer_amount=transfer_amount)
+        self.utils.perform_transfer_operations(self, self.echo_acc0, new_account, self.__database_api_identifier,
+                                               transfer_amount=transfer_amount)
         lcc.log_info("Amount '{}' in '{}' assets added to new account '{}'".format(transfer_amount, self.echo_asset,
                                                                                    new_account))
 
@@ -133,7 +132,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Get nonexistent asset id")
-        nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
+        nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(nonexistent_asset_id))
 
         lcc.set_step("Get balances of new account in nonexistent asset id")

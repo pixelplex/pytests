@@ -65,7 +65,7 @@ class GetEthAddress(BaseTest):
         )
 
         lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, self.echo, new_account, self.__database_api_identifier)
+        self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
 
         lcc.set_step("Get updated ethereum address of created account in the network")
         while self.no_address:

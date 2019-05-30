@@ -66,8 +66,7 @@ class TransferAssetViaContactAddresses(BaseTest):
 
         lcc.set_step("Create multiple account address for new account")
         for i in range(addresses_count):
-            broadcast_result = self.utils.perform_account_address_create_operation(self, self.echo, new_account,
-                                                                                   label + str(i),
+            broadcast_result = self.utils.perform_account_address_create_operation(self, new_account, label + str(i),
                                                                                    self.__database_api_identifier)
             account_address_object.append(self.get_operation_results_ids(broadcast_result))
 
@@ -107,9 +106,9 @@ class TransferAssetViaContactAddresses(BaseTest):
             require_that_entry("asset_id", equal_to(balance_after_transfer["asset_id"]))
 
         lcc.set_step("Transfer assets received to account address")
-        self.utils.perform_transfer_operations(self, self.echo, new_account, self.echo_acc0,
-                                               self.__database_api_identifier, transfer_amount=withdraw_amount,
-                                               only_in_history=False, log_broadcast=True)
+        self.utils.perform_transfer_operations(self, new_account, self.echo_acc0, self.__database_api_identifier,
+                                               transfer_amount=withdraw_amount, only_in_history=False,
+                                               log_broadcast=True)
         lcc.log_info("From the account of the recipient transferred assets to the account sender")
 
         lcc.set_step("Get account balance after return to sender")

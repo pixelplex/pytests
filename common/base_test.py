@@ -4,19 +4,19 @@ import json
 import os
 import time
 
+import lemoncheesecake.api as lcc
 from echopy import Echo
 from lemoncheesecake.matching import is_str, is_integer, check_that_entry
+from web3 import Web3
 from websocket import create_connection
 
-import lemoncheesecake.api as lcc
-
 from common.echo_operation import EchoOperations
+from common.ethereum_transaction import EthereumTransactions
 from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL
 
 
 class BaseTest(object):
@@ -27,14 +27,16 @@ class BaseTest(object):
         self.receiver = None
         self.echo = Echo()
         self.utils = Utils()
+        self.web3 = None
         self.echo_ops = EchoOperations()
+        self.eth_trx = EthereumTransactions()
         self.__id = 0
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eth_asset = "1.3.1"
-        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "0"
-        self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
-        self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
+        self.echo_acc0 = ACCOUNT_PREFIX + "0"
+        self.echo_acc1 = ACCOUNT_PREFIX + "1"
+        self.echo_acc2 = ACCOUNT_PREFIX + "2"
 
     @staticmethod
     def create_connection_to_echo():
@@ -498,6 +500,15 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
+    def _connect_to_ganache_ethereum(self):
+        # Create connection to ganache ethereum
+        lcc.set_step("Open connection to ganache ethereum")
+        self.web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
+        if not self.web3.isConnected():
+            lcc.log_error("Connection to ganache ethereum not established")
+            raise Exception("Connection to ganache ethereum not established")
+        lcc.log_info("Connection to ganache ethereum successfully created")
+
     def perform_pre_deploy_setup(self, database_api_identifier):
         # Perform pre-deploy for run tests on the empty node
         self._connect_to_echopy_lib()
@@ -527,6 +538,7 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
+        self._connect_to_ganache_ethereum()
         self.check_node_status()
 
     def teardown_suite(self):

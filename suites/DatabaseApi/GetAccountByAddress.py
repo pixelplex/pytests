@@ -50,7 +50,7 @@ class GetAccountByAddress(BaseTest):
 
         lcc.set_step("Create account address for new account")
         label = get_random_string
-        broadcast_result = self.utils.perform_account_address_create_operation(self, self.echo, new_account, label,
+        broadcast_result = self.utils.perform_account_address_create_operation(self, new_account, label,
                                                                                self.__database_api_identifier)
         account_address_object = self.get_operation_results_ids(broadcast_result)
 
@@ -123,8 +123,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Create multiple account address for new account")
         for i in range(addresses_count):
-            broadcast_result = self.utils.perform_account_address_create_operation(self, self.echo, new_account,
-                                                                                   label + str(i),
+            broadcast_result = self.utils.perform_account_address_create_operation(self, new_account, label + str(i),
                                                                                    self.__database_api_identifier)
             account_address_object.append(self.get_operation_results_ids(broadcast_result))
 
@@ -145,7 +144,6 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Get created account by created account_addresses")
         for i in range(len(account_addresses)):
-
             params = [account_addresses[i]]
             response_id = self.send_request(self.get_request("get_account_by_address", params),
                                             self.__database_api_identifier)

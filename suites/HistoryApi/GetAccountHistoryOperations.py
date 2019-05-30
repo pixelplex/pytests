@@ -154,8 +154,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create and get new account. Add balance to pay for asset_create_operation fee")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
-        broadcast_result = self.utils.add_balance_for_operations(self, self.echo, new_account,
-                                                                 self.__database_api_identifier,
+        broadcast_result = self.utils.add_balance_for_operations(self, new_account, self.__database_api_identifier,
                                                                  asset_name=new_asset_name,
                                                                  operation_count=operation_count)
         lcc.log_info("New Echo account created, account_id='{}, balance added".format(new_account))
@@ -203,9 +202,8 @@ class PositiveTesting(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}".format(new_account))
 
         lcc.set_step("Perform operations using a new account. Operation count equal to limit")
-        self.utils.perform_transfer_operations(self, self.echo, new_account, self.echo_acc0,
-                                               self.__database_api_identifier, operation_count=operation_count,
-                                               only_in_history=True)
+        self.utils.perform_transfer_operations(self, new_account, self.echo_acc0, self.__database_api_identifier,
+                                               operation_count=operation_count, only_in_history=True)
         lcc.log_info("Fill account history with '{}' number of transfer operations".format(operation_count))
 
         lcc.set_step(
@@ -225,8 +223,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform operations using a new account to create max_limit operations")
         max_limit = 100
-        self.utils.perform_transfer_operations(self, self.echo, new_account, self.echo_acc0,
-                                               self.__database_api_identifier,
+        self.utils.perform_transfer_operations(self, new_account, self.echo_acc0, self.__database_api_identifier,
                                                operation_count=max_limit - operation_count, only_in_history=True)
         lcc.log_info(
             "Fill account history with '{}' number of transfer operations".format(max_limit - operation_count))
@@ -253,7 +250,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform one operation")
         operation_count = 1
-        broadcast_result = self.utils.perform_transfer_operations(self, self.echo, self.echo_acc0, self.echo_acc1,
+        broadcast_result = self.utils.perform_transfer_operations(self, self.echo_acc0, self.echo_acc1,
                                                                   self.__database_api_identifier,
                                                                   transfer_amount=transfer_amount_1,
                                                                   operation_count=operation_count, only_in_history=True)
@@ -274,7 +271,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform another operations")
         operation_count = 5
-        broadcast_result = self.utils.perform_transfer_operations(self, self.echo, self.echo_acc0, self.echo_acc1,
+        broadcast_result = self.utils.perform_transfer_operations(self, self.echo_acc0, self.echo_acc1,
                                                                   self.__database_api_identifier,
                                                                   transfer_amount=transfer_amount_2,
                                                                   operation_count=operation_count, only_in_history=True)

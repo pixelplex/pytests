@@ -88,8 +88,7 @@ class PositiveTesting(BaseTest):
     def new_asset_without_holders(self, get_random_valid_asset_name):
         self.new_asset_name = get_random_valid_asset_name
         lcc.set_step("Create a new asset and get id new asset")
-        self.new_asset_id = self.utils.get_asset_id(self, self.echo, self.new_asset_name,
-                                                    self.__database_api_identifier)
+        self.new_asset_id = self.utils.get_asset_id(self, self.new_asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(self.new_asset_id))
 
         lcc.set_step("Check that the new asset is in the list and its number of holders is zero")
@@ -112,8 +111,7 @@ class PositiveTesting(BaseTest):
     def new_asset_with_holders(self):
         value = 100
         lcc.set_step("Add new asset holder")
-        self.utils.add_assets_to_account(self, self.echo, value, self.new_asset_id, self.echo_acc0,
-                                         self.__database_api_identifier)
+        self.utils.add_assets_to_account(self, value, self.new_asset_id, self.echo_acc0, self.__database_api_identifier)
         lcc.log_info(
             "Echo account '{}' became new asset holder of '{}' asset_id".format(self.echo_acc0, self.new_asset_id))
 

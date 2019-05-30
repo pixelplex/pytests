@@ -44,8 +44,7 @@ class GetContracts(BaseTest):
     @lcc.test("Simple work of method 'get_contracts'")
     def method_main_check(self):
         lcc.set_step("Create contract in the Echo network and get its contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
-                                                 self.__database_api_identifier)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
         lcc.set_step("Get info about created contract")
         response_id = self.send_request(self.get_request("get_contracts", [[contract_id]]),
@@ -117,8 +116,7 @@ class PositiveTesting(BaseTest):
         contracts = []
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract_1,
-                                                 self.__database_api_identifier)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_1, self.__database_api_identifier)
         contracts.append(contract_id)
 
         lcc.set_step("Get info about created contract")
@@ -131,8 +129,7 @@ class PositiveTesting(BaseTest):
         self.check_contracts_ids(response, contracts)
 
         lcc.set_step("Create 'asset_int' contract in the Echo network and get its contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract_2,
-                                                 self.__database_api_identifier)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_2, self.__database_api_identifier)
         contracts.append(contract_id)
 
         lcc.set_step("Get info about created contract")
@@ -149,8 +146,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
     def check_destroyed_field(self):
         lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract_1,
-                                                 self.__database_api_identifier)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_1, self.__database_api_identifier)
 
         lcc.set_step("Get info about created contract")
         response_id = self.send_request(self.get_request("get_contracts", [[contract_id]]),
@@ -192,7 +188,7 @@ class PositiveTesting(BaseTest):
         asset_name = get_random_valid_asset_name
 
         lcc.set_step("Create asset and get id new asset")
-        asset_id = self.utils.get_asset_id(self, self.echo, asset_name, self.__database_api_identifier)
+        asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
@@ -223,8 +219,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
     def check_statistics_field(self):
         lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract_1,
-                                                 self.__database_api_identifier)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_1, self.__database_api_identifier)
 
         lcc.set_step("Get info about created contract. Store statistics_id")
         response_id = self.send_request(self.get_request("get_contracts", [[contract_id]]),

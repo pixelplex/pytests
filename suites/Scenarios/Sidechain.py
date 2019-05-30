@@ -13,7 +13,7 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.tags("sidechain")
 # todo: add when will be added ethereum steps
-@lcc.disabled()
+@lcc.hidden()
 @lcc.suite("Check scenario 'Sidechain'")
 class Sidechain(BaseTest):
 

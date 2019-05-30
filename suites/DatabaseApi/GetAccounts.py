@@ -146,8 +146,8 @@ class PositiveTesting(BaseTest):
         public_data_accounts = [self.generate_keys(), self.generate_keys()]
 
         lcc.set_step("Perform two account creation operations and store accounts ids")
-        accounts = self.utils.get_account_id(self, self.echo, accounts, public_data_accounts,
-                                             self.__database_api_identifier, need_operations=True)
+        accounts = self.utils.get_account_id(self, accounts, public_data_accounts, self.__database_api_identifier,
+                                             need_operations=True)
         lcc.log_info("Two accounts created, ids: 1='{}', 2='{}'".format(accounts.get("accounts_ids")[0],
                                                                         accounts.get("accounts_ids")[1]))
 

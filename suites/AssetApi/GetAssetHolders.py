@@ -4,7 +4,7 @@ from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entr
     has_entry, is_not_none
 
 from common.base_test import BaseTest
-from project import DEFAULT_ACCOUNT_PREFIX
+from project import ACCOUNT_PREFIX
 
 SUITE = {
     "description": "Method 'get_asset_holders'"
@@ -120,13 +120,13 @@ class PositiveTesting(BaseTest):
         new_asset_name = get_random_valid_asset_name
         asset_value = 100
         lcc.set_step("Create a new asset and get id new asset")
-        new_asset_id = self.utils.get_asset_id(self, self.echo, new_asset_name, self.__database_api_identifier)
+        new_asset_id = self.utils.get_asset_id(self, new_asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(new_asset_id))
 
         lcc.set_step("Add new asset holders")
         new_holders = [self.echo_acc0, self.echo_acc1, self.echo_acc2]
         for i in range(len(new_holders)):
-            self.utils.add_assets_to_account(self, self.echo, asset_value - i, new_asset_id, new_holders[i],
+            self.utils.add_assets_to_account(self, asset_value - i, new_asset_id, new_holders[i],
                                              self.__database_api_identifier)
         lcc.log_info(
             "Echo accounts '{}' became new asset holders of '{}' asset_id".format(new_holders, new_asset_id))
@@ -153,10 +153,10 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("AssetApi.GetAssetHolders.GetAssetHolders.method_main_check")
     def work_of_start_and_limit_params(self, get_random_valid_asset_name):
         asset_name = get_random_valid_asset_name
-        account_names = DEFAULT_ACCOUNT_PREFIX
+        account_names = ACCOUNT_PREFIX
         asset_value = max_limit = 100
         lcc.set_step("Create asset and get id new asset")
-        asset_id = self.utils.get_asset_id(self, self.echo, asset_name, self.__database_api_identifier)
+        asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
         lcc.set_step("Get accounts, the number of which is equal to the max limit 'get_asset_holders'")
@@ -226,7 +226,7 @@ class NegativeTesting(BaseTest):
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
+        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
 
     def teardown_suite(self):

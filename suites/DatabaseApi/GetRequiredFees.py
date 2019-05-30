@@ -145,7 +145,7 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
+        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
@@ -160,7 +160,7 @@ class NegativeTesting(BaseTest):
                                                                        to_account_id=self.echo_acc1,
                                                                        amount=self.amount)
         lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
-        self.valid_contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
+        self.valid_contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract,
                                                             self.__database_api_identifier)
 
     def teardown_suite(self):
