@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_integer, is_dict, \
-    is_list, require_that, is_
+    is_list, require_that, is_, equal_to
 
 from common.base_test import BaseTest
 
@@ -110,3 +110,110 @@ class LookupAccountNames(BaseTest):
                             check_that_entry("num_committee", is_integer(), quiet=True)
                             check_that_entry("votes", is_list(), quiet=True)
                             check_that_entry("extensions", is_list(), quiet=True)
+
+
+@lcc.prop("testing", "positive")
+@lcc.tags("database_api", "lookup_account_names")
+@lcc.suite("Positive testing of method 'lookup_account_names'", rank=2)
+class PositiveTesting(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+
+    def setup_suite(self):
+        super().setup_suite()
+        self._connect_to_echopy_lib()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
+
+    @lcc.prop("type", "method")
+    @lcc.test("Create accounts using account_create operation and get info about them")
+    @lcc.depends_on("DatabaseApi.LookupAccountNames.LookupAccountNames.method_main_check")
+    def get_info_about_created_accounts(self, get_random_valid_account_name):
+        accounts = [get_random_valid_account_name + "0", get_random_valid_account_name + "1"]
+        public_data_accounts = [self.generate_keys(), self.generate_keys()]
+
+        lcc.set_step("Perform two account creation operations and store accounts ids")
+        accounts = self.utils.get_account_id(self, accounts, public_data_accounts, self.__database_api_identifier,
+                                             need_operations=True)
+        lcc.log_info("Two accounts created, ids: 1='{}', 2='{}'".format(accounts.get("accounts_ids")[0],
+                                                                        accounts.get("accounts_ids")[1]))
+
+        lcc.set_step("Get a list of created accounts by names")
+        response_id = self.send_request(self.get_request("lookup_account_names", [accounts.get("account_names")]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'lookup_account_names' with params: {}".format(accounts.get("account_names")))
+
+        for i in range(len(response["result"])):
+            lcc.set_step("Checking account #{}".format(i))
+            performed_operations = accounts.get("list_operations")[i][0][1]
+            account_info = response["result"][i]
+            with this_dict(account_info):
+                check_that_entry("registrar", equal_to(performed_operations["registrar"]))
+                check_that_entry("referrer", equal_to(performed_operations["referrer"]))
+                check_that_entry("referrer_rewards_percentage", equal_to(performed_operations["referrer_percent"]))
+                check_that_entry("name", equal_to(performed_operations["name"]))
+                check_that_entry("active", equal_to(performed_operations["active"]))
+                check_that_entry("ed_key", equal_to(performed_operations["ed_key"]))
+                check_that_entry("options", equal_to(performed_operations["options"]))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Create account using account_create operation and "
+              "compare response from 'lookup_account_names' and 'get_objects'")
+    @lcc.depends_on("DatabaseApi.LookupAccountNames.LookupAccountNames.method_main_check")
+    def compare_with_method_get_objects(self, get_random_valid_account_name):
+        account_name = get_random_valid_account_name
+        public_data = self.generate_keys()
+
+        lcc.set_step("Perform account creation operation")
+        operation = self.echo_ops.get_account_create_operation(self.echo, account_name, public_data[1], public_data[1],
+                                                               public_data[2], registrar=self.echo_acc0,
+                                                               signer=self.echo_acc0)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception("Account is not created")
+        operation_result = self.get_operation_results_ids(broadcast_result)
+        lcc.log_info("Account is created, id='{}'".format(operation_result))
+
+        lcc.set_step("Get account by name")
+        response_id = self.send_request(self.get_request("lookup_account_names", [[account_name]]),
+                                        self.__database_api_identifier)
+        response_1 = self.get_response(response_id)
+        lcc.log_info("Call method 'get_account_by_name' with param: {}".format(account_name))
+
+        lcc.set_step("Get account by id")
+        account_id = self.get_account_by_name(account_name, self.__database_api_identifier).get("result").get("id")
+        response_id = self.send_request(self.get_request("get_objects", [[account_id]]),
+                                        self.__database_api_identifier)
+        response_2 = self.get_response(response_id)
+        lcc.log_info("Call method 'get_objects' with param: {}".format(account_id))
+
+        lcc.set_step("Checking created account")
+        account_info_1 = response_1["result"]
+        account_info_2 = response_2["result"]
+        for i in range(len(account_info_1)):
+            with this_dict(account_info_1[i]):
+                check_that_entry("registrar", equal_to(account_info_2[i]["registrar"]))
+                check_that_entry("referrer", equal_to(account_info_2[i]["referrer"]))
+                check_that_entry("referrer_rewards_percentage",
+                                 equal_to(account_info_2[i]["referrer_rewards_percentage"]))
+                check_that_entry("name", equal_to(account_info_2[i]["name"]))
+                check_that_entry("active", equal_to(account_info_2[i]["active"]))
+                check_that_entry("ed_key", equal_to(account_info_2[i]["ed_key"]))
+                check_that_entry("options", equal_to(account_info_2[i]["options"]))

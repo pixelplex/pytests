@@ -132,9 +132,9 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Create accounts using account_create operation and get info about them")
+    @lcc.test("Create account using account_create operation and get info about them")
     @lcc.depends_on("DatabaseApi.GetAccountByName.GetAccountByName.method_main_check")
-    def get_info_about_created_accounts(self, get_random_valid_account_name):
+    def get_info_about_created_account(self, get_random_valid_account_name):
         account_name = get_random_valid_account_name
         public_data = self.generate_keys()
 
@@ -153,7 +153,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get account by name")
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_account_by_name' with param: {}".format(account_name))
 
         lcc.set_step("Checking created account")

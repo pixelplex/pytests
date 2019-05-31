@@ -89,25 +89,12 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 def distribute_balance_between_committee_addresses(base_test):
     default_account_balance = base_test.utils.get_address_balance_in_eth_network(base_test,
                                                                                  base_test.web3.eth.accounts[0])
-    # todo: remove
-    print("\nDefault account balance in eth: " + str(default_account_balance))
-    print("\nAccounts: " + str(base_test.web3.eth.accounts[0]))
-
     balance_to_transfer = default_account_balance / INITIAL_ACCOUNTS_COUNT
-
     for i in range(len(INITIAL_ACCOUNTS_ETH_ADDRESSES)):
         transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
                                                                  to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],
                                                                  value=balance_to_transfer)
-        base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction, debug_mode=True, log_transaction=True)
-
-        balance = base_test.utils.get_address_balance_in_eth_network(base_test, INITIAL_ACCOUNTS_ETH_ADDRESSES[i])
-        print("\nBalance of committee_address #" + str(i) + " in eth: " + str(balance))
-
-    # todo: remove
-    default_account_balance = base_test.web3.fromWei(base_test.web3.eth.getBalance(base_test.web3.eth.accounts[0]),
-                                                     "ether")
-    print("\nMain account NEW balance in eth: " + str(default_account_balance))
+        base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction)
     return True
 
 

@@ -503,6 +503,7 @@ class BaseTest(object):
     def _connect_to_ganache_ethereum(self):
         # Create connection to ganache ethereum
         lcc.set_step("Open connection to ganache ethereum")
+        lcc.log_url(GANACHE_URL)
         self.web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
         if not self.web3.isConnected():
             lcc.log_error("Connection to ganache ethereum not established")

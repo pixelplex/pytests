@@ -182,7 +182,7 @@ class Utils(object):
         for i in range(len(operation_results)):
             accounts_ids.append(operation_results[i][1])
         if need_operations:
-            return {"accounts_ids": accounts_ids, "list_operations": list_operations}
+            return {"accounts_ids": accounts_ids, "account_names": account_names, "list_operations": list_operations}
         return accounts_ids
 
     @staticmethod
