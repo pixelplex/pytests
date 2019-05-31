@@ -334,7 +334,7 @@ class BaseTest(object):
     # todo: remove get_memo_key later
     @staticmethod
     def get_memo_key():
-        return "ECHO7JgjnMroepiCCWyrG3jhWCRswG8CwEkthAZzEpA6HATSqLxduT"
+        return "ECHO1111111111111111111111111111111114T1Anm"
 
     def generate_keys(self):
         brain_key_object = self.echo.brain_key()
