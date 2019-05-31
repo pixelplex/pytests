@@ -111,7 +111,7 @@ class Utils(object):
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=account_1,
                                                               to_account_id=account_2, amount=transfer_amount)
         collected_operation = base_test.collect_operations(operation, database_api_id)
-        if operation_count == 1 or operation_count == 2:  # todo: check work
+        if operation_count == 1:
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                             log_broadcast=log_broadcast)
             return broadcast_result

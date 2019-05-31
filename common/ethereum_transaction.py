@@ -36,9 +36,7 @@ class EthereumTransactions(object):
             lcc.log_debug("Sent:\n{}".format(json.dumps(transaction, indent=4)))
         signed_transaction = web3.eth.account.signTransaction(transaction[0], transaction[1])
         transaction_hash = web3.eth.sendRawTransaction(signed_transaction.rawTransaction)
-        # todo: make pretty print
         if log_transaction:
             lcc.log_info("Transaction:\n{}".format(web3.eth.getTransaction(transaction_hash)))
         if log_transaction_logs:
-            lcc.log_info(
-                "Transaction logs:\n{}".format(web3.eth.getTransactionReceipt(transaction_hash).logs))
+            lcc.log_info("Transaction logs:\n{}".format(web3.eth.getTransactionReceipt(transaction_hash).logs))

@@ -46,8 +46,8 @@ MAIN_TEST_ACCOUNT_COUNT = 1
 BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_interval"]
 
 ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
-# todo: get from .env
-ETH_PRIVATE_KEY = "0xda8e316c9e63e6725d93ebae25f923c567c4d7e9fbd2d1740a4e27d4a6094fab"
+with open(".env") as env_file:
+    ETH_PRIVATE_KEY = (env_file.readline().split('RPC_ACCOUNT=')[1]).split(",")[0]
 
 
 class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy, HasPreRunHook, HasPostRunHook):

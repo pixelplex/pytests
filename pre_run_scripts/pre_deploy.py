@@ -87,8 +87,6 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 
 
 def distribute_balance_between_committee_addresses(base_test):
-    # default_account_balance = base_test.web3.fromWei(base_test.web3.eth.getBalance(base_test.web3.eth.accounts[0]),
-    #                                                  "ether")
     default_account_balance = base_test.utils.get_address_balance_in_eth_network(base_test,
                                                                                  base_test.web3.eth.accounts[0])
     # todo: remove
@@ -103,7 +101,6 @@ def distribute_balance_between_committee_addresses(base_test):
                                                                  value=balance_to_transfer)
         base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction, debug_mode=True, log_transaction=True)
 
-        # balance = base_test.web3.fromWei(base_test.web3.eth.getBalance(INITIAL_ACCOUNTS_ETH_ADDRESSES[i]), "ether")
         balance = base_test.utils.get_address_balance_in_eth_network(base_test, INITIAL_ACCOUNTS_ETH_ADDRESSES[i])
         print("\nBalance of committee_address #" + str(i) + " in eth: " + str(balance))
 
@@ -111,6 +108,7 @@ def distribute_balance_between_committee_addresses(base_test):
     default_account_balance = base_test.web3.fromWei(base_test.web3.eth.getBalance(base_test.web3.eth.accounts[0]),
                                                      "ether")
     print("\nMain account NEW balance in eth: " + str(default_account_balance))
+    return True
 
 
 def get_public_key(account):
@@ -140,8 +138,9 @@ def pre_deploy_echo(base_test, database_api, lcc):
     nathan = get_account(base_test, "nathan", database_api)
     nathan_id = get_account_id(nathan)
     nathan_public_key = get_public_key(nathan)
-    distribute_balance_between_committee_addresses(base_test)
-    print("\nHERE!!!!!!!!!!!!!!!!")
+    if not distribute_balance_between_committee_addresses(base_test):
+        raise Exception("Ethereum balance is not distributed")
+    lcc.log_info("Ethereum balance distributed between committee addresses successfully")
     if not import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
         raise Exception("Broadcast failed")
     lcc.log_info("Balance to nathan imported successfully")

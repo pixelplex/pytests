@@ -12,6 +12,7 @@ SUITE = {
 
 @lcc.prop("testing", "main")
 @lcc.tags("eth_in")
+# @lcc.hidden()
 @lcc.suite("Check scenario 'Ethereum in'")
 class EthToEcho(BaseTest):
 
@@ -39,6 +40,7 @@ class EthToEcho(BaseTest):
 
     def setup_suite(self):
         super().setup_suite()
+        self._connect_to_ganache_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
@@ -90,75 +92,14 @@ class EthToEcho(BaseTest):
         print("\nAccount: '{}'".format(new_account))
         print("\nEth address: '{}'".format(eth_account_address))
 
-        # # todo: ethereum steps
-        # lcc.set_step("Send ethereum_amount from Eth to Echo")
-        # ethereum_amount = 9
-        # web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
-        # status = web3.isConnected()
-        # print("\nis_connected: " + str(status))
-        #
-        # web3.eth.defaultAccount = web3.eth.account[0] # todo: not need private_key ?
-        #
-        # block_num = web3.eth.blockNumber
-        # print("\nblock_num is: " + str(block_num))
-        # account_balance_in_wei = web3.eth.getBalance("0x1AFeEcE88325110488570146f2635C8615Ad0613")
-        # print("\naccount_balance_in_wei: " + str(account_balance_in_wei))
-        # account_balance_in_eth = web3.fromWei(account_balance_in_wei, 'ether')
-        # print("\naccount_balance_in_eth: " + str(account_balance_in_eth))
-        #
-        # address = web3.toChecksumAddress("0xfA562F151a8D7cD62A4b0ca53aCF108CAe4497cF")
-        # contract = web3.eth.contract(address=address)
-        # print("\nsidechain contract: " + str(contract))
-        #
-        # account_1 = "0x1AFeEcE88325110488570146f2635C8615Ad0613"
-        # # todo: don't have address of account2
-        # account_2 = None
-        #
-        # # todo: don't have private_key of account1
-        # private_key_account_1 = None
-        #
-        # nonce = web3.eth.getBlockTransactionCount(account_1)
-        #
-        # tx = {
-        #     "nonce": nonce,
-        #     "to": account_2,
-        #     "value": web3.toWei(1, "ether"),
-        #     "gas": 2000000,
-        #     "gasPrice": web3.toWei("50", 'qwei')
-        # }
-        #
-        # signed_tx = web3.eth.account.signTransaction(tx, private_key_account_1)
-        # tx_hash = web3.eth.sendRawTransaction(signed_tx.rawTransaction)
-        # print(web3.toHex(tx_hash))
-
-        # lcc.set_step("Get updated ethereum balance")
-        # ethereum_balance = self.utils.get_account_balances(self, "1.2.329", self.__database_api_identifier,
-        #                                                    self.eth_asset)
-        # check_that(
-        #     "'balance in ethereum'",
-        #     ethereum_balance["amount"],
-        #     is_(10000)
-        # )
-        #
-        # new_account = get_random_valid_account_name
-        # ethereum_amount = 9
-        #
-        # lcc.set_step("Create and get new account")
-        # new_account = self.get_account_id(new_account, self.__database_api_identifier,
-        #                                   self.__registration_api_identifier)
-        # lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
-        #
-        # operation = self.echo_ops.get_transfer_operation(self.echo, from_account_id="1.2.329",
-        #                                                  to_account_id=new_account, amount=100, amount_asset_id="1.3.1",
-        #                                                  debug_mode=True)
-        # collected_operation = self.collect_operations(operation, self.__database_api_identifier, fee_asset_id="1.3.1")
-        # broadcast_result = self.echo_ops.broadcast(self.echo, list_operations=collected_operation,
-        #                                            log_broadcast=True)
-        #
-        # lcc.set_step("Get updated ethereum balance")
-        # ethereum_balance = self.utils.get_account_balances(self, "1.2.329", self.__database_api_identifier,
-        #                                                    self.eth_asset)
-        #
-        # lcc.set_step("Get updated ethereum balance")
-        # ethereum_balance = self.utils.get_account_balances(self, new_account, self.__database_api_identifier,
-        #                                                    self.eth_asset)
+        # todo: ethereum steps
+        # Steps:
+        # todo: send eth to echo from main account 1
+        # todo: check echo account balance 1
+        # todo: send eth to echo from main account 2
+        # todo: check echo account balance 2
+        # todo: transfer eth in network to another account
+        # todo: transfer eth in network to another account address 1
+        # todo: transfer eth in network to another account address 2
+        # todo: to yourself ?
+        # todo: withdraw

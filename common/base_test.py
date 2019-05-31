@@ -511,6 +511,7 @@ class BaseTest(object):
 
     def perform_pre_deploy_setup(self, database_api_identifier):
         # Perform pre-deploy for run tests on the empty node
+        self._connect_to_ganache_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Pre-deploy setup")
         lcc.log_info("Empty node. Start pre-deploy setup...")
@@ -538,7 +539,6 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
-        self._connect_to_ganache_ethereum()
         self.check_node_status()
 
     def teardown_suite(self):
