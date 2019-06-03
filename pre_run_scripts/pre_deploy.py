@@ -2,14 +2,15 @@
 import json
 
 from project import ECHO_INITIAL_BALANCE, NATHAN, INITIAL_ACCOUNTS_COUNT, INITIAL_ACCOUNTS_NAMES, \
-    ACCOUNT_PREFIX, DEFAULT_ACCOUNTS_COUNT, MAIN_TEST_ACCOUNT_COUNT, WALLETS, INITIAL_ACCOUNTS_ETH_ADDRESSES
+    ACCOUNT_PREFIX, DEFAULT_ACCOUNTS_COUNT, MAIN_TEST_ACCOUNT_COUNT, WALLETS, INITIAL_ACCOUNTS_ETH_ADDRESSES, \
+    ETH_ASSET_SYMBOL
 
 BALANCE_TO_ACCOUNT = ECHO_INITIAL_BALANCE / (INITIAL_ACCOUNTS_COUNT + MAIN_TEST_ACCOUNT_COUNT)
 
 
 def make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
     list_operations = []
-    for i in range(DEFAULT_ACCOUNTS_COUNT - 1):
+    for i in range(1, DEFAULT_ACCOUNTS_COUNT):
         to_account_id = get_account_id(get_account(base_test, ACCOUNT_PREFIX + str(i), database_api))
         operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id, 1,
                                                               signer=NATHAN)
@@ -121,6 +122,15 @@ def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_a
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
+def create_eth_asset_id(base_test, nathan_id, database_api):
+    operation = base_test.echo_ops.get_asset_create_operation(base_test.echo, nathan_id, ETH_ASSET_SYMBOL,
+                                                              signer=NATHAN)
+    collected_operation = base_test.collect_operations(operation, database_api)
+    broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                    log_broadcast=False)
+    return base_test.get_operation_results_ids(broadcast_result)
+
+
 def pre_deploy_echo(base_test, database_api, lcc):
     nathan = get_account(base_test, "nathan", database_api)
     nathan_id = get_account_id(nathan)
@@ -146,3 +156,6 @@ def pre_deploy_echo(base_test, database_api, lcc):
     if not make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
         raise Exception("Default accounts did not become asset echo holders")
     lcc.log_info("All default accounts became echo holders successfully")
+    if create_eth_asset_id(base_test, nathan_id, database_api) != base_test.eth_asset:
+        raise Exception("Ethereum asset did not created in echo network")
+    lcc.log_info("Ethereum asset created in echo network successfully")

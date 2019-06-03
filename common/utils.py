@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
+from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD
 
 
 class Utils(object):
+
+    def __init__(self):
+        super().__init__()
+        self.waiting_time_result = 0
+        self.block_count = 10
 
     @staticmethod
     def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
@@ -230,9 +236,8 @@ class Utils(object):
 
     @staticmethod
     def perform_generate_eth_address_operation(base_test, registrar, database_api_id, log_broadcast=False):
-        operation = base_test.echo_ops.get_generate_eth_address_operation(echo=base_test.echo, account_id=registrar,
-                                                                          debug_mode=True)
-        collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
+        operation = base_test.echo_ops.get_generate_eth_address_operation(echo=base_test.echo, account_id=registrar)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
@@ -256,6 +261,20 @@ class Utils(object):
                                                                                                     broadcast_result))
         return broadcast_result
 
+    def get_eth_address(self, base_test, account_id, database_api_id, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        response_id = base_test.send_request(base_test.get_request("get_eth_address", [account_id]), database_api_id)
+        response = base_test.get_response(response_id)
+        if response["result"]:
+            return response
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_eth_address(base_test, account_id, database_api_id, timeout=timeout)
+        raise Exception(
+            "No ethereum address of '{}' account. Waiting time result='{}'".format(account_id,
+                                                                                   self.waiting_time_result))
+
     @staticmethod
     def get_account_balances(base_test, account, database_api_id, assets=None):
         if assets is None:
@@ -265,8 +284,21 @@ class Utils(object):
         params = [account, assets]
         response_id = base_test.send_request(base_test.get_request("get_account_balances", params), database_api_id)
         if len(assets) == 1:
-            return base_test.get_response(response_id, log_response=True)["result"][0]
+            return base_test.get_response(response_id)["result"][0]
         return base_test.get_response(response_id)["result"]
+
+    def get_eth_balance(self, base_test, account_id, database_api_id, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        ethereum_balance = self.get_account_balances(base_test, account_id, database_api_id, base_test.eth_asset)
+        if ethereum_balance["amount"] != 0:
+            return ethereum_balance
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_eth_balance(base_test, account_id, database_api_id, timeout=timeout)
+        raise Exception(
+            "No ethereum balance of '{}' account. Waiting time result='{}'".format(account_id,
+                                                                                   self.waiting_time_result))
 
     @staticmethod
     def cancel_all_subscriptions(base_test, database_api_id):
@@ -278,3 +310,23 @@ class Utils(object):
     @staticmethod
     def get_address_balance_in_eth_network(base_test, account, currency="ether"):
         return base_test.web3.fromWei(base_test.web3.eth.getBalance(account), currency)
+
+    @staticmethod
+    def get_unpaid_fee(base_test, account_id, in_ethereum=True):
+        method_call_result = base_test.web3.eth.call(
+            {
+                "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
+                "data": UNPAID_FEE_METHOD + base_test.get_byte_code_param(account_id)
+            }
+        )
+        if in_ethereum:
+            return int(method_call_result.hex()[-64:], 16) / 1e18
+        return int(method_call_result.hex()[-64:], 16)
+
+    @staticmethod
+    def convert_ethereum_to_eeth(value):
+        return round(value * 10 ** 6)
+
+    @staticmethod
+    def convert_eeth_to_ethereum(value):
+        return value / 10 ** 6

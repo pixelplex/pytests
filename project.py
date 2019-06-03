@@ -44,6 +44,10 @@ ACCOUNT_PREFIX = "account"
 DEFAULT_ACCOUNTS_COUNT = 100
 MAIN_TEST_ACCOUNT_COUNT = 1
 BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_interval"]
+ETH_ASSET_SYMBOL = "EETH"
+ETH_ASSET_ID = json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["ETH_asset_id"]
+ETH_CONTRACT_ADDRESS = "0x" + json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["eth_contract_address"]
+UNPAID_FEE_METHOD = "0x19c4518a"
 
 ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
 with open(".env") as env_file:

@@ -3,7 +3,6 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Entering the currency ethereum in the network ECHO to the account"
@@ -20,23 +19,6 @@ class EthToEcho(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
-        self.temp_count = 0
-        self.block_count = 10
-        self.waiting_time_result = 0
-
-    def get_eth_address(self, account_id, timeout=BLOCK_RELEASE_INTERVAL):
-        self.temp_count += 1
-        response_id = self.send_request(self.get_request("get_eth_address", [account_id]),
-                                        self.__database_api_identifier, debug_mode=True)
-        response = self.get_response(response_id, log_response=True)
-        if response["result"]:
-            return response
-        if self.temp_count <= self.block_count:
-            self.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_eth_address(account_id, timeout=timeout)
-        raise Exception("No ethereum address of '{}' account. "
-                        "Waiting time result='{}'".format(account_id, self.waiting_time_result))
 
     def setup_suite(self):
         super().setup_suite()
@@ -57,20 +39,15 @@ class EthToEcho(BaseTest):
     @lcc.test("The scenario entering eth assets to the echo account")
     def ethereum_in_scenario(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
-        # tx_hash = "0x46cf8218792c59d93dabc738198b98a8d556ae26bbffb7be8e918b41f9cb33da"
-        #
-        # tx = self.web3.eth.getTransaction(tx_hash)
-        # print("TRANZA:\n" + str(tx))
-        #
-        # tx_logs = self.web3.eth.getTransactionReceipt(tx_hash).logs
-        # print("LOGS:\n" + str(tx_logs))
+        eth_amount_1 = 0.01
+        eth_amount_2 = 0.02
 
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
-        lcc.set_step("Get account balance in ethereum")
+        lcc.set_step("Get account balance in ethereum of new account")
         ethereum_balance = self.utils.get_account_balances(self, new_account, self.__database_api_identifier,
                                                            self.eth_asset)
         check_that(
@@ -81,16 +58,42 @@ class EthToEcho(BaseTest):
 
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier,
-                                                          log_broadcast=True)
+                                                          log_broadcast=False)
         lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the network")
-        eth_account_address = self.get_eth_address(new_account)["result"][0]["eth_addr"]
-
+        eth_account_address = self.utils.get_eth_address(self, new_account,
+                                                         self.__database_api_identifier)["result"][0]["eth_addr"]
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
-        print("\nAccount: '{}'".format(new_account))
-        print("\nEth address: '{}'".format(eth_account_address))
+        lcc.set_step("Get unpaid fee for ethereum address creation")
+        unpaid_fee = self.utils.get_unpaid_fee(self, new_account)
+
+        lcc.set_step("First send eth to ethereum address of created account")
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address, value=eth_amount_1)
+        self.eth_trx.broadcast(web3=self.web3, transaction=transaction, log_transaction=True)
+
+        lcc.set_step("Get updated account balance in ethereum after first in")
+        ethereum_balance_first_in = self.utils.get_eth_balance(self, new_account, self.__database_api_identifier)
+
+        check_that(
+            "'updated balance in ethereum'",
+            ethereum_balance_first_in["amount"],
+            is_(self.utils.convert_ethereum_to_eeth(eth_amount_1) - self.utils.convert_ethereum_to_eeth(unpaid_fee))
+        )
+
+        lcc.set_step("Second send eth to ethereum address of created account")
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address, value=eth_amount_2)
+        self.eth_trx.broadcast(web3=self.web3, transaction=transaction, log_transaction=True)
+
+        lcc.set_step("Get updated account balance in ethereum after second in")
+        ethereum_balance_second_in = self.utils.get_account_balances(self, new_account, self.__database_api_identifier,
+                                                                     self.eth_asset)
+        check_that(
+            "'updated balance in ethereum'",
+            ethereum_balance_second_in["amount"],
+            is_(ethereum_balance_first_in["amount"] + self.utils.convert_ethereum_to_eeth(eth_amount_2))
+        )
 
         # todo: ethereum steps
         # Steps:

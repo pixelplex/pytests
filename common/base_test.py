@@ -16,7 +16,7 @@ from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID
 
 
 class BaseTest(object):
@@ -33,7 +33,7 @@ class BaseTest(object):
         self.__id = 0
         self.validator = Validator()
         self.echo_asset = "1.3.0"
-        self.eth_asset = "1.3.1"
+        self.eth_asset = ETH_ASSET_ID
         self.echo_acc0 = ACCOUNT_PREFIX + "0"
         self.echo_acc1 = ACCOUNT_PREFIX + "1"
         self.echo_acc2 = ACCOUNT_PREFIX + "2"
