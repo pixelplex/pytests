@@ -38,7 +38,7 @@ class EthereumTransactions(object):
         return [transfer_props, signer]
 
     @staticmethod
-    def broadcast(web3, transaction, log_transaction=False, log_transaction_logs=False, debug_mode=False):
+    def broadcast(web3, transaction, log_transaction=True, log_transaction_logs=False, debug_mode=False):
         if debug_mode:
             lcc.log_debug("Sent:\n{}".format(json.dumps(transaction, indent=4)))
         signed_transaction = web3.eth.account.signTransaction(transaction[0], transaction[1])
