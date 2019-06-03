@@ -13,7 +13,6 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
-@lcc.disabled()  # todo: remove when ethereum is added
 @lcc.tags("database_api", "get_eth_address")
 @lcc.suite("Check work of method 'get_eth_address'", rank=1)
 class GetEthAddress(BaseTest):
