@@ -49,7 +49,7 @@ def get_random_float_up_to_hundred():
 @lcc.fixture(scope="test")
 def get_random_float_up_to_ten():
     random_float = random.uniform(0, 10)
-    lcc.log_info("Generated random float up to a one: {}".format(random_float))
+    lcc.log_info("Generated random float up to a ten: {}".format(random_float))
     return random_float
 
 

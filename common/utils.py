@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import math
+
 from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD
 
 
@@ -325,7 +327,7 @@ class Utils(object):
         return base_test.web3.fromWei(base_test.web3.eth.getBalance(account), currency)
 
     @staticmethod
-    def get_unpaid_fee(base_test, account_id, in_ethereum=True):
+    def get_unpaid_fee(base_test, account_id, in_ethereum=False):
         method_call_result = base_test.web3.eth.call(
             {
                 "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
@@ -334,11 +336,11 @@ class Utils(object):
         )
         if in_ethereum:
             return int(method_call_result.hex()[-64:], 16) / 1e18
-        return int(method_call_result.hex()[-64:], 16)
+        return round(int(method_call_result.hex()[-64:], 16) / 1e12)
 
     @staticmethod
     def convert_ethereum_to_eeth(value):
-        return round(value * 10 ** 6)
+        return math.floor((value * 10 ** 6))
 
     @staticmethod
     def convert_eeth_to_ethereum(value):
