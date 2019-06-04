@@ -14,8 +14,8 @@ class Utils(object):
     @staticmethod
     def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
-                                   transfer_asset_id=None, operation_count=1, label=None, only_in_history=False,
-                                   log_broadcast=False):
+                                   transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
+                                   only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -38,6 +38,9 @@ class Utils(object):
             operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
             fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
             amount = amount + (operation_count * fee)
+        if asset_name is not None:
+            operation = base_test.echo_ops.get_operation_json("asset_create_operation", example=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if label is not None:
             operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=account,
                                                                                 label=label)
