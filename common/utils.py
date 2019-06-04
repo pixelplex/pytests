@@ -267,7 +267,7 @@ class Utils(object):
         operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, acc_id=registrar,
                                                                   eth_addr=eth_addr,
                                                                   value=value)
-        collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
@@ -310,7 +310,7 @@ class Utils(object):
         if temp_count <= self.block_count:
             base_test.set_timeout_wait(timeout, print_log=False)
             self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_eth_balance(base_test, account_id, database_api_id, timeout=timeout)
+            return self.get_eth_balance(base_test, account_id, database_api_id)
         raise Exception(
             "No ethereum balance of '{}' account. Waiting time result='{}'".format(account_id,
                                                                                    self.waiting_time_result))
@@ -323,8 +323,23 @@ class Utils(object):
             raise Exception("Can't cancel all cancel_all_subscriptions, got:\n{}".format(str(response)))
 
     @staticmethod
-    def get_address_balance_in_eth_network(base_test, account, currency="ether"):
-        return base_test.web3.fromWei(base_test.web3.eth.getBalance(account), currency)
+    def get_address_balance_in_eth_network(base_test, account_address, currency="ether"):
+        return base_test.web3.fromWei(base_test.web3.eth.getBalance(account_address), currency)
+
+    def get_updated_address_balance_in_eth_network(self, base_test, account_address, previous_balance, temp_count=0,
+                                                   currency="ether", timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        current_balance = self.get_address_balance_in_eth_network(base_test, account_address, currency=currency)
+        if previous_balance != current_balance:
+            return current_balance
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_updated_address_balance_in_eth_network(base_test, account_address, previous_balance,
+                                                                   currency=currency)
+        raise Exception(
+            "Ethereum balance of '{}' account not updated. Waiting time result='{}'".format(account_address,
+                                                                                            self.waiting_time_result))
 
     @staticmethod
     def get_unpaid_fee(base_test, account_id, in_ethereum=False):
@@ -343,5 +358,8 @@ class Utils(object):
         return math.floor((value * 10 ** 6))
 
     @staticmethod
-    def convert_eeth_to_ethereum(value):
-        return value / 10 ** 6
+    def convert_eeth_to_currency(value, currency="wei"):
+        if currency == "wei":
+            return value * 10 ** 12
+        if currency == "ether":
+            return value / 10 ** 6

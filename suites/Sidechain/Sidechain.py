@@ -2,8 +2,7 @@
 import random
 
 import lemoncheesecake.api as lcc
-import math
-from lemoncheesecake.matching import check_that, this_dict, require_that_entry, equal_to
+from lemoncheesecake.matching import check_that, equal_to
 
 from common.base_test import BaseTest
 
@@ -15,19 +14,44 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.tags("sidechain")
 @lcc.suite("Check scenario 'Ethereum in'")
-class EthToEcho(BaseTest):
+class Sidechain(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.new_account = None
+        self.eth_address = None
         self.eth_account_address = None
-        self.eth_address_balance = None
+        self.temp_count = 0
 
     @staticmethod
     def get_random_amount(_to, _from=0.01):
-        return math.floor(random.uniform(_from, _to))
+        return round(random.uniform(_from, _to))
+
+    def withdraw_eth_to_ethereum_address(self, from_account, withdraw_amount):
+        lcc.set_step("Get address balance in ethereum network")
+        eth_address_balance = self.utils.get_address_balance_in_eth_network(self, self.eth_address, currency="wei")
+        lcc.log_info("Ethereum address has '{}' balance in ethereum".format(eth_address_balance))
+
+        lcc.set_step("Withdraw eth to ethereum address")
+        self.utils.perform_withdraw_eth_operation_operation(self, from_account, self.eth_address[2:],
+                                                            withdraw_amount, self.__database_api_identifier,
+                                                            log_broadcast=True)
+
+        lcc.set_step("Get updated address balance in ethereum network")
+        eth_address_balance_after_withdraw = self.utils.get_updated_address_balance_in_eth_network(self,
+                                                                                                   self.eth_address,
+                                                                                                   eth_address_balance,
+                                                                                                   currency="wei")
+        lcc.log_info("Ethereum address has '{}' balance in ethereum".format(eth_address_balance_after_withdraw))
+
+        lcc.set_step("Check that withdraw eth completed successfully")
+        check_that(
+            "'updated address balance in ethereum'",
+            int(eth_address_balance_after_withdraw),
+            equal_to(int(eth_address_balance) + self.utils.convert_eeth_to_currency(withdraw_amount, currency="wei"))
+        )
 
     def setup_suite(self):
         super().setup_suite()
@@ -42,6 +66,8 @@ class EthToEcho(BaseTest):
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+        self.eth_address = self.web3.eth.accounts[0]
+        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -78,7 +104,7 @@ class EthToEcho(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario entering eth assets to the echo account")
-    @lcc.depends_on("Sidechain.EthToEcho.EthToEcho.sidechain_pre_run_scenario")
+    @lcc.depends_on("Sidechain.Sidechain.Sidechain.sidechain_pre_run_scenario")
     def ethereum_in_scenario(self, get_random_float_up_to_ten):
         min_eth_amount = 0.01
         eth_amount = get_random_float_up_to_ten
@@ -92,11 +118,12 @@ class EthToEcho(BaseTest):
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get updated account balance in ethereum after first in")
-        ethereum_balance_first_in = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)
+        ethereum_balance_first_in = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)[
+            "amount"]
 
         check_that(
             "'updated balance in ethereum'",
-            ethereum_balance_first_in["amount"],
+            ethereum_balance_first_in,
             equal_to(self.utils.convert_ethereum_to_eeth(min_eth_amount) - unpaid_fee)
         )
 
@@ -108,16 +135,21 @@ class EthToEcho(BaseTest):
         lcc.set_step("Get updated account balance in ethereum after second in")
         ethereum_balance_second_in = self.utils.get_account_balances(self, self.new_account,
                                                                      self.__database_api_identifier,
-                                                                     self.eth_asset)
+                                                                     self.eth_asset)["amount"]
         check_that(
             "'updated balance in ethereum'",
-            ethereum_balance_second_in["amount"],
-            equal_to(ethereum_balance_first_in["amount"] + self.utils.convert_ethereum_to_eeth(eth_amount))
+            ethereum_balance_second_in,
+            equal_to(ethereum_balance_first_in + self.utils.convert_ethereum_to_eeth(eth_amount))
         )
+
+        lcc.set_step("Withdraw eth from ECHO network to Ethereum network")
+        withdraw_amount = self.get_random_amount(_to=ethereum_balance_second_in)
+        lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount, self.new_account))
+        self.withdraw_eth_to_ethereum_address(self.new_account, withdraw_amount)
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth between accounts")
-    @lcc.depends_on("Sidechain.EthToEcho.EthToEcho.sidechain_pre_run_scenario")
+    @lcc.depends_on("Sidechain.Sidechain.Sidechain.sidechain_pre_run_scenario")
     def transfer_eeth_scenario(self, get_random_float_up_to_ten):
         eth_amount = get_random_float_up_to_ten
 
@@ -155,9 +187,14 @@ class EthToEcho(BaseTest):
             equal_to(recipient_balance + transfer_amount)
         )
 
+        lcc.set_step("Withdraw eth from ECHO network to Ethereum network")
+        withdraw_amount = self.get_random_amount(_to=recipient_balance_after_transfer)
+        lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount, self.echo_acc0))
+        self.withdraw_eth_to_ethereum_address(self.echo_acc0, withdraw_amount)
+
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth to account addresses")
-    @lcc.depends_on("Sidechain.EthToEcho.EthToEcho.sidechain_pre_run_scenario")
+    @lcc.depends_on("Sidechain.Sidechain.Sidechain.sidechain_pre_run_scenario")
     def transfer_eeth_to_account_address_scenario(self, get_random_float_up_to_ten, get_random_string):
         eth_amount = get_random_float_up_to_ten
         label = get_random_string
@@ -232,3 +269,8 @@ class EthToEcho(BaseTest):
             recipient_balance_after_second_transfer,
             equal_to(recipient_balance_after_transfer + transfer_amount)
         )
+
+        lcc.set_step("Withdraw eth from ECHO network to Ethereum network")
+        withdraw_amount = self.get_random_amount(_to=recipient_balance_after_second_transfer)
+        lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount, self.echo_acc0))
+        self.withdraw_eth_to_ethereum_address(self.echo_acc0, withdraw_amount)
