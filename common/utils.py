@@ -11,8 +11,9 @@ class Utils(object):
 
     @staticmethod
     def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
-                                   method_bytecode=None, callee="1.14.0", transfer_amount=None, transfer_asset_id=None,
-                                   operation_count=1, label=None, only_in_history=False, log_broadcast=False):
+                                   method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
+                                   transfer_asset_id=None, operation_count=1, label=None, only_in_history=False,
+                                   log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -23,15 +24,17 @@ class Utils(object):
             operation = base_test.echo_ops.get_call_contract_operation(echo=base_test.echo, registrar=account,
                                                                        bytecode=method_bytecode, callee=callee)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if transfer_amount is not None:
+        if transfer_amount is not None and to_address is None:
             operation = base_test.echo_ops.get_operation_json("transfer_operation", example=True)
-            if transfer_asset_id is not None:
-                operation["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
-                fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-            else:
-                fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-                if only_in_history:
-                    amount = operation_count * transfer_amount
+            operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
+            fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+            if only_in_history:
+                amount = operation_count * transfer_amount
+            amount = amount + (operation_count * fee)
+        if to_address is not None:
+            operation = base_test.echo_ops.get_operation_json("transfer_to_address_operation", example=True)
+            operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
+            fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
             amount = amount + (operation_count * fee)
         if label is not None:
             operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=account,
@@ -111,6 +114,7 @@ class Utils(object):
         if account_1 != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, account_1, database_api_id,
                                                                transfer_amount=transfer_amount,
+                                                               transfer_asset_id=amount_asset_id,
                                                                operation_count=operation_count,
                                                                only_in_history=only_in_history)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
@@ -119,6 +123,34 @@ class Utils(object):
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=account_1,
                                                               to_account_id=account_2, amount=transfer_amount,
                                                               amount_asset_id=amount_asset_id)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        if operation_count == 1:
+            broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                            log_broadcast=log_broadcast)
+            return broadcast_result
+        list_operations = []
+        for i in range(operation_count - add_balance_operation):
+            list_operations.append(collected_operation)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
+                                                        log_broadcast=log_broadcast)
+        return broadcast_result
+
+    def perform_transfer_to_address_operations(self, base_test, account_1, to_address, database_api_id,
+                                               transfer_amount=1, amount_asset_id="1.3.0", operation_count=1,
+                                               log_broadcast=False):
+        add_balance_operation = 0
+        if account_1 != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, account_1, database_api_id,
+                                                               transfer_amount=transfer_amount,
+                                                               to_address=to_address,
+                                                               transfer_asset_id=amount_asset_id,
+                                                               operation_count=operation_count)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+            add_balance_operation = 1
+        operation = base_test.echo_ops.get_transfer_to_address_operation(echo=base_test.echo, from_account_id=account_1,
+                                                                         to_address=to_address, amount=transfer_amount,
+                                                                         amount_asset_id=amount_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         if operation_count == 1:
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
