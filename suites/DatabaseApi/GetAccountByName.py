@@ -145,7 +145,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get account by name")
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
         lcc.log_info("Call method 'get_account_by_name' with param: {}".format(account_name))
 
         lcc.set_step("Checking created account")

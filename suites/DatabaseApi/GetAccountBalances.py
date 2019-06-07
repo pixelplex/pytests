@@ -138,8 +138,8 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get balances of new account in nonexistent asset id")
         params = [new_account, [nonexistent_asset_id]]
         response_id = self.send_request(self.get_request("get_account_balances", params),
-                                        self.__database_api_identifier, debug_mode=True)
-        response = self.get_response(response_id, log_response=True)
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
         lcc.log_info("Call method 'get_account_balances' in '{}' assets".format(nonexistent_asset_id))
 
         lcc.set_step("Check that new account has empty balance in nonexistent assets")
