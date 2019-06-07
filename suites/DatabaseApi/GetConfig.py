@@ -66,7 +66,7 @@ class GetConfig(BaseTest):
             if check_that("config", response["result"], has_length(70)):
                 check_that_entry("ECHO_SYMBOL", is_str("ECHO"), quiet=True)
                 check_that_entry("ECHO_ADDRESS_PREFIX", is_str("ECHO"), quiet=True)
-                check_that_entry("ECHO_ED_PREFIX", is_str("DET"), quiet=True)
+                check_that_entry("ECHO_ED_PREFIX", is_str("ECHO"), quiet=True)
                 for i in range(len(echo_configs)):
                     self.check_uint64_numbers(response["result"], echo_configs[i], quiet=True)
 
