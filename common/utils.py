@@ -176,8 +176,7 @@ class Utils(object):
         if type(account_names) is str:
             operation = base_test.echo_ops.get_account_create_operation(echo=base_test.echo, name=account_names,
                                                                         active_key_auths=account_keys[1],
-                                                                        ed_key=account_keys[1],
-                                                                        options_memo_key=account_keys[2],
+                                                                        echorand_key=account_keys[1],
                                                                         registrar=signer, signer=signer)
             collected_operation = base_test.collect_operations(operation, database_api_id)
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
@@ -192,8 +191,7 @@ class Utils(object):
         for i in range(len(account_names)):
             operation = base_test.echo_ops.get_account_create_operation(echo=base_test.echo, name=account_names[i],
                                                                         active_key_auths=account_keys[i][1],
-                                                                        ed_key=account_keys[i][1],
-                                                                        options_memo_key=account_keys[i][2],
+                                                                        echorand_key=account_keys[i][1],
                                                                         registrar=signer, signer=signer)
             collected_operation = base_test.collect_operations(operation, database_api_id)
             list_operations.append(collected_operation)

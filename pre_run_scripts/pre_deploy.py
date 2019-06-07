@@ -52,9 +52,9 @@ def register_default_accounts(base_test, database_api):
     list_operations = []
     for i in range(DEFAULT_ACCOUNTS_COUNT):
         names = ACCOUNT_PREFIX + str(i)
-        public_data = base_test.store_new_account(names)
-        operation = base_test.echo_ops.get_account_create_operation(base_test.echo, names, public_data[0],
-                                                                    public_data[0], public_data[1], signer=NATHAN)
+        public_key = base_test.store_new_account(names)
+        operation = base_test.echo_ops.get_account_create_operation(base_test.echo, names, public_key, public_key,
+                                                                    signer=NATHAN)
         collected_operation = base_test.collect_operations(operation, database_api)
         list_operations.append(collected_operation)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,

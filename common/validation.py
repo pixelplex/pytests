@@ -275,22 +275,16 @@ class Validator(object):
     def is_operation_id(self, value):
         return self.is_uint8(value) and value < 49
 
-    def is_echo_rand_key(self, value, echo_rand_prefix="DET"):
-        if not self.is_hex(value) or len(value) != 44 + len(echo_rand_prefix):
-            return False
-        prefix = value[0:len(echo_rand_prefix)]
-        return echo_rand_prefix == prefix
-
-    def is_private_key(self, value):
-        if not self.is_hex(value) or len(value) != 51:
-            return False
-        return True
-
-    def is_public_key(self, value, address_prefix="ECHO"):
-        if not self.is_hex(value) or len(value) != 39 + len(address_prefix):
+    def is_echo_rand_key(self, value, address_prefix="ECHO"):
+        if not self.is_hex(value) or len(value) != 44 + len(address_prefix):
             return False
         prefix = value[0:len(address_prefix)]
         return address_prefix == prefix
+
+    def is_private_key(self, value):
+        if not self.is_hex(value) or len(value) != 44:
+            return False
+        return True
 
     def is_iso8601(self, value):
         if self.is_string(value):

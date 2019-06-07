@@ -118,7 +118,7 @@ class GetGlobalProperties(BaseTest):
     def method_main_check(self):
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_global_properties'")
 
         lcc.set_step("Check main fields")
@@ -234,6 +234,7 @@ class GetGlobalProperties(BaseTest):
         sidechain_config = parameters["sidechain_config"]
         eth_params = ["eth_contract_address", "eth_committee_updated_topic", "eth_gen_address_topic",
                       "eth_deposit_topic", "eth_withdraw_topic"]
+        # todo: add 'eth_update_addr_method'. Bug ECHO-917
         eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method"]
         self.check_sidechain_config(sidechain_config, eth_params, eth_methods)
 

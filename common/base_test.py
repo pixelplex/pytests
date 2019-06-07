@@ -326,42 +326,29 @@ class BaseTest(object):
             return contract_id
 
     @staticmethod
-    def get_account_details_template(account_name, private_key, public_key, memo_key, brain_key):
-        # todo: remove memo_key later
-        return {account_name: {"id": "", "private_key": private_key, "public_key": public_key,
-                               "memo_key": memo_key, "brain_key": brain_key}}
-
-    # todo: remove get_memo_key later
-    @staticmethod
-    def get_memo_key():
-        return "ECHO1111111111111111111111111111111114T1Anm"
+    def get_account_details_template(account_name, private_key, public_key, brain_key):
+        return {account_name: {"id": "", "private_key": private_key, "public_key": public_key, "brain_key": brain_key}}
 
     def generate_keys(self):
         brain_key_object = self.echo.brain_key()
         brain_key = brain_key_object.brain_key
         private_key_base58 = brain_key_object.get_private_key_base58()
         public_key_base58 = brain_key_object.get_public_key_base58()
-        memo_key = self.get_memo_key()
-        return [private_key_base58, public_key_base58, memo_key, brain_key]
+        return [private_key_base58, public_key_base58, brain_key]
 
     def store_new_account(self, account_name):
         keys = self.generate_keys()
-        private_key = keys[0]
-        public_key = keys[1]
-        # todo: remove memo_key later
-        memo_key = keys[2]
-        brain_key = keys[3]
-        account_details = self.get_account_details_template(account_name, private_key, public_key, memo_key, brain_key)
+        account_details = self.get_account_details_template(account_name, keys[0], keys[1], keys[2])
         if not os.path.exists(WALLETS):
             with open(WALLETS, "w") as file:
                 file.write(json.dumps(account_details))
-            return [public_key, memo_key]
+            return keys[1]
         with open(WALLETS, "r") as file:
             data = json.load(file)
             data.update(account_details)
             with open(WALLETS, "w") as new_file:
                 new_file.write(json.dumps(data))
-        return [public_key, memo_key]
+        return keys[1]
 
     def get_account_by_name(self, account_name, database_api_identifier, debug_mode=False):
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
@@ -373,10 +360,10 @@ class BaseTest(object):
         return response
 
     def register_account(self, account_name, registration_api_identifier, database_api_identifier, debug_mode=False):
-        public_data = self.store_new_account(account_name)
+        public_key = self.store_new_account(account_name)
         self.__id += 1
         callback = self.__id
-        account_params = [callback, account_name, public_data[0], public_data[0], public_data[1], public_data[0]]
+        account_params = [callback, account_name, public_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         registration_api_identifier, debug_mode=debug_mode)
         response = self.get_response(response_id, debug_mode=debug_mode)

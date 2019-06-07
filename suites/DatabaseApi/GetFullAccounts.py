@@ -56,7 +56,7 @@ class GetFullAccounts(BaseTest):
             if check_that("full_account_info", full_account_info, has_length(14)):
                 account_info = full_account_info.get("account")
                 with this_dict(account_info):
-                    if check_that("account_info", account_info, has_length(20)):
+                    if check_that("account_info", account_info, has_length(19)):
                         check_that_entry("id", is_str(params[i]))
                         if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
                             lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
@@ -74,10 +74,10 @@ class GetFullAccounts(BaseTest):
                         else:
                             lcc.log_info("'name' has correct format: account_name")
                         check_that_entry("active", is_dict(), quiet=True)
-                        if not self.validator.is_echo_rand_key(account_info["ed_key"]):
-                            lcc.log_error("Wrong format of 'ed_key', got: {}".format(account_info["ed_key"]))
+                        if not self.validator.is_echo_rand_key(account_info["echorand_key"]):
+                            lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
                         else:
-                            lcc.log_info("'ed_key' has correct format: echo_rand_key")
+                            lcc.log_info("'echorand_key' has correct format: echo_rand_key")
                         check_that_entry("options", is_dict(), quiet=True)
                         if not self.validator.is_account_statistics_id(account_info["statistics"]):
                             lcc.log_error("Wrong format of 'statistics', got: {}".format(account_info["statistics"]))
@@ -87,8 +87,6 @@ class GetFullAccounts(BaseTest):
                         check_that_entry("blacklisting_accounts", is_list(), quiet=True)
                         check_that_entry("whitelisted_accounts", is_list(), quiet=True)
                         check_that_entry("blacklisted_accounts", is_list(), quiet=True)
-                        # todo: remove 'owner_special_authority'. Improve: "ECHO-829"
-                        check_that_entry("owner_special_authority", is_list(), quiet=True)
                         check_that_entry("active_special_authority", is_list(), quiet=True)
                         check_that_entry("top_n_control_flags", is_integer(), quiet=True)
 
@@ -101,13 +99,7 @@ class GetFullAccounts(BaseTest):
 
                         lcc.set_step("Check 'options' field")
                         with this_dict(account_info["options"]):
-                            if check_that("active", account_info["options"], has_length(6)):
-                                if not self.validator.is_public_key(account_info["options"]["memo_key"]):
-                                    lcc.log_error(
-                                        "Wrong format of 'memo_key', got: {}".format(
-                                            account_info["options"]["memo_key"]))
-                                else:
-                                    lcc.log_info("'memo_key' has correct format: public_key")
+                            if check_that("active", account_info["options"], has_length(5)):
                                 account_ids_format = ["voting_account", "delegating_account"]
                                 for k in range(len(account_ids_format)):
                                     self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
