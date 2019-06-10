@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, equal_to
-
 import math
+from lemoncheesecake.matching import check_that, equal_to
 
 from common.base_test import BaseTest
 

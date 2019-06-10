@@ -28,12 +28,14 @@ class RegistrationApi(object):
         api_identifier = base.get_identifier("registration")
         check_that("'registration api identifier'", api_identifier, is_integer())
 
+        lcc.set_step("Check node status, if empty run pre-deploy")
+        base.check_node_status()
+
         lcc.set_step("Check Registration api identifier. Call registration api method 'register_account'")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
-        memo_key = generate_keys[2]
         callback = get_random_integer
-        account_params = [callback, get_random_valid_account_name, public_key, public_key, memo_key, public_key]
+        account_params = [callback, get_random_valid_account_name, public_key, public_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier)
         response = base.get_response(response_id)
         base.get_notice(callback)
@@ -46,8 +48,7 @@ class RegistrationApi(object):
         lcc.set_step("Check that Registration api identifier is unique")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
-        memo_key = generate_keys[2]
-        account_params = [callback, get_random_valid_account_name, public_key, public_key, memo_key, public_key]
+        account_params = [callback, get_random_valid_account_name, public_key, public_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier + 1)
         response = base.get_response(response_id, negative=True)
 
@@ -87,8 +88,7 @@ class PositiveTesting(BaseTest):
         callback = get_random_integer
         generate_keys = self.generate_keys()
         public_key = generate_keys[1]
-        memo_key = generate_keys[2]
-        account_params = [callback, new_account, public_key, public_key, memo_key, public_key]
+        account_params = [callback, new_account, public_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         response = self.get_response(response_id)
@@ -125,10 +125,11 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "Registration API identifiers is '{}'".format(self.__registration_api_identifier))
 
-    def get_random_character(self, random_def, not_hyphen=False):
+    @staticmethod
+    def get_random_character(random_def, not_hyphen=False):
         character = random_def
         if not_hyphen and character == "-":
-            return self.get_random_character(random_def, not_hyphen=True)
+            return "*"
         return character
 
     @staticmethod
@@ -138,13 +139,11 @@ class NegativeTesting(BaseTest):
             random.SystemRandom().choice(string.ascii_lowercase) for _ in range(random_num))
         return random_string
 
-    def _register_account(self, callback, new_account, public_key=None, memo_key=None):
+    def _register_account(self, callback, new_account, public_key=None):
         generate_keys = self.generate_keys()
         if public_key is None:
             public_key = generate_keys[1]
-        if memo_key is None:
-            memo_key = generate_keys[2]
-        account_params = [callback, new_account, public_key, public_key, memo_key, public_key]
+        account_params = [callback, new_account, public_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         return self.get_response(response_id, negative=True)
@@ -249,4 +248,4 @@ class NegativeTesting(BaseTest):
             response, has_entry("error"), quiet=True
         )
 
-    # todo: add check for: callback, owner ECDSA key, active ECDSA key, memo ECDSA key, ed25519 key for echorand
+    # todo: add check for: callback, active ECDSA key, ed25519 key for echorand

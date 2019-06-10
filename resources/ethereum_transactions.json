@@ -1,0 +1,9 @@
+{
+    "transfer_operation": {
+        "nonce": 0,
+        "to": "",
+        "value": 0,
+        "gas": 0,
+        "gasPrice": 0
+    }
+}

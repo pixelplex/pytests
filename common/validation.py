@@ -10,31 +10,33 @@ class Validator(object):
     account_id_regex = re.compile(r"^1\.2\.(0|[1-9]\d*)$")
     asset_id_regex = re.compile(r"^1\.3\.(0|[1-9]\d*)$")
     eth_asset_id_regex = re.compile(r"^1.3.1$")
-    force_settlement_id_regex = re.compile(r"^1\.4\.[1-9]\d*$")
+    force_settlement_id_regex = re.compile(r"^1\.4\.(0|[1-9]\d*)$")
     committee_member_id_regex = re.compile(r"^1\.5\.(0|[1-9]\d*)$")
-    limit_order_id_regex = re.compile(r"^1\.6\.[1-9]\d*$")
-    call_order_id_regex = re.compile(r"^1\.7\.[1-9]\d*$")
-    custom_id_regex = re.compile(r"^1\.8\.[1-9]\d*$")
-    proposal_id_regex = re.compile(r"^1\.9\.[1-9]\d*$")
+    limit_order_id_regex = re.compile(r"^1\.6\.(0|[1-9]\d*)$")
+    call_order_id_regex = re.compile(r"^1\.7\.(0|[1-9]\d*)$")
+    custom_id_regex = re.compile(r"^1\.8\.(0|[1-9]\d*)$")
+    proposal_id_regex = re.compile(r"^1\.9\.(0|[1-9]\d*)$")
     operation_history_id_regex = re.compile(r"^1\.10\.(0|[1-9]\d*)$")
-    withdraw_permission_id_regex = re.compile(r"^1\.11\.[1-9]\d*$")
-    vesting_balance_id_regex = re.compile(r"^1\.12\.[1-9]\d*$")
-    balance_id_regex = re.compile(r"^1\.13\.[1-9]\d*$")
+    withdraw_permission_id_regex = re.compile(r"^1\.11\.(0|[1-9]\d*)$")
+    vesting_balance_id_regex = re.compile(r"^1\.12\.(0|[1-9]\d*)$")
+    balance_id_regex = re.compile(r"^1\.13\.(0|[1-9]\d)*$")
     contract_id_regex = re.compile(r"^1\.14\.(0|[1-9]\d*)$")
-    contract_result_id_regex = re.compile(r"^1\.15\.[1-9]\d*$")
-    block_id_regex = re.compile(r"^1\.16\.[1-9]\d*$")
-    transfer_id_regex = re.compile(r"^1\.17\.[1-9]\d*$")
+    contract_result_id_regex = re.compile(r"^1\.15\.(0|[1-9]\d*)$")
+    block_id_regex = re.compile(r"^1\.16\.(0|[1-9]\d*)$")
+    eth_address_id_regex = re.compile(r"^1\.17\.(0|[1-9]\d*)$")
     global_object_id_regex = re.compile(r"^2.0.0$")
     dynamic_global_object_id_regex = re.compile(r"^2.1.0$")
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
     bit_asset_id_regex = re.compile(r"^2\.4\.(0|[1-9]\d*)$")
-    account_balance_id_regex = re.compile(r"^2\.5\.[1-9]\d*$")
-    account_statistics_id_regex = re.compile(r"^2\.6\.[0|1-9]\d*$")
-    transaction_id_regex = re.compile(r"^2\.7\.[1-9]\d*$")
-    block_summary_id_regex = re.compile(r"^2\.8\.[1-9]\d*$")
-    account_transaction_history_id_regex = re.compile(r"^2\.9\.[1-9]\d*$")
+    account_balance_id_regex = re.compile(r"^2\.5\.(0|[1-9]\d*)$")
+    account_statistics_id_regex = re.compile(r"^2\.6\.(0|[1-9]\d*)$")
+    transaction_id_regex = re.compile(r"^2\.7\.(0|[1-9]\d*)$")
+    block_summary_id_regex = re.compile(r"^2\.8\.(0|[1-9]\d*)$")
+    account_transaction_history_id_regex = re.compile(r"^2\.9\.(0|[1-9]\d*)$")
     chain_property_object_id_regex = re.compile(r"^2.10.0$")
-    contract_history_id_regex = re.compile(r"^2\.16\.[1-9]\d*$")
+    contract_history_id_regex = re.compile(r"^2\.16\.(0|[1-9]\d*)$")
+    contract_statistics_id_regex = re.compile(r"^2\.17\.(0|[1-9]\d*)$")
+    account_address_id_regex = re.compile(r"^2\.18\.(0|[1-9]\d*)$")
     hex_regex = re.compile(r"^[0-9a-fA-F]+")
     bytecode_regex = re.compile(r"^[\da-fA-F]{8}([\da-fA-F]{64})*$")
     vote_id_type_regex = re.compile(r"^[0-3]:[0-9]+")
@@ -150,9 +152,9 @@ class Validator(object):
         if self.is_string(value):
             return bool(self.contract_result_id_regex.match(value))
 
-    def is_transfer_id(self, value):
+    def is_eth_address_id(self, value):
         if self.is_string(value):
-            return bool(self.transfer_id_regex.match(value))
+            return bool(self.eth_address_id_regex.match(value))
 
     def is_global_object_id(self, value):
         if self.is_string(value):
@@ -197,6 +199,14 @@ class Validator(object):
     def is_contract_history_id(self, value):
         if self.is_string(value):
             return bool(self.contract_history_id_regex.match(value))
+
+    def is_contract_statistics_id(self, value):
+        if self.is_string(value):
+            return bool(self.contract_statistics_id_regex.match(value))
+
+    def is_account_address_id(self, value):
+        if self.is_string(value):
+            return bool(self.account_address_id_regex.match(value))
 
     def is_vote_id(self, value):
         if self.is_string(value):
@@ -265,23 +275,22 @@ class Validator(object):
     def is_operation_id(self, value):
         return self.is_uint8(value) and value < 49
 
-    def is_echo_rand_key(self, value, echo_rand_prefix="DET"):
-        if not self.is_hex(value) or len(value) != 44 + len(echo_rand_prefix):
-            return False
-        prefix = value[0:len(echo_rand_prefix)]
-        return echo_rand_prefix == prefix
-
-    def is_private_key(self, value):
-        if not self.is_hex(value) or len(value) != 51:
-            return False
-        return True
-
-    def is_public_key(self, value, address_prefix="ECHO"):
-        if not self.is_hex(value) or len(value) != 39 + len(address_prefix):
+    def is_echo_rand_key(self, value, address_prefix="ECHO"):
+        if not self.is_hex(value) or 44 + len(address_prefix) < len(value) or len(value) < 43 + len(address_prefix):
             return False
         prefix = value[0:len(address_prefix)]
         return address_prefix == prefix
 
+    def is_private_key(self, value):
+        if not self.is_hex(value) or 44 < len(value) or len(value) < 43:
+            return False
+        return True
+
     def is_iso8601(self, value):
         if self.is_string(value):
             return bool(self.iso8601_regex.match(value))
+
+    def is_eth_address(self, value):
+        if not self.is_hex(value) or len(value) != 44 or value[:2] != "0x" and len(value) != 42:
+            return False
+        return True

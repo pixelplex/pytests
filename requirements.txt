@@ -9,3 +9,4 @@ termcolor
 terminaltables
 websocket-client
 echopy-lib
+web3

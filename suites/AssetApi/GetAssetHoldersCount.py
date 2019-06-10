@@ -91,7 +91,7 @@ class PositiveTesting(BaseTest):
         new_asset_name = get_random_valid_asset_name
         value = 100
         lcc.set_step("Create a new asset and get id new asset")
-        new_asset_id = self.utils.get_asset_id(self, self.echo, new_asset_name, self.__database_api_identifier)
+        new_asset_id = self.utils.get_asset_id(self, new_asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(new_asset_id))
 
         lcc.set_step("Get holders count of new asset")
@@ -106,8 +106,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Add new asset holders")
         new_holders = [self.echo_acc0, self.echo_acc1, self.echo_acc2]
         for i in range(len(new_holders)):
-            self.utils.add_assets_to_account(self, self.echo, value, new_asset_id, new_holders[i],
-                                             self.__database_api_identifier)
+            self.utils.add_assets_to_account(self, value, new_asset_id, new_holders[i], self.__database_api_identifier)
         lcc.log_info(
             "Echo accounts '{}' became new asset holders of '{}' asset_id".format(new_holders, new_asset_id))
 
@@ -143,7 +142,7 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', asset='{}'".format(self.__database_api_identifier,
                                                                     self.__asset_api_identifier))
-        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
+        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
 
     @lcc.prop("type", "method")

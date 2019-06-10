@@ -1,10 +1,20 @@
 test:
+  variables:
+    MIGRATION_RESULT: ""
   before_script:
     - $(aws ecr get-login --no-include-email --region eu-central-1)
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - docker-compose down -v
     - docker-compose pull
-    - docker-compose build --no-cache
-    - docker-compose up --exit-code-from=pytests
+    - docker-compose build
+    - MIGRATION_RESULT=$(docker-compose run migrate)
+    - export SIDECHAIN_ADDRESS=$(echo \"$MIGRATION_RESULT\" | perl -lne '/SideChain.*contract address:\s+(0x.{40})/ && print $1')
+    - sed -i "s/0xc87395b45C1c199F25a6c2Be43515C41d53751Af/$SIDECHAIN_ADDRESS/g" ./genesis.json
+    - docker-compose up -d ganache
+    - docker-compose up -d echo
+    - docker-compose up pytests
+    - docker-compose down -v
   after_script:
     - docker-compose rm -fv
   tags:
@@ -12,3 +22,4 @@ test:
   only:
     - web
     - trigger
+    - merge_requests

@@ -10,35 +10,48 @@ project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
 
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
+GENESIS = os.path.join(os.path.dirname(__file__), "genesis.json")
 
 if "BASE_URL" not in os.environ:
     BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
 else:
     BASE_URL = os.environ["BASE_URL"]
 
-if "EMPTY_NODE" in os.environ and os.environ["EMPTY_NODE"] == "False":
-    EMPTY_NODE = False
+if "GANACHE_URL" not in os.environ:
+    GANACHE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["GANACHE_URL"]
 else:
-    EMPTY_NODE = True
+    GANACHE_URL = os.environ["GANACHE_URL"]
 
 if "NATHAN" not in os.environ:
     NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "nathan.json")))["NATHAN"]
 else:
     NATHAN = os.environ["NATHAN"]
 
-if "ECHO_POOL" not in os.environ:
-    ECHO_POOL = 1000000000000000
-else:
-    ECHO_POOL = os.environ["ECHO_POOL"]
-
 ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
 WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
-DEFAULT_INIT_ACCOUNTS = 6
-DEFAULT_ACCOUNT_PREFIX = "account"
-DEFAULT_ACCOUNT_COUNT = 100
+ECHO_INITIAL_BALANCE = int(json.load(open(GENESIS))["initial_balances"][0]["amount"])
+INITIAL_ACCOUNTS = json.load(open(GENESIS))["initial_accounts"]
+INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
+INITIAL_ACCOUNTS_NAMES = []
+for i in range(INITIAL_ACCOUNTS_COUNT):
+    INITIAL_ACCOUNTS_NAMES.append(INITIAL_ACCOUNTS[i]["name"])
+INITIAL_ACCOUNTS_ETH_ADDRESSES = []
+for i in range(INITIAL_ACCOUNTS_COUNT):
+    if "eth_address" in INITIAL_ACCOUNTS[i]:
+        INITIAL_ACCOUNTS_ETH_ADDRESSES.append("0x" + INITIAL_ACCOUNTS[i]["eth_address"])
+ACCOUNT_PREFIX = "account"
+DEFAULT_ACCOUNTS_COUNT = 100
 MAIN_TEST_ACCOUNT_COUNT = 1
-BLOCK_RELEASE_INTERVAL = 3
+BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_interval"]
+ETH_ASSET_SYMBOL = "EETH"
+ETH_ASSET_ID = json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["ETH_asset_id"]
+ETH_CONTRACT_ADDRESS = "0x" + json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["eth_contract_address"]
+UNPAID_FEE_METHOD = "0x19c4518a"
+
+ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
+with open(".env") as env_file:
+    ETH_PRIVATE_KEY = (env_file.readline().split('RPC_ACCOUNT=')[1]).split(",")[0]
 
 
 class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy, HasPreRunHook, HasPostRunHook):

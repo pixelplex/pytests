@@ -2,7 +2,7 @@
 import lemoncheesecake.api as lcc
 from echopy.echoapi.ws.exceptions import RPCError
 from lemoncheesecake.matching import check_that, is_not_none, this_dict, check_that_entry, is_integer, is_str, \
-    has_entry
+    has_entry, is_
 
 from common.base_test import BaseTest
 
@@ -114,6 +114,23 @@ class PositiveTesting(BaseTest):
             broadcast_result["trx"], is_not_none(), quiet=True
         )
 
+    @lcc.prop("type", "method")
+    # todo: add test. Bug: "ECHO-666"
+    @lcc.tags("Bug: 'ECHO-666'")
+    @lcc.test("Try to get fee in eETH")
+    @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
+    def fee_in_eth_asset(self):
+        lcc.set_step("Get in eETH asset")
+        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
+                                                         to_account_id=self.echo_acc1, amount=self.amount,
+                                                         fee_asset_id=self.eth_asset)
+        params = [[operation], self.eth_asset]
+        response_id = self.send_request(self.get_request("get_required_fees", params), self.__database_api_identifier)
+        response = self.get_response(response_id)
+        with this_dict(response["result"][0]):
+            check_that_entry("amount", is_integer(), quiet=True)
+            check_that_entry("asset_id", is_(self.eth_asset), quiet=True)
+
 
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_required_fees")
@@ -134,7 +151,7 @@ class NegativeTesting(BaseTest):
     def get_required_fees(self, operations, asset, negative=False):
         params = [[operations], asset]
         response_id = self.send_request(self.get_request("get_required_fees", params), self.__database_api_identifier)
-        return self.get_response(response_id, negative=negative)
+        return self.get_response(response_id, negative=negative, log_response=True)
 
     def setup_suite(self):
         super().setup_suite()
@@ -145,7 +162,7 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.echo, self.__database_api_identifier)
+        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
@@ -160,7 +177,7 @@ class NegativeTesting(BaseTest):
                                                                        to_account_id=self.echo_acc1,
                                                                        amount=self.amount)
         lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
-        self.valid_contract_id = self.utils.get_contract_id(self, self.echo, self.echo_acc0, self.contract,
+        self.valid_contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract,
                                                             self.__database_api_identifier)
 
     def teardown_suite(self):
@@ -270,23 +287,6 @@ class NegativeTesting(BaseTest):
             lcc.log_error("Error: broadcast transaction complete with insufficient.")
         except RPCError as e:
             lcc.log_info(str(e))
-
-    @lcc.prop("type", "method")
-    # todo: add test. Bug: "ECHO-666"
-    @lcc.tags("Bug: 'ECHO-666'")
-    @lcc.disabled()
-    @lcc.test("Try to get fee in eETH")
-    @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
-    def fee_in_eth_asset(self):
-        lcc.set_step("Get in eETH asset")
-        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
-                                                         to_account_id=self.echo_acc1, amount=self.amount,
-                                                         fee_asset_id=self.eeth_asset)
-        response = self.get_required_fees(operation, self.eeth_asset, negative=True)
-        check_that(
-            "'get_required_fees' return error message",
-            response, has_entry("error"), quiet=True
-        )
 
     @lcc.prop("type", "method")
     @lcc.test("Nonexistent contract byte code")

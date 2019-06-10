@@ -4,19 +4,19 @@ import json
 import os
 import time
 
+import lemoncheesecake.api as lcc
 from echopy import Echo
 from lemoncheesecake.matching import is_str, is_integer, check_that_entry
+from web3 import Web3
 from websocket import create_connection
 
-import lemoncheesecake.api as lcc
-
 from common.echo_operation import EchoOperations
+from common.ethereum_transaction import EthereumTransactions
 from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-
-from project import RESOURCES_DIR, BASE_URL, EMPTY_NODE, ECHO_CONTRACTS, WALLETS, DEFAULT_ACCOUNT_PREFIX
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID
 
 
 class BaseTest(object):
@@ -27,14 +27,16 @@ class BaseTest(object):
         self.receiver = None
         self.echo = Echo()
         self.utils = Utils()
+        self.web3 = None
         self.echo_ops = EchoOperations()
+        self.eth_trx = EthereumTransactions()
         self.__id = 0
         self.validator = Validator()
         self.echo_asset = "1.3.0"
-        self.eeth_asset = "1.3.9"
-        self.echo_acc0 = DEFAULT_ACCOUNT_PREFIX + "0"
-        self.echo_acc1 = DEFAULT_ACCOUNT_PREFIX + "1"
-        self.echo_acc2 = DEFAULT_ACCOUNT_PREFIX + "2"
+        self.eth_asset = ETH_ASSET_ID
+        self.echo_acc0 = ACCOUNT_PREFIX + "0"
+        self.echo_acc1 = ACCOUNT_PREFIX + "1"
+        self.echo_acc2 = ACCOUNT_PREFIX + "2"
 
     @staticmethod
     def create_connection_to_echo():
@@ -57,11 +59,23 @@ class BaseTest(object):
         else:
             check_that_entry(key, is_integer(), quiet=quiet)
 
+    def check_uint256_numbers(self, response, key, quiet=False):
+        if type(response.get(key)) is str:
+            self.validator.is_uint256(response.get(key))
+            check_that_entry(key, is_str(), quiet=quiet)
+        else:
+            check_that_entry(key, is_integer(), quiet=quiet)
+
     @staticmethod
-    def set_timeout_wait(seconds):
-        print("\nBefore sleep: {}".format(time.ctime()))
+    def get_time():
+        return time.strftime("%H:%M:%S", time.localtime())
+
+    def set_timeout_wait(self, seconds, print_log=True):
+        if print_log:
+            lcc.log_info("Start a '{}' second sleep... local_time:'{}'".format(seconds, self.get_time()))
         time.sleep(seconds)
-        print("\nAfter sleep: {}".format(time.ctime()))
+        if print_log:
+            lcc.log_info("Sleep is over, local_time:'{}'".format(self.get_time()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):
@@ -312,43 +326,29 @@ class BaseTest(object):
             return contract_id
 
     @staticmethod
-    def get_account_details_template(account_name, private_key, public_key, memo_key, brain_key):
-        # todo: remove memo_key later
-        return {account_name: {"id": "", "private_key": private_key, "public_key": public_key,
-                               "memo_key": memo_key, "brain_key": brain_key}}
-
-    # todo: remove get_memo_key later
-    @staticmethod
-    def get_memo_key():
-        return "ECHO7JgjnMroepiCCWyrG3jhWCRswG8CwEkthAZzEpA6HATSqLxduT"
+    def get_account_details_template(account_name, private_key, public_key, brain_key):
+        return {account_name: {"id": "", "private_key": private_key, "public_key": public_key, "brain_key": brain_key}}
 
     def generate_keys(self):
         brain_key_object = self.echo.brain_key()
         brain_key = brain_key_object.brain_key
         private_key_base58 = brain_key_object.get_private_key_base58()
         public_key_base58 = brain_key_object.get_public_key_base58()
-        memo_key = self.get_memo_key()
-        return [private_key_base58, public_key_base58, memo_key, brain_key]
+        return [private_key_base58, public_key_base58, brain_key]
 
     def store_new_account(self, account_name):
         keys = self.generate_keys()
-        private_key = keys[0]
-        public_key = keys[1]
-        # todo: remove memo_key later
-        memo_key = keys[2]
-        brain_key = keys[3]
-        account_details = self.get_account_details_template(account_name, private_key, public_key, memo_key,
-                                                            brain_key)
+        account_details = self.get_account_details_template(account_name, keys[0], keys[1], keys[2])
         if not os.path.exists(WALLETS):
             with open(WALLETS, "w") as file:
                 file.write(json.dumps(account_details))
-            return [public_key, memo_key]
+            return keys[1]
         with open(WALLETS, "r") as file:
             data = json.load(file)
             data.update(account_details)
             with open(WALLETS, "w") as new_file:
                 new_file.write(json.dumps(data))
-        return [public_key, memo_key]
+        return keys[1]
 
     def get_account_by_name(self, account_name, database_api_identifier, debug_mode=False):
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
@@ -360,10 +360,10 @@ class BaseTest(object):
         return response
 
     def register_account(self, account_name, registration_api_identifier, database_api_identifier, debug_mode=False):
-        public_data = self.store_new_account(account_name)
+        public_key = self.store_new_account(account_name)
         self.__id += 1
         callback = self.__id
-        account_params = [callback, account_name, public_data[0], public_data[0], public_data[1], public_data[0]]
+        account_params = [callback, account_name, public_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         registration_api_identifier, debug_mode=debug_mode)
         response = self.get_response(response_id, debug_mode=debug_mode)
@@ -412,6 +412,8 @@ class BaseTest(object):
         response = self.get_response(response_id)
         if debug_mode:
             lcc.log_debug("Required fee:\n{}".format(json.dumps(response, indent=4)))
+        if response.get("result")[0].get("fee"):
+            return [response.get("result")[0].get("fee")]
         return response.get("result")
 
     def add_fee_to_operation(self, operation, database_api_identifier, fee_amount=None, fee_asset_id="1.3.0",
@@ -451,12 +453,6 @@ class BaseTest(object):
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
 
-    def check_node_status(self, database_api_identifier):
-        # Check that the node empty or not
-        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
-                                        database_api_identifier)
-        return self.get_response(response_id)["result"]
-
     @staticmethod
     def _login_status(response):
         # Check authorization status
@@ -493,8 +489,19 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
+    def _connect_to_ganache_ethereum(self):
+        # Create connection to ganache ethereum
+        lcc.set_step("Open connection to ganache ethereum")
+        lcc.log_url(GANACHE_URL)
+        self.web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
+        if self.web3.isConnected() is None or not self.web3.isConnected():
+            lcc.log_error("Connection to ganache ethereum not established")
+            raise Exception("Connection to ganache ethereum not established")
+        lcc.log_info("Connection to ganache ethereum successfully created")
+
     def perform_pre_deploy_setup(self, database_api_identifier):
         # Perform pre-deploy for run tests on the empty node
+        self._connect_to_ganache_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Pre-deploy setup")
         lcc.log_info("Empty node. Start pre-deploy setup...")
@@ -503,6 +510,13 @@ class BaseTest(object):
         pre_deploy_echo(self, database_api_identifier, lcc)
         lcc.log_info("Pre-deploy setup completed successfully")
         self._disconnect_to_echopy_lib()
+
+    def check_node_status(self):
+        database_api_identifier = self.get_identifier("database")
+        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+                                        database_api_identifier)
+        if not self.get_response(response_id)["result"]:
+            self.perform_pre_deploy_setup(database_api_identifier)
 
     def setup_suite(self):
         # Check status of connection
@@ -515,10 +529,7 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
-        if EMPTY_NODE:
-            database_api_identifier = self.get_identifier("database")
-            if not self.check_node_status(database_api_identifier):
-                self.perform_pre_deploy_setup(database_api_identifier)
+        self.check_node_status()
 
     def teardown_suite(self):
         # Close connection to WebSocket

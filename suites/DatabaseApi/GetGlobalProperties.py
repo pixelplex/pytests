@@ -36,7 +36,11 @@ class GetGlobalProperties(BaseTest):
     def fee_with_price_per_kbyte(actual_fee):
         with this_dict(actual_fee):
             if check_that("fee", actual_fee, has_length(2)):
-                check_that_entry("fee", is_integer(), quiet=True)
+                # todo: 44 operation has 'basic_fee'. Improve ECHO-916
+                if "fee" in actual_fee:
+                    check_that_entry("fee", is_integer(), quiet=True)
+                if "basic_fee" in actual_fee:
+                    check_that_entry("basic_fee", is_integer(), quiet=True)
                 check_that_entry("price_per_kbyte", is_integer(), quiet=True)
 
     @staticmethod
@@ -172,25 +176,27 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            # todo: Delete '-7' when 44 for 50 operations will be added
+            # todo: Delete '-7' when all 55 operations will be added
             len(current_fees["parameters"]), is_(len(self.all_operations) - 7)
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
-        operations = ["transfer", "account_update", "asset_update", "asset_issue", "proposal_create",
-                      "proposal_update", "withdraw_permission_claim", "custom", "override_transfer"]
+        # todo: move to 'only_fee' ["transfer", "withdraw_permission_claim", "override_transfer"]. Bug ECHO-922
+        operations = ["transfer", "account_update", "asset_update", "proposal_create", "proposal_update",
+                      "withdraw_permission_claim", "custom", "override_transfer", "account_address_create"]
         self.check_default_fee_for_operation(current_fees["parameters"], operations, self.fee_with_price_per_kbyte)
 
         lcc.set_step("Check 'only_fee' for operations")
         operations = ["limit_order_create", "limit_order_cancel", "call_order_update", "account_whitelist",
-                      "account_transfer", "asset_update_bitasset", "asset_update_feed_producers", "asset_reserve",
-                      "asset_fund_fee_pool", "asset_settle", "asset_global_settle", "asset_publish_feed",
-                      "witness_create", "witness_update", "proposal_delete", "withdraw_permission_create",
-                      "withdraw_permission_update", "withdraw_permission_delete", "committee_member_create",
-                      "committee_member_update", "committee_member_update_global_parameters", "vesting_balance_create",
-                      "vesting_balance_withdraw", "worker_create", "assert", "transfer_from_blind", "asset_claim_fees",
-                      "bid_collateral", "create_contract", "call_contract", "contract_transfer",
-                      "change_sidechain_config"]
+                      "account_transfer", "asset_update_bitasset", "asset_issue", "asset_update_feed_producers",
+                      "asset_reserve", "asset_fund_fee_pool", "asset_settle", "asset_global_settle",
+                      "asset_publish_feed", "witness_create", "witness_update", "proposal_delete",
+                      "withdraw_permission_create", "withdraw_permission_update", "withdraw_permission_delete",
+                      "committee_member_create", "committee_member_update", "committee_member_update_global_parameters",
+                      "vesting_balance_create", "vesting_balance_withdraw", "worker_create", "assert",
+                      "transfer_from_blind", "asset_claim_fees", "bid_collateral", "create_contract", "call_contract",
+                      "contract_transfer", "change_sidechain_config", "transfer_to_address_operation",
+                      "generate_eth_address_operation", "create_eth_address_operation"]
         self.check_default_fee_for_operation(current_fees["parameters"], operations, self.only_fee)
 
         lcc.set_step("Check 'no_fee' for operations")
@@ -229,6 +235,7 @@ class GetGlobalProperties(BaseTest):
         sidechain_config = parameters["sidechain_config"]
         eth_params = ["eth_contract_address", "eth_committee_updated_topic", "eth_gen_address_topic",
                       "eth_deposit_topic", "eth_withdraw_topic"]
+        # todo: add 'eth_update_addr_method'. Bug ECHO-917
         eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method"]
         self.check_sidechain_config(sidechain_config, eth_params, eth_methods)
 

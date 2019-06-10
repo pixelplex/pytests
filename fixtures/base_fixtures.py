@@ -47,6 +47,13 @@ def get_random_float_up_to_hundred():
 
 
 @lcc.fixture(scope="test")
+def get_random_float_up_to_ten():
+    random_float = random.uniform(0, 10)
+    lcc.log_info("Generated random float up to a ten: {}".format(random_float))
+    return random_float
+
+
+@lcc.fixture(scope="test")
 def get_random_string():
     random_string = ''.join(
         random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(RANGE_OF_STR))

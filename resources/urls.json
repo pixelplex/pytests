@@ -1,3 +1,4 @@
 {
-    "BASE_URL": "wss://devnet.echo-dev.io/ws"
+    "BASE_URL": "ws://127.0.0.1:56451/ws",
+    "GANACHE_URL": "http://127.0.0.1:56452"
 }
