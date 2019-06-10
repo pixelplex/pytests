@@ -115,8 +115,6 @@ class PositiveTesting(BaseTest):
         )
 
     @lcc.prop("type", "method")
-    # todo: add test. Bug: "ECHO-666"
-    @lcc.tags("Bug: 'ECHO-666'")
     @lcc.test("Try to get fee in eETH")
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def fee_in_eth_asset(self):
