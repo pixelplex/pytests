@@ -252,7 +252,7 @@ class Utils(object):
 
     @staticmethod
     def perform_generate_eth_address_operation(base_test, registrar, database_api_id, log_broadcast=False):
-        operation = base_test.echo_ops.get_generate_eth_address_operation(echo=base_test.echo, account_id=registrar)
+        operation = base_test.echo_ops.get_generate_eth_address_operation(echo=base_test.echo, account=registrar)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
@@ -265,9 +265,8 @@ class Utils(object):
     @staticmethod
     def perform_withdraw_eth_operation_operation(base_test, registrar, eth_addr, value, database_api_id,
                                                  log_broadcast=False):
-        operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, acc_id=registrar,
-                                                                  eth_addr=eth_addr,
-                                                                  value=value)
+        operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, account=registrar,
+                                                                  eth_addr=eth_addr, value=value)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)

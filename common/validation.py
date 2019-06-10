@@ -276,13 +276,13 @@ class Validator(object):
         return self.is_uint8(value) and value < 49
 
     def is_echo_rand_key(self, value, address_prefix="ECHO"):
-        if not self.is_hex(value) or len(value) != 44 + len(address_prefix):
+        if not self.is_hex(value) or 44 + len(address_prefix) < len(value) or len(value) < 43 + len(address_prefix):
             return False
         prefix = value[0:len(address_prefix)]
         return address_prefix == prefix
 
     def is_private_key(self, value):
-        if not self.is_hex(value) or len(value) != 44:
+        if not self.is_hex(value) or 44 < len(value) or len(value) < 43:
             return False
         return True
 

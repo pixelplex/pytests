@@ -170,8 +170,7 @@ class EchoOperations(object):
         asset_issue_props.update({"issuer": issuer, "issue_to_account": issue_to_account})
         asset_issue_props["asset_to_issue"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
-            lcc.log_debug(
-                "Asset issue operation: \n{}".format(json.dumps([operation_id, asset_issue_props], indent=4)))
+            lcc.log_debug("Asset issue operation: \n{}".format(json.dumps([operation_id, asset_issue_props], indent=4)))
         if signer is None:
             return [operation_id, asset_issue_props, issuer]
         return [operation_id, asset_issue_props, signer]
@@ -187,9 +186,8 @@ class EchoOperations(object):
              "balance_owner_key": balance_owner_public_key})
         balance_claim_operation_props["total_claimed"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
-            lcc.log_debug(
-                "Balance claim operation: \n{}".format(
-                    json.dumps([operation_id, balance_claim_operation_props], indent=4)))
+            lcc.log_debug("Balance claim operation: \n{}".format(
+                json.dumps([operation_id, balance_claim_operation_props], indent=4)))
         if signer is None:
             return [operation_id, balance_claim_operation_props, balance_owner_private_key]
         return [operation_id, balance_claim_operation_props, signer]
@@ -245,36 +243,34 @@ class EchoOperations(object):
         transfer_to_address_props.update({"from": from_account_id, "to": to_address})
         transfer_to_address_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
         if debug_mode:
-            lcc.log_debug(
-                "Transfer to address operation: \n{}".format(json.dumps(transfer_to_address_props, indent=4)))
+            lcc.log_debug("Transfer to address operation: \n{}".format(json.dumps(transfer_to_address_props, indent=4)))
         if signer is None:
             return [operation_id, transfer_to_address_props, from_account_id]
         return [operation_id, transfer_to_address_props, signer]
 
-    def get_generate_eth_address_operation(self, echo, account_id, fee_amount=0, fee_asset_id="1.3.0", signer=None,
+    def get_generate_eth_address_operation(self, echo, account, fee_amount=0, fee_asset_id="1.3.0", signer=None,
                                            debug_mode=False):
         operation_id = echo.config.operation_ids.GENERATE_ETH_ADDRESS
         generate_eth_address_props = deepcopy(self.get_operation_json("generate_eth_address_operation"))
         generate_eth_address_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        generate_eth_address_props.update({"account_id": account_id})
+        generate_eth_address_props.update({"account": account})
         if debug_mode:
             lcc.log_debug(
                 "Generate ethereum address operation: \n{}".format(json.dumps(generate_eth_address_props, indent=4)))
         if signer is None:
-            return [operation_id, generate_eth_address_props, account_id]
+            return [operation_id, generate_eth_address_props, account]
         return [operation_id, generate_eth_address_props, signer]
 
-    def get_withdraw_eth_operation(self, echo, acc_id, eth_addr, value, fee_amount=0, fee_asset_id="1.3.0", signer=None,
-                                   debug_mode=False):
+    def get_withdraw_eth_operation(self, echo, account, eth_addr, value, fee_amount=0, fee_asset_id="1.3.0",
+                                   signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.WITHDRAW_ETH
         withdraw_eth_props = deepcopy(self.get_operation_json("withdraw_eth_operation"))
         withdraw_eth_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        withdraw_eth_props.update({"acc_id": acc_id, "eth_addr": eth_addr, "value": value})
+        withdraw_eth_props.update({"account": account, "eth_addr": eth_addr, "value": value})
         if debug_mode:
-            lcc.log_debug(
-                "Withdraw ethereum operation: \n{}".format(json.dumps(withdraw_eth_props, indent=4)))
+            lcc.log_debug("Withdraw ethereum operation: \n{}".format(json.dumps(withdraw_eth_props, indent=4)))
         if signer is None:
-            return [operation_id, withdraw_eth_props, acc_id]
+            return [operation_id, withdraw_eth_props, account]
         return [operation_id, withdraw_eth_props, signer]
 
     def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):

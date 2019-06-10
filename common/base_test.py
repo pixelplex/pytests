@@ -412,6 +412,8 @@ class BaseTest(object):
         response = self.get_response(response_id)
         if debug_mode:
             lcc.log_debug("Required fee:\n{}".format(json.dumps(response, indent=4)))
+        if response.get("result")[0].get("fee"):
+            return [response.get("result")[0].get("fee")]
         return response.get("result")
 
     def add_fee_to_operation(self, operation, database_api_identifier, fee_amount=None, fee_asset_id="1.3.0",

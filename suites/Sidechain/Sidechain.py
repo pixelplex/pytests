@@ -7,13 +7,13 @@ from lemoncheesecake.matching import check_that, equal_to
 from common.base_test import BaseTest
 
 SUITE = {
-    "description": "Entering the currency ethereum in the network ECHO to the account"
+    "description": "Entering the currency ethereum in the network ECHO to the account and withdraw that currency"
 }
 
 
 @lcc.prop("testing", "main")
 @lcc.tags("sidechain")
-@lcc.suite("Check scenario 'Ethereum in'")
+@lcc.suite("Check scenario 'EthToEcho and EchoToEth'")
 class Sidechain(BaseTest):
 
     def __init__(self):
@@ -92,6 +92,11 @@ class Sidechain(BaseTest):
             equal_to(0)
         )
 
+        # todo: remove transfer to new account. Bug ECHO-926
+        operation = self.echo_ops.get_transfer_operation(self.echo, self.echo_acc0, self.new_account, amount=200000)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, self.new_account, self.__database_api_identifier,
                                                           log_broadcast=False)
@@ -99,7 +104,7 @@ class Sidechain(BaseTest):
 
         lcc.set_step("Get ethereum address of created account in the network")
         self.eth_account_address = self.utils.get_eth_address(self, self.new_account,
-                                                              self.__database_api_identifier)["result"][0]["eth_addr"]
+                                                              self.__database_api_identifier)["result"]["eth_addr"]
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(self.new_account, self.eth_account_address))
 
     @lcc.prop("type", "scenario")
@@ -220,7 +225,8 @@ class Sidechain(BaseTest):
         lcc.set_step("Create multiple account address for new account")
         for i in range(addresses_count):
             broadcast_result = self.utils.perform_account_address_create_operation(self, self.echo_acc0, label + str(i),
-                                                                                   self.__database_api_identifier)
+                                                                                   self.__database_api_identifier,
+                                                                                   log_broadcast=True)
             account_address_object.append(self.get_operation_results_ids(broadcast_result))
 
         # todo: change to 'get_account_addresses'. Bug: "ECHO-843"
