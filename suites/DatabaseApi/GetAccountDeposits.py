@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, greater_than, is_integer, is_bool, \
-    is_list
+from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, greater_than, is_bool, is_list
 
 from common.base_test import BaseTest
 
@@ -15,7 +14,7 @@ SUITE = {
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_account_deposits")
 @lcc.suite("Check work of method 'get_account_deposits'", rank=1)
-class GetAccountsDeposits(BaseTest):
+class GetAccountDeposits(BaseTest):
 
     def __init__(self):
         super().__init__()
@@ -65,7 +64,15 @@ class GetAccountsDeposits(BaseTest):
                                                               self.__database_api_identifier)["result"]["eth_addr"]
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, self.eth_account_address))
 
-        lcc.set_step("Send eth to ethereum address of created account")
+        lcc.set_step("Get unpaid fee for ethereum address creation")
+        unpaid_fee = self.utils.get_unpaid_fee(self, new_account)
+
+        lcc.set_step("First send eth to ethereum address of created account")
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+                                                            value=eth_amount)
+        self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
+
+        lcc.set_step("Second send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
@@ -78,18 +85,39 @@ class GetAccountsDeposits(BaseTest):
         lcc.log_info("Call method 'get_account_deposits' of new account '{}'".format(new_account))
 
         lcc.set_step("Check simple work of method 'get_account_deposits'")
-        deposit = response["result"][0]
-        require_that(
-            "'first deposit of created account'",
-            len(deposit), is_(6)
-        )
-        with this_dict(deposit):
-            if not self.validator.is_deposit_eth_id(deposit["id"]):
-                lcc.log_error("Wrong format of 'id', got: {}".format(deposit["id"]))
-            else:
-                lcc.log_info("'id' has correct format: deposit_eth_object_type")
-            check_that_entry("deposit_id", greater_than(0), quiet=True)
-            check_that_entry("account", is_(new_account), quiet=True)
-            check_that_entry("value", is_integer(), quiet=True)
-            check_that_entry("is_approved", is_bool(), quiet=True)
-            check_that_entry("approves", is_list(), quiet=False)
+        deposit = response["result"]
+        deposit_ids = []
+        deposit_values = [self.utils.convert_ethereum_to_eeth(eth_amount) - unpaid_fee,
+                          self.utils.convert_ethereum_to_eeth(eth_amount)]
+        for i in range(len(deposit)):
+            require_that(
+                "'first deposit of created account'",
+                len(deposit[i]), is_(6)
+            )
+            with this_dict(deposit[i]):
+                if not self.validator.is_deposit_eth_id(deposit[i]["id"]):
+                    lcc.log_error("Wrong format of 'id', got: {}".format(deposit[i]["id"]))
+                else:
+                    lcc.log_info("'id' has correct format: deposit_eth_object_type")
+                deposit_ids.append(deposit[i]["id"])
+                check_that_entry("deposit_id", greater_than(0), quiet=True)
+                check_that_entry("account", is_(new_account), quiet=True)
+                check_that_entry("value", is_(deposit_values[i]), quiet=True)
+                check_that_entry("is_approved", is_bool(), quiet=True)
+                check_that_entry("approves", is_list(), quiet=True)
+
+        lcc.set_step("Get deposit by id")
+        response_id = self.send_request(self.get_request("get_objects", [deposit_ids]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"]
+        lcc.log_info("Call method 'get_objects' with param: {}".format(deposit_ids))
+
+        lcc.log_info("Compare deposits in 'get_account_deposits' with method 'get_objects'")
+        for i in range(len(deposit)):
+            with this_dict(deposit[i]):
+                check_that_entry("id", is_(response[i]["id"]), quiet=True)
+                check_that_entry("deposit_id", is_(response[i]["deposit_id"]), quiet=True)
+                check_that_entry("account", is_(response[i]["account"]), quiet=True)
+                check_that_entry("value", is_(response[i]["value"]), quiet=True)
+                check_that_entry("is_approved", is_(response[i]["is_approved"]), quiet=True)
+                check_that_entry("approves", is_(response[i]["approves"]), quiet=True)
