@@ -20,7 +20,6 @@ class GetAccountDeposits(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
-        self.eth_account_address = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -60,20 +59,20 @@ class GetAccountDeposits(BaseTest):
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
 
         lcc.set_step("Get ethereum address of created account in the network")
-        self.eth_account_address = self.utils.get_eth_address(self, new_account,
-                                                              self.__database_api_identifier)["result"]["eth_addr"]
-        lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, self.eth_account_address))
+        eth_account_address = self.utils.get_eth_address(self, new_account,
+                                                         self.__database_api_identifier)["result"]["eth_addr"]
+        lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
         unpaid_fee = self.utils.get_unpaid_fee(self, new_account)
 
         lcc.set_step("First send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Second send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
@@ -81,7 +80,7 @@ class GetAccountDeposits(BaseTest):
         params = [new_account]
         response_id = self.send_request(self.get_request("get_account_deposits", params),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_account_deposits' of new account '{}'".format(new_account))
 
         lcc.set_step("Check simple work of method 'get_account_deposits'")
