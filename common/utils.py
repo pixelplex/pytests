@@ -263,8 +263,7 @@ class Utils(object):
         return broadcast_result
 
     @staticmethod
-    def perform_withdraw_eth_operation_operation(base_test, registrar, eth_addr, value, database_api_id,
-                                                 log_broadcast=False):
+    def perform_withdraw_eth_operation(base_test, registrar, eth_addr, value, database_api_id, log_broadcast=False):
         operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, account=registrar,
                                                                   eth_addr=eth_addr, value=value)
         collected_operation = base_test.collect_operations(operation, database_api_id)
@@ -381,3 +380,16 @@ class Utils(object):
         raise Exception(
             "No needed operation (id='{}') in '{}' account history. "
             "Waiting time result='{}'".format(operation_id, account_id, self.waiting_time_result))
+
+    @staticmethod
+    def perform_contract_fund_pool_operation(base_test, sender, callee, value_amount, database_api_id,
+                                             log_broadcast=False):
+        operation = base_test.echo_ops.get_contract_fund_pool_operation(echo=base_test.echo, sender=sender,
+                                                                        callee=callee, value_amount=value_amount)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: fund pool from '{}' account is not performed, response:\n{}".format(sender, broadcast_result))
+        return broadcast_result

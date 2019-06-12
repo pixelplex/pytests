@@ -273,6 +273,19 @@ class EchoOperations(object):
             return [operation_id, withdraw_eth_props, account]
         return [operation_id, withdraw_eth_props, signer]
 
+    def get_contract_fund_pool_operation(self, echo, sender, callee, fee_amount=0, fee_asset_id="1.3.0", value_amount=1,
+                                         value_asset_id="1.3.0", signer=None, debug_mode=False):
+        operation_id = echo.config.operation_ids.CONTRACT_FUND_POOL
+        contract_fund_pool_props = self.get_operation_json("contract_fund_pool_operation")
+        contract_fund_pool_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        contract_fund_pool_props.update({"sender": sender, "callee": callee})
+        contract_fund_pool_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
+        if debug_mode:
+            lcc.log_debug("Contract fund pool operation: \n{}".format(json.dumps(contract_fund_pool_props, indent=4)))
+        if signer is None:
+            return [operation_id, contract_fund_pool_props, sender]
+        return [operation_id, contract_fund_pool_props, signer]
+
     def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:

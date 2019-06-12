@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that_entry, is_str, is_false, check_that, has_length, \
-    require_that, require_that_in, is_true
+    require_that, require_that_in, is_true, is_
 
 from common.base_test import BaseTest
 
@@ -55,17 +55,20 @@ class GetContracts(BaseTest):
         lcc.set_step("Check simple work of method 'get_contracts'")
         result = response["result"][0]
         with this_dict(result):
-            if not self.validator.is_contract_id(result["id"]):
-                lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
-            else:
-                lcc.log_info("'id' has correct format: contract_object_type")
-            if not self.validator.is_contract_statistics_id(result["statistics"]):
-                lcc.log_error("Wrong format of 'statistics', got: {}".format(result["statistics"]))
-            else:
-                lcc.log_info("'statistics' has correct format: contract_statistics_object_type")
-            check_that_entry("destroyed", is_false())
-            check_that_entry("type", is_str("evm"))
-            check_that_entry("supported_asset_id", is_str(self.echo_asset))
+            if check_that("config", result, has_length(6)):
+                if not self.validator.is_contract_id(result["id"]):
+                    lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
+                else:
+                    lcc.log_info("'id' has correct format: contract_object_type")
+                if not self.validator.is_contract_statistics_id(result["statistics"]):
+                    lcc.log_error("Wrong format of 'statistics', got: {}".format(result["statistics"]))
+                else:
+                    lcc.log_info("'statistics' has correct format: contract_statistics_object_type")
+                check_that_entry("destroyed", is_false())
+                check_that_entry("type", is_str("evm"))
+                check_that_entry("supported_asset_id", is_str(self.echo_asset))
+                # todo: add when fixed. Bug ECHO-935
+                # check_that_entry("owner", is_(self.echo_acc0))
 
 
 @lcc.prop("testing", "positive")
@@ -238,3 +241,10 @@ class PositiveTesting(BaseTest):
             "'statistics_id'",
             response["result"][0]["owner"], is_str(contract_id)
         )
+
+        # todo: add test. Bug ECHO-935
+        @lcc.prop("type", "method")
+        @lcc.test("Check work of owner field")
+        @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
+        def check_owner_field(self):
+            pass
