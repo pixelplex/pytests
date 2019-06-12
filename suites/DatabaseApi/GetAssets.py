@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict, equal_to, check_that, is_none
+    is_dict, equal_to, check_that, is_none, has_length
 
 from common.base_test import BaseTest
 
@@ -56,7 +56,7 @@ class GetAssets(BaseTest):
 
         require_that(
             "'length of default chain asset'",
-            len(asset), is_(6)
+            asset, has_length(6)
         )
         with this_dict(asset):
             check_that_entry("id", is_(asset_ids[0]), quiet=True)
@@ -74,7 +74,7 @@ class GetAssets(BaseTest):
             check_that_entry("options", is_dict(), quiet=True)
             options = asset["options"]
             with this_dict(options):
-                require_that("'options'", len(options), is_(12))
+                require_that("'options'", options, has_length(12))
                 check_that_entry("blacklist_authorities", is_list(), quiet=True)
                 check_that_entry("blacklist_markets", is_list(), quiet=True)
                 check_that_entry("core_exchange_rate", is_dict(), quiet=True)
@@ -82,7 +82,7 @@ class GetAssets(BaseTest):
                 core_exchange_rate = options["core_exchange_rate"]
                 require_that(
                     "'core_exchange_rate'",
-                    len(core_exchange_rate), is_(2)
+                    core_exchange_rate, has_length(2)
                 )
                 self.check_core_exchange_rate_structure(core_exchange_rate)
 
@@ -126,8 +126,6 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
-        lcc.log_info("Nonexistent asset id: '{}'".format(self.nonexistent_asset_id))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -164,7 +162,7 @@ class PositiveTesting(BaseTest):
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
 
-        lcc.set_step("Checking created assets")
+        lcc.set_step("Check created assets")
         assets_info = response["result"]
         for operation_num in range(len(collected_operations)):
             performed_operation = collected_operations[operation_num][0][1]
@@ -187,12 +185,12 @@ class PositiveTesting(BaseTest):
         lcc.log_info('Nonexistent asset id: {}'.format(nonexistent_asset_id))
 
         lcc.set_step("Get assets")
-        lcc.log_info("Call method 'get_assets' with param: {}".format(nonexistent_asset_id))
         response_id = self.send_request(self.get_request("get_assets", [nonexistent_asset_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_assets' with param: {}".format(nonexistent_asset_id))
 
-        lcc.set_step("Checking nonexistent asset")
+        lcc.set_step("Check nonexistent asset")
         asset_info = response["result"]
         for nonexistent_result in asset_info:
             check_that("'get_assets result'", nonexistent_result, is_none())
