@@ -15,7 +15,7 @@ class EthereumTransactions(object):
     @staticmethod
     def get_operation_json(variable_name):
         # Return needed operation template from json file
-        return ETHEREUM_OPERATIONS[variable_name]
+        return deepcopy(ETHEREUM_OPERATIONS[variable_name])
 
     def get_transfer_transaction(self, web3, to, value, _from=None, nonce=None, value_currency="ether", gas=2000000,
                                  gas_price=None, gas_price_currency="gwei", signer=ETH_PRIVATE_KEY, debug_mode=False):

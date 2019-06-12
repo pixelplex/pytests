@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, greater_than, is_bool, is_list
+from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, greater_than, is_bool, is_list, \
+    equal_to, check_that, starts_with, has_length
 
 from common.base_test import BaseTest
 
@@ -20,6 +21,7 @@ class GetAccountDeposits(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.__history_api_identifier = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -28,9 +30,11 @@ class GetAccountDeposits(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
         self.__registration_api_identifier = self.get_identifier("registration")
+        self.__history_api_identifier = self.get_identifier("history")
         lcc.log_info(
-            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
-                                                                           self.__registration_api_identifier))
+            "API identifiers are: database='{}', registration='{}', "
+            "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
+                                  self.__history_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
@@ -44,6 +48,9 @@ class GetAccountDeposits(BaseTest):
     def method_main_check(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
         eth_amount = 0.01
+        deposit_ids = []
+        deposit_values = []
+        sidechain_issue_operations = []
 
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -70,28 +77,62 @@ class GetAccountDeposits(BaseTest):
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
+        deposit_values.append(self.utils.convert_ethereum_to_eeth(eth_amount) - unpaid_fee)
+
+        lcc.set_step("Store the first sent operation EthToEcho")
+        sidechain_issue_operation = self.echo_ops.get_operation_json("sidechain_issue_operation", example=True)
+        sidechain_issue_operation[1]["value"].update({"amount": deposit_values[0]})
+        sidechain_issue_operation[1].update({"account": new_account})
+        sidechain_issue_operations.insert(0, sidechain_issue_operation)
+        lcc.log_info("First deposit operation stored")
 
         lcc.set_step("Second send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
+        deposit_values.append(self.utils.convert_ethereum_to_eeth(eth_amount))
+
+        lcc.set_step("Store the second sent operation EthToEcho")
+        sidechain_issue_operation = self.echo_ops.get_operation_json("sidechain_issue_operation", example=True)
+        sidechain_issue_operation[1]["value"].update({"amount": deposit_values[1]})
+        sidechain_issue_operation[1].update({"account": new_account})
+        sidechain_issue_operations.insert(0, sidechain_issue_operation)
+        lcc.log_info("Second deposit operation stored")
+
+        lcc.set_step("Get account history operations")
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_ISSUE
+        response = self.utils.get_account_history_operations(self, new_account, operation_id,
+                                                             self.__history_api_identifier, limit=2)
+        lcc.log_info("Account history operations of 'sidechain_issue_operation' received")
+
+        lcc.set_step("Check response from method 'get_account_history_operations'")
+        for i in range(len(response["result"])):
+            operation_in_history = response["result"][i]["op"]
+            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            check_that("operation_id", operation_in_history[0], equal_to(operation_id))
+            with this_dict(operation_in_history[1]):
+                check_that_entry("fee", equal_to(sidechain_issue_operations[i][1]["fee"]))
+                with this_dict(operation_in_history[1]["value"]):
+                    check_that_entry("amount", equal_to(sidechain_issue_operations[i][1]["value"]["amount"]))
+                    check_that_entry("asset_id", equal_to(sidechain_issue_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_issue_operations[i][1]["account"]))
+                check_that_entry("deposit_id",
+                                 starts_with(self.get_object_type(self.echo.config.object_types.DEPOSIT_ETH)))
 
         lcc.set_step("Get deposits of created account")
         params = [new_account]
         response_id = self.send_request(self.get_request("get_account_deposits", params),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
         lcc.log_info("Call method 'get_account_deposits' of new account '{}'".format(new_account))
 
         lcc.set_step("Check simple work of method 'get_account_deposits'")
         deposit = response["result"]
-        deposit_ids = []
-        deposit_values = [self.utils.convert_ethereum_to_eeth(eth_amount) - unpaid_fee,
-                          self.utils.convert_ethereum_to_eeth(eth_amount)]
         for i in range(len(deposit)):
+            lcc.set_step("Check account deposit #{}".format(str(i)))
             require_that(
                 "'first deposit of created account'",
-                len(deposit[i]), is_(6)
+                deposit[i], has_length(6)
             )
             with this_dict(deposit[i]):
                 if not self.validator.is_deposit_eth_id(deposit[i]["id"]):
@@ -105,14 +146,15 @@ class GetAccountDeposits(BaseTest):
                 check_that_entry("is_approved", is_bool(), quiet=True)
                 check_that_entry("approves", is_list(), quiet=True)
 
-        lcc.set_step("Get deposit by id")
+        lcc.set_step("Get deposit by id using 'get_objects'")
         response_id = self.send_request(self.get_request("get_objects", [deposit_ids]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_objects' with param: {}".format(deposit_ids))
 
-        lcc.log_info("Compare deposits in 'get_account_deposits' with method 'get_objects'")
+        lcc.set_step("Compare deposits in 'get_account_deposits' with method 'get_objects'")
         for i in range(len(deposit)):
+            lcc.set_step("Compare #{}, deposit in 'get_account_deposits' with method 'get_objects'".format(str(i)))
             with this_dict(deposit[i]):
                 check_that_entry("id", is_(response[i]["id"]), quiet=True)
                 check_that_entry("deposit_id", is_(response[i]["deposit_id"]), quiet=True)

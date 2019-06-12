@@ -3,7 +3,7 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, is_, this_dict, greater_than_or_equal_to, check_that_entry, is_bool, \
-    is_list
+    is_list, has_length
 
 from common.base_test import BaseTest
 
@@ -23,6 +23,7 @@ class GetAccountWithdrawals(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.__history_api_identifier = None
 
     @staticmethod
     def get_random_amount(_to, _from=0.01):
@@ -35,9 +36,11 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
         self.__registration_api_identifier = self.get_identifier("registration")
+        self.__history_api_identifier = self.get_identifier("history")
         lcc.log_info(
-            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
-                                                                           self.__registration_api_identifier))
+            "API identifiers are: database='{}', registration='{}', "
+            "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
+                                  self.__history_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
@@ -51,6 +54,9 @@ class GetAccountWithdrawals(BaseTest):
     def method_main_check(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
         eth_amount = 0.01
+        withdraw_ids = []
+        withdraw_values = []
+        sidechain_burn_operations = []
 
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -80,22 +86,59 @@ class GetAccountWithdrawals(BaseTest):
                                                            self.eth_asset)["amount"]
 
         lcc.set_step("First withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount_1 = self.get_random_amount(_to=ethereum_balance)
-        lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount_1, new_account))
+        withdraw_amount = self.get_random_amount(_to=ethereum_balance)
+        withdraw_values.append(withdraw_amount)
         self.utils.perform_withdraw_eth_operation_operation(self, new_account, eth_account_address[2:],
-                                                            withdraw_amount_1, self.__database_api_identifier)
+                                                            withdraw_amount, self.__database_api_identifier)
+        lcc.log_info("Withdraw '{}' eeth from '{}' account".format(withdraw_amount, new_account))
+
+        lcc.set_step("Store the first withdraw operation EchoToEth")
+        sidechain_burn_operation = self.echo_ops.get_operation_json("sidechain_burn_operation", example=True)
+        sidechain_burn_operation[1]["value"].update({"amount": withdraw_values[0]})
+        sidechain_burn_operation[1].update({"account": new_account})
+        sidechain_burn_operations.insert(0, sidechain_burn_operation)
+        lcc.log_info("First withdraw operation stored")
 
         lcc.set_step("Get updated account balance in ethereum after first withdraw")
         ethereum_balance = self.utils.get_account_balances(self, new_account, self.__database_api_identifier,
                                                            self.eth_asset)["amount"]
 
         lcc.set_step("Second withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount_2 = self.get_random_amount(_to=ethereum_balance)
-        lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount_2, new_account))
+        withdraw_amount = self.get_random_amount(_to=ethereum_balance)
+        withdraw_values.append(withdraw_amount)
         self.utils.perform_withdraw_eth_operation_operation(self, new_account, eth_account_address[2:],
-                                                            withdraw_amount_2, self.__database_api_identifier)
+                                                            withdraw_amount, self.__database_api_identifier)
+        lcc.log_info("Withdraw '{}' eeth from '{}' account".format(withdraw_amount, new_account))
 
-        lcc.set_step("Get deposits of created account")
+        lcc.set_step("Store the second withdraw operation EchoToEth")
+        sidechain_burn_operation = self.echo_ops.get_operation_json("sidechain_burn_operation", example=True)
+        sidechain_burn_operation[1]["value"].update({"amount": withdraw_values[1]})
+        sidechain_burn_operation[1].update({"account": new_account})
+        sidechain_burn_operations.insert(0, sidechain_burn_operation)
+        lcc.log_info("Second withdraw operation stored")
+
+        # todo: add check history. Bug ECHO-933
+        # lcc.set_step("Get account history operations")
+        # operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
+        # response = self.utils.get_account_history_operations(self, new_account, operation_id,
+        #                                                      self.__history_api_identifier, limit=2)
+        # lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
+        #
+        # lcc.set_step("Check response from method 'get_account_history_operations'")
+        # for i in range(len(response["result"])):
+        #     operation_in_history = response["result"][i]["op"]
+        #     lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+        #     check_that("operation_id", operation_in_history[0], equal_to(operation_id))
+        #     with this_dict(operation_in_history[1]):
+        #         check_that_entry("fee", equal_to(sidechain_burn_operations[i][1]["fee"]))
+        #         with this_dict(operation_in_history[1]["value"]):
+        #             check_that_entry("amount", equal_to(sidechain_burn_operations[i][1]["value"]["amount"]))
+        #             check_that_entry("asset_id", equal_to(sidechain_burn_operations[i][1]["value"]["asset_id"]))
+        #         check_that_entry("account", equal_to(sidechain_burn_operations[i][1]["account"]))
+        #         check_that_entry("withdraw_id",
+        #                          starts_with(self.get_object_type(self.echo.config.object_types.WITHDRAW_ETH)))
+
+        lcc.set_step("Get withdrawals of created account")
         params = [new_account]
         response_id = self.send_request(self.get_request("get_account_withdrawals", params),
                                         self.__database_api_identifier)
@@ -104,12 +147,11 @@ class GetAccountWithdrawals(BaseTest):
 
         lcc.set_step("Check simple work of method 'get_account_withdrawals'")
         withdraw = response["result"]
-        withdraw_ids = []
-        withdraw_values = [withdraw_amount_1, withdraw_amount_2]
         for i in range(len(withdraw)):
+            lcc.set_step("Check account withdraw #{}".format(str(i)))
             require_that(
                 "'first deposit of created account'",
-                len(withdraw[i]), is_(7)
+                withdraw[i], has_length(7)
             )
             with this_dict(withdraw[i]):
                 if not self.validator.is_withdraw_eth_id(withdraw[i]["id"]):
@@ -124,18 +166,19 @@ class GetAccountWithdrawals(BaseTest):
                 else:
                     lcc.log_info("'eth_addr' has correct format: ethereum_address_type")
                 check_that_entry("value", is_(withdraw_values[i]), quiet=True)
-                # todo: always False, remove false when the bug is fixed
+                # todo: always False, remove false when the bug is fixed. Bug ECHO-933
                 check_that_entry("is_approved", is_bool(False), quiet=True)
                 check_that_entry("approves", is_list(), quiet=True)
 
-        lcc.set_step("Get deposit by id")
+        lcc.set_step("Get withdraw by id using 'get_objects'")
         response_id = self.send_request(self.get_request("get_objects", [withdraw_ids]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_objects' with param: {}".format(withdraw_ids))
 
-        lcc.log_info("Compare withdrawals in 'get_account_withdrawals' with method 'get_objects'")
+        lcc.set_step("Compare withdrawals in 'get_account_withdrawals' with method 'get_objects'")
         for i in range(len(withdraw)):
+            lcc.set_step("Compare #{}, withdraw in 'get_account_withdrawals' with method 'get_objects'".format(str(i)))
             with this_dict(withdraw[i]):
                 check_that_entry("id", is_(response[i]["id"]), quiet=True)
                 check_that_entry("withdraw_id", is_(response[i]["withdraw_id"]), quiet=True)

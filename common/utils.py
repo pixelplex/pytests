@@ -285,7 +285,7 @@ class Utils(object):
         if temp_count <= self.block_count:
             base_test.set_timeout_wait(timeout, print_log=False)
             self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_eth_address(base_test, account_id, database_api_id, timeout=timeout)
+            return self.get_eth_address(base_test, account_id, database_api_id, temp_count=temp_count)
         raise Exception(
             "No ethereum address of '{}' account. Waiting time result='{}'".format(account_id,
                                                                                    self.waiting_time_result))
@@ -310,7 +310,7 @@ class Utils(object):
         if temp_count <= self.block_count:
             base_test.set_timeout_wait(timeout, print_log=False)
             self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_eth_balance(base_test, account_id, database_api_id)
+            return self.get_eth_balance(base_test, account_id, database_api_id, temp_count=temp_count)
         raise Exception(
             "No ethereum balance of '{}' account. Waiting time result='{}'".format(account_id,
                                                                                    self.waiting_time_result))
@@ -326,8 +326,8 @@ class Utils(object):
     def get_address_balance_in_eth_network(base_test, account_address, currency="ether"):
         return base_test.web3.fromWei(base_test.web3.eth.getBalance(account_address), currency)
 
-    def get_updated_address_balance_in_eth_network(self, base_test, account_address, previous_balance, temp_count=0,
-                                                   currency="ether", timeout=BLOCK_RELEASE_INTERVAL):
+    def get_updated_address_balance_in_eth_network(self, base_test, account_address, previous_balance, currency="ether",
+                                                   temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
         current_balance = self.get_address_balance_in_eth_network(base_test, account_address, currency=currency)
         if previous_balance != current_balance:
@@ -336,7 +336,7 @@ class Utils(object):
             base_test.set_timeout_wait(timeout, print_log=False)
             self.waiting_time_result = self.waiting_time_result + timeout
             return self.get_updated_address_balance_in_eth_network(base_test, account_address, previous_balance,
-                                                                   currency=currency)
+                                                                   currency=currency, temp_count=temp_count)
         raise Exception(
             "Ethereum balance of '{}' account not updated. Waiting time result='{}'".format(account_address,
                                                                                             self.waiting_time_result))
@@ -363,3 +363,21 @@ class Utils(object):
             return value * 10 ** 12
         if currency == "ether":
             return value / 10 ** 6
+
+    def get_account_history_operations(self, base_test, account_id, operation_id, history_api_id, start="1.10.0",
+                                       limit=100, stop="1.10.0", temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        params = [account_id, operation_id, start, stop, limit]
+        response_id = base_test.send_request(base_test.get_request("get_account_history_operations", params),
+                                             history_api_id)
+        response = base_test.get_response(response_id)
+        if response["result"]:
+            return response
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_account_history_operations(base_test, account_id, operation_id, history_api_id,
+                                                       start=start, limit=limit, stop=stop, temp_count=temp_count)
+        raise Exception(
+            "No needed operation (id='{}') in '{}' account history. "
+            "Waiting time result='{}'".format(operation_id, account_id, self.waiting_time_result))
