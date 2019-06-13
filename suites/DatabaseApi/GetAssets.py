@@ -114,6 +114,9 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
 
+    def generate_asset_names(self, asset_name_base, total_asset_count):
+        return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -135,8 +138,10 @@ class PositiveTesting(BaseTest):
     @lcc.test("Create assets using asset_create operation and get info about them")
     @lcc.depends_on("DatabaseApi.GetAssets.GetAssets.method_main_check")
     def get_info_about_create_assets(self, get_random_valid_asset_name):
+        lcc.set_step("Generate assets symbols")
         asset_name_base = get_random_valid_asset_name
-        generated_assets = ['{}{}'.format(asset_name_base, 'A' * num) for num in range(2)]
+        total_asset_count = 2
+        generated_assets = self.generate_asset_names(asset_name_base, total_asset_count)
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")
@@ -157,10 +162,10 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Assets was created, ids='{}'".format(asset_ids))
 
         lcc.set_step("Get assets")
-        lcc.log_info("Call method 'get_assets' with param: {}".format(asset_ids))
         response_id = self.send_request(self.get_request("get_assets", [asset_ids]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_assets' with param: {}".format(asset_ids))
 
         lcc.set_step("Check created assets")
         assets_info = response["result"]
