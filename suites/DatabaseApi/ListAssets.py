@@ -125,7 +125,7 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
 
     @staticmethod
-    def generate_asset_names(asset_name_base, total_asset_count):
+    def proliferate_asset_names(asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)], asset_name_base
 
     def get_assets_limit_more_than_exists(self, return_symbol=False):
@@ -178,7 +178,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Generate assets symbols")
         asset_name_base = get_random_valid_asset_name
         total_asset_count = limit = 2
-        generated_assets, lower_bound_symbol = self.generate_asset_names(asset_name_base, total_asset_count)
+        generated_assets, lower_bound_symbol = self.proliferate_asset_names(asset_name_base, total_asset_count)
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")

@@ -120,7 +120,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
 
-    def generate_asset_names(self, asset_name_base, total_asset_count):
+    def proliferate_asset_names(self, asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
 
     def check_created_asset(self, asset_info, performed_operation):
@@ -157,7 +157,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Generate assets symbols")
         asset_name_base = get_random_valid_asset_name
         total_asset_count = 2
-        generated_assets = self.generate_asset_names(asset_name_base, total_asset_count)
+        generated_assets = self.proliferate_asset_names(asset_name_base, total_asset_count)
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")

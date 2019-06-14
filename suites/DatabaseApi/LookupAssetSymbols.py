@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict, equal_to, check_that, is_none, has_length, equal_to
+from lemoncheesecake.matching import require_that, this_dict, check_that_entry, is_str, is_list, is_integer, \
+    is_dict, equal_to, check_that, is_none, has_length
 
 from common.base_test import BaseTest
 from project import ECHO_ASSET_SYMBOL
@@ -139,23 +139,22 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
 
     @staticmethod
-    def generate_asset_names(asset_name_base, total_asset_count):
+    def proliferate_asset_names(asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
 
-    def check_created_asset(self, asset_info, performed_operation, only_lookup=False):
+    def compare_assets(self, asset_info, performed_operation, asset_is_created=False):
         if performed_operation["symbol"] == asset_info["symbol"]:
-            if not only_lookup:
+            if asset_is_created:
                 performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
                     asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
             with this_dict(asset_info):
                 check_that_entry("issuer", equal_to(performed_operation["issuer"]))
                 check_that_entry("symbol", equal_to(performed_operation["symbol"]))
                 check_that_entry("precision", equal_to(performed_operation["precision"]))
-                performed_options_field_name = "common_options"
-                if only_lookup:
-                    performed_options_field_name = "options"
+                performed_options_field_name = "options"
+                if asset_is_created:
+                    performed_options_field_name = "common_options"
                 check_that_entry("options", equal_to(performed_operation[performed_options_field_name]))
-
 
     def setup_suite(self):
         super().setup_suite()
@@ -177,11 +176,11 @@ class PositiveTesting(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Create assets using asset_create operation and lookup info about them")
     @lcc.depends_on("DatabaseApi.LookupAssetSymbols.LookupAssetSymbols.method_main_check")
-    def lookup_info_about_create_assets(self, get_random_valid_asset_name):
+    def lookup_info_about_created_assets(self, get_random_valid_asset_name):
         lcc.set_step("Generate assets symbols")
         asset_name_base = get_random_valid_asset_name
         total_asset_count = 2
-        generated_assets = self.generate_asset_names(asset_name_base, total_asset_count)
+        generated_assets = self.proliferate_asset_names(asset_name_base, total_asset_count)
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")
@@ -207,7 +206,7 @@ class PositiveTesting(BaseTest):
         for operation_num in range(len(collected_operations)):
             performed_operation = collected_operations[operation_num][0][1]
             for asset_by_symbol_info in assets_by_symbol:
-                self.check_created_asset(asset_by_symbol_info, performed_operation)
+                self.compare_assets(asset_by_symbol_info, performed_operation, asset_is_created=True)
 
         lcc.set_step("Lookup created assets by ids")
         response_id = self.send_request(self.get_request("lookup_asset_symbols", [asset_ids]),
@@ -220,7 +219,7 @@ class PositiveTesting(BaseTest):
         assets_by_ids = response["result"]
         for asset_by_symbol_info in assets_by_symbol:
             for asset_by_id_info in assets_by_ids:
-                self.check_created_asset(asset_by_id_info, asset_by_symbol_info, only_lookup=True)
+                self.compare_assets(asset_by_id_info, asset_by_symbol_info)
 
         lcc.set_step("Lookup created assets by mixed input parameters (symbol and id)")
         mixed_symbols_or_ids = [asset_ids[0], generated_assets[1]]
@@ -234,7 +233,7 @@ class PositiveTesting(BaseTest):
         assets_by_mixed_params = response["result"]
         for asset_by_id_info in assets_by_ids:
             for asset_by_mixed_params_info in assets_by_mixed_params:
-                self.check_created_asset(asset_by_mixed_params_info, asset_by_id_info, only_lookup=True)
+                self.compare_assets(asset_by_mixed_params_info, asset_by_id_info)
 
     @lcc.prop("type", "method")
     @lcc.test("Lookup nonexistent assets")
@@ -294,4 +293,4 @@ class PositiveTesting(BaseTest):
         asset_object_by_get_object = response["result"][0]
 
         lcc.set_step("Compare asset objects (by 'lookup_asset_symbols' and 'get_objects' methods)")
-        self.check_created_asset(asset_object_by_lookup, asset_object_by_get_object, only_lookup=True)
+        self.compare_assets(asset_object_by_lookup, asset_object_by_get_object)
