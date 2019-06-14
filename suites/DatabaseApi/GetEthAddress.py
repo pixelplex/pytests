@@ -3,7 +3,6 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_list, this_dict, has_length, is_bool, check_that_entry, is_none
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Method 'get_eth_address'"
@@ -75,23 +74,14 @@ class GetEthAddress(BaseTest):
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
 
         lcc.set_step("Get updated ethereum address of created account in the network")
-        while self.no_address:
-            self.temp_count += 1
-            response_id = self.send_request(self.get_request("get_eth_address", [new_account]),
-                                            self.__database_api_identifier)
-            response = self.get_response(response_id)
-            if response["result"]:
-                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
-                self.no_address = False
-            if self.temp_count <= self.block_count:
-                self.set_timeout_wait(BLOCK_RELEASE_INTERVAL, print_log=False)
-                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
-        lcc.log_info(
-            "Call method 'get_eth_address' of new account. Waiting time result='{}' seconds".format(
-                self.waiting_time_result))
+        eth_account_address = self.utils.get_eth_address(self, new_account,
+                                                         self.__database_api_identifier)["result"]["eth_addr"]
+        lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Check new eth address in method 'get_eth_address'")
-        result = response["result"]
+        response_id = self.send_request(self.get_request("get_eth_address", [new_account]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
         with this_dict(result):
             if check_that("account_eth_address", result, has_length(5)):
                 if not self.validator.is_eth_address_id(result["id"]):
