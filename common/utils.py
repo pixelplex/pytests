@@ -2,6 +2,7 @@
 import math
 
 from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD
+from fixtures.base_fixtures import get_random_valid_asset_name
 
 
 class Utils(object):
@@ -70,6 +71,23 @@ class Utils(object):
         if return_symbol:
             return asset_id, symbol
         return asset_id
+
+    def get_nonexistent_asset_symbol(self, base_test, database_api_id, symbol="",
+                                     list_asset_symbols=[]):
+        max_limit = 100
+        response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]),
+                                             database_api_id)
+        response = base_test.get_response(response_id)
+        for i in range(len(response["result"])):
+            list_asset_symbols.append(response["result"][i]["symbol"])
+        if len(response["result"]) == max_limit:
+            return self.get_nonexistent_asset_symbol(base_test, database_api_id,
+                                                     symbol=response["result"][-1]["symbol"],
+                                                     list_asset_symbols=list_asset_symbols)
+        nonexistent_asset_symbol = list_asset_symbols[0]
+        while nonexistent_asset_symbol in list_asset_symbols:
+            nonexistent_asset_symbol = get_random_valid_asset_name()
+        return nonexistent_asset_symbol
 
     def get_contract_id(self, base_test, registrar, contract_bytecode, database_api_id, value_amount=0,
                         operation_count=1, need_broadcast_result=False, log_broadcast=False):

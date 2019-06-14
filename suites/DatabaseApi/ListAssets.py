@@ -3,7 +3,7 @@ import re
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict, equal_to, check_that, has_length, starts_with, match_pattern
+    is_dict, equal_to, check_that, has_length, match_pattern
 
 from common.base_test import BaseTest
 from project import ECHO_ASSET_SYMBOL
@@ -40,34 +40,12 @@ class ListAssets(BaseTest):
                     else:
                         lcc.log_info("{} 'asset_id' has correct format: asset_id".format(key))
 
-    def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.__database_api_identifier = self.get_identifier("database")
-        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
-
-    @lcc.prop("type", "method")
-    @lcc.test("Simple work of method 'list_assets'")
-    def method_main_check(self):
-        lcc.set_step("List default asset of the chain")
-        limit = 1
-        response_id = self.send_request(self.get_request("list_assets", [self.echo_symbol, limit]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.log_info("Call method 'list_assets' with lower_bound_symbol='{}', limit={} parameters".format(
-            self.echo_symbol, limit))
-        asset = response["result"][0]
-
-        require_that(
-            "'length of default chain asset'",
-            asset, has_length(6)
-        )
+    def check_asset_structure(self, asset):
         with this_dict(asset):
             if not self.validator.is_asset_id(asset["id"]):
-                lcc.log_error("Wrong format of asset 'id', got {}".format(asset["id"]))
+                lcc.log_error("Wrong format of 'id', got: {}".format(asset["id"]))
             else:
-                lcc.log_info("asset 'id' has correct format: asset_id")
-
+                lcc.log_info("'id' has correct format: asset_id")
             if not self.validator.is_dynamic_asset_data_id(asset["dynamic_asset_data_id"]):
                 lcc.log_error("Wrong format of 'dynamic_asset_data_id', got: {}".format(
                     asset["dynamic_asset_data_id"]))
@@ -79,6 +57,7 @@ class ListAssets(BaseTest):
             else:
                 lcc.log_info("'issuer' has correct format: account_id")
 
+            check_that_entry("options", is_dict(), quiet=True)
             options = asset["options"]
             with this_dict(options):
                 require_that("'options'", options, has_length(12))
@@ -110,6 +89,30 @@ class ListAssets(BaseTest):
             else:
                 lcc.log_info("'symbol' has correct format: asset_name")
 
+    def setup_suite(self):
+        super().setup_suite()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Simple work of method 'list_assets'")
+    def method_main_check(self):
+        lcc.set_step("List default asset of the chain")
+        limit = 1
+        response_id = self.send_request(self.get_request("list_assets", [self.echo_symbol, limit]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'list_assets' with lower_bound_symbol='{}', limit={} parameters".format(
+            self.echo_symbol, limit))
+        asset = response["result"][0]
+
+        require_that(
+            "'length of default chain asset'",
+            asset, has_length(6)
+        )
+        self.check_asset_structure(asset)
+
 
 @lcc.prop("testing", "positive")
 @lcc.tags("database_api", "list_assets")
@@ -140,6 +143,16 @@ class PositiveTesting(BaseTest):
             limit = (limit % 100) + 1
             return limit, True
         return limit, False
+
+    def check_created_asset(self, asset_info, performed_operation):
+        if performed_operation["symbol"] == asset_info["symbol"]:
+            performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
+                asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
+            with this_dict(asset_info):
+                check_that_entry("issuer", equal_to(performed_operation["issuer"]))
+                check_that_entry("symbol", equal_to(performed_operation["symbol"]))
+                check_that_entry("precision", equal_to(performed_operation["precision"]))
+                check_that_entry("options", equal_to(performed_operation["common_options"]))
 
     def setup_suite(self):
         super().setup_suite()
@@ -179,7 +192,7 @@ class PositiveTesting(BaseTest):
             collected_operations.append(collected_operation)
         lcc.log_info("Assets was created, ids='{}'".format(asset_ids))
 
-        lcc.set_step("Get assets")
+        lcc.set_step("List assets")
         response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol, limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -191,14 +204,7 @@ class PositiveTesting(BaseTest):
         for operation_num in range(len(collected_operations)):
             performed_operation = collected_operations[operation_num][0][1]
             for asset_info in assets_info:
-                if performed_operation["symbol"] == asset_info["symbol"]:
-                    performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
-                        asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
-                    with this_dict(asset_info):
-                        check_that_entry("issuer", equal_to(performed_operation["issuer"]))
-                        check_that_entry("symbol", starts_with(asset_name_base))
-                        check_that_entry("precision", equal_to(performed_operation["precision"]))
-                        check_that_entry("options", equal_to(performed_operation["common_options"]))
+                self.check_created_asset(asset_info, performed_operation)
 
     @lcc.prop("type", "method")
     @lcc.test("List assets with setted `limit` parameter more than exist in chain")
@@ -215,7 +221,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Got 'limit' value={}, 'lower_bound_symbol' value = '{}'".format(limit,
                                                                                       lower_bound_symbol))
 
-        lcc.set_step("Get assets")
+        lcc.set_step("List assets")
         response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol,
                                                                          limit]),
                                         self.__database_api_identifier)
@@ -236,7 +242,7 @@ class PositiveTesting(BaseTest):
     def check_alphabet_order_in_full_listed_assets(self):
         limit, lower_bound_symbol = 100, ""
 
-        lcc.set_step("Get assets")
+        lcc.set_step("List assets")
         response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol, limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -274,7 +280,7 @@ class PositiveTesting(BaseTest):
                                                    self.__database_api_identifier)
         lcc.log_info("Asset was created, symbol='{}' id='{}'".format(asset_symbol, created_asset_id))
 
-        lcc.set_step("Get assets")
+        lcc.set_step("List assets")
         response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol, limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)

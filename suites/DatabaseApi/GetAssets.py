@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
+from lemoncheesecake.matching import require_that, this_dict, check_that_entry, is_str, is_list, is_integer, \
     is_dict, equal_to, check_that, is_none, has_length
 
 from common.base_test import BaseTest
@@ -35,31 +35,12 @@ class GetAssets(BaseTest):
                     else:
                         lcc.log_info("{} 'asset_id' has correct format: asset_id".format(key))
 
-    def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.__database_api_identifier = self.get_identifier("database")
-        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
-
-    @lcc.prop("type", "method")
-    @lcc.test("Simple work of method 'get_assets'")
-    def method_main_check(self):
-        lcc.set_step("Get default asset of the chain")
-        asset_ids = [self.echo_asset]
-        response_id = self.send_request(self.get_request("get_assets", [asset_ids]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_assets' with asset_ids='{}' parameter".format(asset_ids))
-
-        lcc.set_step("Check simple work of method 'get_assets'")
-        asset = response["result"][0]
-
-        require_that(
-            "'length of default chain asset'",
-            asset, has_length(6)
-        )
+    def check_asset_structure(self, asset):
         with this_dict(asset):
-            check_that_entry("id", is_(asset_ids[0]), quiet=True)
+            if not self.validator.is_asset_id(asset["id"]):
+                lcc.log_error("Wrong format of 'id', got: {}".format(asset["id"]))
+            else:
+                lcc.log_info("'id' has correct format: asset_id")
             if not self.validator.is_dynamic_asset_data_id(asset["dynamic_asset_data_id"]):
                 lcc.log_error("Wrong format of 'dynamic_asset_data_id', got: {}".format(
                     asset["dynamic_asset_data_id"]))
@@ -71,6 +52,7 @@ class GetAssets(BaseTest):
             else:
                 lcc.log_info("'issuer' has correct format: account_id")
 
+            check_that_entry("options", is_dict(), quiet=True)
             options = asset["options"]
             with this_dict(options):
                 require_that("'options'", options, has_length(12))
@@ -102,6 +84,31 @@ class GetAssets(BaseTest):
             else:
                 lcc.log_info("'symbol' has correct format: asset_name")
 
+    def setup_suite(self):
+        super().setup_suite()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Simple work of method 'get_assets'")
+    def method_main_check(self):
+        lcc.set_step("Get default asset of the chain")
+        asset_ids = [self.echo_asset]
+        response_id = self.send_request(self.get_request("get_assets", [asset_ids]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_assets' with asset_ids='{}' parameter".format(asset_ids))
+
+        lcc.set_step("Check simple work of method 'get_assets'")
+        asset = response["result"][0]
+
+        require_that(
+            "'length of default chain asset'",
+            asset, has_length(6)
+        )
+        self.check_asset_structure(asset)
+
 
 @lcc.prop("testing", "positive")
 @lcc.tags("database_api", "get_assets")
@@ -115,6 +122,16 @@ class PositiveTesting(BaseTest):
 
     def generate_asset_names(self, asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
+
+    def check_created_asset(self, asset_info, performed_operation):
+        if performed_operation["symbol"] == asset_info["symbol"]:
+            performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
+                asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
+            with this_dict(asset_info):
+                check_that_entry("issuer", equal_to(performed_operation["issuer"]))
+                check_that_entry("symbol", equal_to(performed_operation["symbol"]))
+                check_that_entry("precision", equal_to(performed_operation["precision"]))
+                check_that_entry("options", equal_to(performed_operation["common_options"]))
 
     def setup_suite(self):
         super().setup_suite()
@@ -165,14 +182,7 @@ class PositiveTesting(BaseTest):
         for operation_num in range(len(collected_operations)):
             performed_operation = collected_operations[operation_num][0][1]
             for asset_info in assets_info:
-                if performed_operation["symbol"] == asset_info["symbol"]:
-                    performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
-                        asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
-                    with this_dict(asset_info):
-                        check_that_entry("issuer", equal_to(performed_operation["issuer"]))
-                        check_that_entry("symbol", equal_to(performed_operation["symbol"]))
-                        check_that_entry("precision", equal_to(performed_operation["precision"]))
-                        check_that_entry("options", equal_to(performed_operation["common_options"]))
+                self.check_created_asset(asset_info, performed_operation)
 
     @lcc.prop("type", "method")
     @lcc.test("Get info about nonexistent asset id")
