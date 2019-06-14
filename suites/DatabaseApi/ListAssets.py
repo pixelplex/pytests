@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+import re
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, this_dict, check_that_entry, is_str, is_list, is_integer, \
     is_dict, equal_to, check_that, has_length, starts_with, match_pattern
+
 from common.base_test import BaseTest
-import re
+from project import ECHO_ASSET_SYMBOL
+
 
 SUITE = {
     "description": "Method 'list_assets'"
@@ -14,12 +18,13 @@ SUITE = {
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "list_assets")
-@lcc.suite("Check work of method 'get_assets'", rank=1)
+@lcc.suite("Check work of method 'list_assets'", rank=1)
 class ListAssets(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
+        self.echo_symbol = ECHO_ASSET_SYMBOL
 
     def check_core_exchange_rate_structure(self, core_exchange_rate):
         with this_dict(core_exchange_rate):
@@ -40,7 +45,6 @@ class ListAssets(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
         lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
-        self.echo_symbol = "ECHO"
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'list_assets'")
@@ -75,7 +79,6 @@ class ListAssets(BaseTest):
             else:
                 lcc.log_info("'issuer' has correct format: account_id")
 
-            check_that_entry("options", is_dict(), quiet=True)
             options = asset["options"]
             with this_dict(options):
                 require_that("'options'", options, has_length(12))
@@ -118,7 +121,8 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
 
-    def generate_asset_names(self, asset_name_base, total_asset_count):
+    @staticmethod
+    def generate_asset_names(asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)], asset_name_base
 
     def get_assets_limit_more_than_exists(self, return_symbol=False):
@@ -130,11 +134,12 @@ class PositiveTesting(BaseTest):
                                                   return_symbol=return_symbol)
         return int(_id[_id.rfind('.') + 1:]) + 1
 
-    def check_limit_value_range(self, limit):
+    @staticmethod
+    def check_limit_value_range(limit):
         if limit > 100:
             limit = (limit % 100) + 1
-
-        return limit
+            return limit, True
+        return limit, False
 
     def setup_suite(self):
         super().setup_suite()
@@ -164,20 +169,14 @@ class PositiveTesting(BaseTest):
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")
+        asset_ids = []
         collected_operations = []
         for asset_symbol in generated_assets:
-            operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=self.echo_acc0,
-                                                                 symbol=asset_symbol, signer=self.echo_acc0)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            asset_id, collected_operation = self.utils.get_asset_id(self, asset_symbol,
+                                                                    self.__database_api_identifier,
+                                                                    need_operation=True)
+            asset_ids.append(asset_id)
             collected_operations.append(collected_operation)
-
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operations,
-                                                   log_broadcast=False)
-
-        if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
-            raise Exception("Asset is not created")
-        operation_result = self.get_operation_results_ids(broadcast_result)
-        asset_ids = [result[1] for result in operation_result]
         lcc.log_info("Assets was created, ids='{}'".format(asset_ids))
 
         lcc.set_step("Get assets")
@@ -207,13 +206,14 @@ class PositiveTesting(BaseTest):
     def list_more_assets_than_exists(self):
         lcc.set_step("Get assets limit, more than exists")
         limit, lower_bound_symbol = self.get_assets_limit_more_than_exists(return_symbol=True)
-        lcc.log_info("Total assets counts in chain: {}".format(limit))
+        lcc.log_info("Total assets count in chain: {}".format(limit))
 
-        limit = self.check_limit_value_range(limit)
-        lcc.log_info("'Limit' value change to {}, reason - {} is a maximum available value".format(
-            limit, 100))
-        lcc.log_info("Geted 'limit' value={}, 'lower_bound_symbol' value = '{}'".format(limit,
-                                                                                        lower_bound_symbol))
+        limit, limit_change_status = self.check_limit_value_range(limit)
+        if limit_change_status:
+            lcc.log_info("'Limit' value change to {}, reason - {} is a maximum available value".format(
+                limit, 100))
+        lcc.log_info("Got 'limit' value={}, 'lower_bound_symbol' value = '{}'".format(limit,
+                                                                                      lower_bound_symbol))
 
         lcc.set_step("Get assets")
         response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol,
@@ -260,26 +260,18 @@ class PositiveTesting(BaseTest):
         )
 
     @lcc.prop("type", "method")
-    @lcc.test("Check alphabet symbol order in cutted listed assets and cutting rules")
+    @lcc.test("Check alphabet symbol order in cut listed assets and cutting rules")
     @lcc.depends_on("DatabaseApi.ListAssets.ListAssets.method_main_check")
-    def check_alphabet_order_in_cutted_listed_assets(self, get_random_valid_asset_name):
+    def check_alphabet_order_in_cut_listed_assets(self, get_random_valid_asset_name):
         lcc.set_step("Generate asset symbol")
         asset_symbol = get_random_valid_asset_name
         lower_bound_symbol = asset_symbol[:2]
         limit = 100
         lcc.log_info('Generated asset name: {}'.format(asset_symbol))
 
-        lcc.set_step("Perform assets creation operation")
-        operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=self.echo_acc0,
-                                                             symbol=asset_symbol, signer=self.echo_acc0)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-
-        if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
-            raise Exception("Asset is not created")
-        created_asset_id = self.get_operation_results_ids(broadcast_result)
+        lcc.set_step("Perform asset creation operation")
+        created_asset_id = self.utils.get_asset_id(self, asset_symbol,
+                                                   self.__database_api_identifier)
         lcc.log_info("Asset was created, symbol='{}' id='{}'".format(asset_symbol, created_asset_id))
 
         lcc.set_step("Get assets")
@@ -306,6 +298,7 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Check cutting rules of symbols")
-        pattern = re.compile(r"^[{}-Z][A-Z]*$".format(lower_bound_symbol[0]))
+        pattern_regex = "^[{}-Z][A-Z]*$".format(lower_bound_symbol[0])
+        pattern = re.compile(pattern_regex)
         for asset in assets:
             check_that_entry("symbol", match_pattern(pattern), in_=asset)

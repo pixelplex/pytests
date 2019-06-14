@@ -71,7 +71,6 @@ class GetAssets(BaseTest):
             else:
                 lcc.log_info("'issuer' has correct format: account_id")
 
-            check_that_entry("options", is_dict(), quiet=True)
             options = asset["options"]
             with this_dict(options):
                 require_that("'options'", options, has_length(12))
@@ -145,20 +144,14 @@ class PositiveTesting(BaseTest):
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")
+        asset_ids = []
         collected_operations = []
         for asset_symbol in generated_assets:
-            operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=self.echo_acc0,
-                                                                 symbol=asset_symbol, signer=self.echo_acc0)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            asset_id, collected_operation = self.utils.get_asset_id(self, asset_symbol,
+                                                                    self.__database_api_identifier,
+                                                                    need_operation=True)
+            asset_ids.append(asset_id)
             collected_operations.append(collected_operation)
-
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operations,
-                                                   log_broadcast=False)
-
-        if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
-            raise Exception("Asset is not created")
-        operation_result = self.get_operation_results_ids(broadcast_result)
-        asset_ids = [result[1] for result in operation_result]
         lcc.log_info("Assets was created, ids='{}'".format(asset_ids))
 
         lcc.set_step("Get assets")

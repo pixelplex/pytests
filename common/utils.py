@@ -212,7 +212,7 @@ class Utils(object):
         return accounts_ids
 
     @staticmethod
-    def get_asset_id(base_test, symbol, database_api_id, log_broadcast=False):
+    def get_asset_id(base_test, symbol, database_api_id, need_operation=False, log_broadcast=False):
         params = [symbol, 1]
         response_id = base_test.send_request(base_test.get_request("list_assets", params), database_api_id, )
         response = base_test.get_response(response_id)
@@ -222,7 +222,10 @@ class Utils(object):
             collected_operation = base_test.collect_operations(operation, database_api_id)
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                             log_broadcast=log_broadcast)
-            return base_test.get_operation_results_ids(broadcast_result)
+            asset_id = base_test.get_operation_results_ids(broadcast_result)
+            if need_operation:
+                return asset_id, collected_operation
+            return asset_id
         return response["result"][0]["id"]
 
     @staticmethod

@@ -31,6 +31,7 @@ ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.js
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
 WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
 ECHO_INITIAL_BALANCE = int(json.load(open(GENESIS))["initial_balances"][0]["amount"])
+ECHO_ASSET_SYMBOL = json.load(open(GENESIS))["initial_balances"][0]["asset_symbol"]
 INITIAL_ACCOUNTS = json.load(open(GENESIS))["initial_accounts"]
 INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
 INITIAL_ACCOUNTS_NAMES = []
