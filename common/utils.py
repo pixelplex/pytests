@@ -2,6 +2,7 @@
 import math
 
 from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD
+from fixtures.base_fixtures import get_random_valid_asset_name
 
 
 class Utils(object):
@@ -52,9 +53,9 @@ class Utils(object):
         return base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                             log_broadcast=log_broadcast)
 
-    def get_nonexistent_asset_id(self, base_test, database_api_id, symbol=""):
+    def get_nonexistent_asset_id(self, base_test, database_api_id, symbol="",
+                                 list_asset_ids=[], return_symbol=False):
         max_limit = 100
-        list_asset_ids = []
         response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]),
                                              database_api_id)
         response = base_test.get_response(response_id)
@@ -62,10 +63,31 @@ class Utils(object):
             list_asset_ids.append(response["result"][i]["id"])
         if len(response["result"]) == max_limit:
             return self.get_nonexistent_asset_id(base_test, database_api_id,
-                                                 symbol=response["result"][-1]["symbol"])
+                                                 symbol=response["result"][-1]["symbol"],
+                                                 list_asset_ids=list_asset_ids, return_symbol=return_symbol)
         sorted_list_asset_ids = sorted(list_asset_ids, key=base_test.get_value_for_sorting_func)
-        return "{}{}".format(base_test.get_object_type(base_test.echo.config.object_types.ASSET),
-                             str(int(sorted_list_asset_ids[-1][4:]) + 1))
+        asset_id = "{}{}".format(base_test.get_object_type(base_test.echo.config.object_types.ASSET),
+                                 str(int(sorted_list_asset_ids[-1][4:]) + 1))
+        if return_symbol:
+            return asset_id, symbol
+        return asset_id
+
+    def get_nonexistent_asset_symbol(self, base_test, database_api_id, symbol="",
+                                     list_asset_symbols=[]):
+        max_limit = 100
+        response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]),
+                                             database_api_id)
+        response = base_test.get_response(response_id)
+        for i in range(len(response["result"])):
+            list_asset_symbols.append(response["result"][i]["symbol"])
+        if len(response["result"]) == max_limit:
+            return self.get_nonexistent_asset_symbol(base_test, database_api_id,
+                                                     symbol=response["result"][-1]["symbol"],
+                                                     list_asset_symbols=list_asset_symbols)
+        nonexistent_asset_symbol = list_asset_symbols[0]
+        while nonexistent_asset_symbol in list_asset_symbols:
+            nonexistent_asset_symbol = get_random_valid_asset_name()
+        return nonexistent_asset_symbol
 
     def get_contract_id(self, base_test, registrar, contract_bytecode, database_api_id, value_amount=0,
                         operation_count=1, need_broadcast_result=False, log_broadcast=False):
@@ -208,7 +230,7 @@ class Utils(object):
         return accounts_ids
 
     @staticmethod
-    def get_asset_id(base_test, symbol, database_api_id, log_broadcast=False):
+    def get_asset_id(base_test, symbol, database_api_id, need_operation=False, log_broadcast=False):
         params = [symbol, 1]
         response_id = base_test.send_request(base_test.get_request("list_assets", params), database_api_id, )
         response = base_test.get_response(response_id)
@@ -218,7 +240,10 @@ class Utils(object):
             collected_operation = base_test.collect_operations(operation, database_api_id)
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                             log_broadcast=log_broadcast)
-            return base_test.get_operation_results_ids(broadcast_result)
+            asset_id = base_test.get_operation_results_ids(broadcast_result)
+            if need_operation:
+                return asset_id, collected_operation
+            return asset_id
         return response["result"][0]["id"]
 
     @staticmethod
