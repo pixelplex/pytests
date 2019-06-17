@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that_entry, check_that, \
-    require_that, ends_with, is_, is_list, equal_to
+from lemoncheesecake.matching import this_dict, check_that_entry, check_that, require_that, ends_with, is_, is_list, \
+    equal_to, not_equal_to
 
 from common.base_test import BaseTest
 
@@ -22,6 +22,7 @@ class GetContract(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
+        self.contract_id = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -78,8 +79,8 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
-        self.contract_greet = self.get_byte_code("piggy", "greet")
-        self.contract_breakPiggy = self.get_byte_code("piggy", "breakPiggy")
+        self.greet = self.get_byte_code("piggy", "greet")
+        self.breakPiggy = self.get_byte_code("piggy", "breakPiggy")
 
     def setup_suite(self):
         super().setup_suite()
@@ -93,69 +94,86 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
-                                                      self.__database_api_identifier)
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Create contract and check get_contract method with piggy contract")
+    @lcc.test("Check contract info using method 'get_contract'")
     @lcc.depends_on("DatabaseApi.GetContract.GetContract.method_main_check")
-    def check_contract_changes_after_calling_greet_method(self):
+    def check_contract_info_after_calling_contract_method(self):
+        lcc.set_step("Create 'piggy' contract in ECHO network")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+                                                 self.__database_api_identifier)
+
         lcc.set_step("Get the contract by id")
-        response_id = self.send_request(self.get_request("get_contract", [self.contract_id]),
+        response_id = self.send_request(self.get_request("get_contract", [contract_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_contract' with contract_id='{}' parameter".format(self.contract_id))
+        lcc.log_info("Call method 'get_contract' with contract_id='{}' parameter".format(contract_id))
 
-        lcc.set_step("Get response of 'get_contract'")
-        contract_before_calling = response["result"][1]
-        check_that("'contract code'", self.contract_piggy, ends_with(contract_before_calling["code"]), quiet=True)
-        store_storage = contract_before_calling["storage"]
-        lcc.log_info("Store contract before calling")
+        lcc.set_step("Check response of 'get_contract' before call any method. Store contract storage")
+        contract_info = response["result"][1]
+        code_before_contract_call = contract_info["code"]
+        check_that("'contract code'", self.contract_piggy, ends_with(code_before_contract_call), quiet=True)
+        storage_before_contract_call = contract_info["storage"]
+        lcc.log_info("Store contract storage before call 'greet' method")
 
-        lcc.set_step("Сall the greet contract method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo,
-                                                              registrar=self.echo_acc0,
-                                                              bytecode=self.contract_greet,
-                                                              callee=self.contract_id)
-
+        lcc.set_step("Call contract method that nothing do with contract fields")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
-        lcc.set_step("Get response of 'get_contract' after calling")
-        response_id = self.send_request(self.get_request("get_contract", [self.contract_id]),
+        lcc.set_step("Get response of 'get_contract' after contract call")
+        response_id = self.send_request(self.get_request("get_contract", [contract_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
+        contract_info = response["result"][1]
+        code_after_contract_call = contract_info["code"]
+        storage_after_contract_call = contract_info["storage"]
+        lcc.log_info("Store contract storage after call 'greet' method")
 
-        contract = response["result"][1]
-
-        lcc.set_step("Check response changes")
-        check_that("'response'", contract_before_calling, equal_to(contract), quiet=True)
-        check_that("'compare storage'", store_storage, equal_to(contract["storage"]), quiet=True)
+        lcc.set_step("Check contract info before and after call 'greet' method")
+        check_that("'code after contract call'", code_after_contract_call, equal_to(code_before_contract_call),
+                   quiet=True)
+        check_that("'storage after contract call'", storage_before_contract_call, equal_to(storage_after_contract_call),
+                   quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test("Check destroy contract method")
+    @lcc.test("Check contract info after contract destroy")
     @lcc.depends_on("DatabaseApi.GetContract.GetContract.method_main_check")
-    def check_destroy_contract_method(self):
-        lcc.set_step("Check method contract destruction")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo,
-                                                              registrar=self.echo_acc0,
-                                                              bytecode=self.contract_breakPiggy,
-                                                              callee=self.contract_id)
+    def check_contract_destroy_method(self):
+        lcc.set_step("Create 'piggy' contract in ECHO network")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+                                                 self.__database_api_identifier)
 
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-
-        lcc.set_step("Get response of 'get_contract' after calling destroy contract method")
-        response_id = self.send_request(self.get_request("get_contract", [self.contract_id]),
+        lcc.set_step("Get the contract by id and store info before destroy contract")
+        response_id = self.send_request(self.get_request("get_contract", [contract_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        contract = response["result"][1]
-        lcc.log_info("contract response {}".format(contract))
-        with this_dict(contract):
+        contract_info = response["result"][1]
+        contract_code = contract_info["code"]
+        contract_storage = contract_info["storage"]
+        lcc.log_info("Call method 'get_contract' with contract_id='{}' parameter".format(contract_id))
+
+        lcc.set_step("Call method 'breakPiggy' to destroy contract")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.breakPiggy, callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        lcc.set_step("Get response of 'get_contract' after call method that destroy contract")
+        response_id = self.send_request(self.get_request("get_contract", [contract_id]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_contract' with contract_id='{}' parameter".format(contract_id))
+
+        lcc.set_step("Check contract info after contract destroy")
+        contract_info = response["result"][1]
+        with this_dict(contract_info):
+            check_that_entry("code", not_equal_to(contract_code), quiet=True)
             check_that_entry("code", equal_to(""), quiet=True)
+            check_that_entry("storage", not_equal_to(contract_storage), quiet=True)
             check_that_entry("storage", equal_to([]), quiet=True)
