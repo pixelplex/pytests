@@ -64,7 +64,9 @@ class HelloWorld(BaseTest):
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 
         lcc.set_step("Check get 'Hello World!!!'")
-        contract_output = self.get_contract_output(contract_result, output_type=str)[1:]
+        expected_string = "Hello World!!!"
+        contract_output = self.get_contract_output(contract_result, output_type=str,
+                                                   len_output_string=len(expected_string))
         check_that(
             "return of method 'greet'",
             contract_output,
