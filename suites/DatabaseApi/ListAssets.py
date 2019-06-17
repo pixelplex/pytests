@@ -1,25 +1,30 @@
 # -*- coding: utf-8 -*-
+import re
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict, equal_to, check_that, is_none, has_length
+    is_dict, equal_to, check_that, has_length, match_pattern
 
 from common.base_test import BaseTest
+from project import ECHO_ASSET_SYMBOL
+
 
 SUITE = {
-    "description": "Method 'get_assets'"
+    "description": "Method 'list_assets'"
 }
 
 
 @lcc.prop("testing", "main")
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
-@lcc.tags("database_api", "get_assets")
-@lcc.suite("Check work of method 'get_assets'", rank=1)
-class GetAssets(BaseTest):
+@lcc.tags("database_api", "list_assets")
+@lcc.suite("Check work of method 'list_assets'", rank=1)
+class ListAssets(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
+        self.echo_symbol = ECHO_ASSET_SYMBOL
 
     def check_core_exchange_rate_structure(self, core_exchange_rate):
         with this_dict(core_exchange_rate):
@@ -91,16 +96,15 @@ class GetAssets(BaseTest):
         lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
 
     @lcc.prop("type", "method")
-    @lcc.test("Simple work of method 'get_assets'")
+    @lcc.test("Simple work of method 'list_assets'")
     def method_main_check(self):
-        lcc.set_step("Get default asset of the chain")
-        asset_ids = [self.echo_asset]
-        response_id = self.send_request(self.get_request("get_assets", [asset_ids]),
+        lcc.set_step("List default asset of the chain")
+        limit = 1
+        response_id = self.send_request(self.get_request("list_assets", [self.echo_symbol, limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_assets' with asset_ids='{}' parameter".format(asset_ids))
-
-        lcc.set_step("Check simple work of method 'get_assets'")
+        lcc.log_info("Call method 'list_assets' with lower_bound_symbol='{}', limit={} parameters".format(
+            self.echo_symbol, limit))
         asset = response["result"][0]
 
         require_that(
@@ -111,8 +115,8 @@ class GetAssets(BaseTest):
 
 
 @lcc.prop("testing", "positive")
-@lcc.tags("database_api", "get_assets")
-@lcc.suite("Positive testing of method 'get_assets'", rank=2)
+@lcc.tags("database_api", "list_assets")
+@lcc.suite("Positive testing of method 'list_assets'", rank=2)
 class PositiveTesting(BaseTest):
 
     def __init__(self):
@@ -120,8 +124,25 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
 
-    def proliferate_asset_names(self, asset_name_base, total_asset_count):
-        return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
+    @staticmethod
+    def proliferate_asset_names(asset_name_base, total_asset_count):
+        return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)], asset_name_base
+
+    def get_assets_limit_more_than_exists(self, return_symbol=False):
+        if return_symbol:
+            _id, symbol = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier,
+                                                              return_symbol=return_symbol)
+            return int(_id[_id.rfind('.') + 1:]) + 1, symbol
+        _id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier,
+                                                  return_symbol=return_symbol)
+        return int(_id[_id.rfind('.') + 1:]) + 1
+
+    @staticmethod
+    def check_limit_value_range(limit):
+        if limit > 100:
+            limit = (limit % 100) + 1
+            return limit, True
+        return limit, False
 
     def check_created_asset(self, asset_info, performed_operation):
         if performed_operation["symbol"] == asset_info["symbol"]:
@@ -151,13 +172,13 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Create assets using asset_create operation and get info about them")
-    @lcc.depends_on("DatabaseApi.GetAssets.GetAssets.method_main_check")
-    def get_info_about_create_assets(self, get_random_valid_asset_name):
+    @lcc.test("Create assets using asset_create operation and list info about them")
+    @lcc.depends_on("DatabaseApi.ListAssets.ListAssets.method_main_check")
+    def list_info_about_create_assets(self, get_random_valid_asset_name):
         lcc.set_step("Generate assets symbols")
         asset_name_base = get_random_valid_asset_name
-        total_asset_count = 2
-        generated_assets = self.proliferate_asset_names(asset_name_base, total_asset_count)
+        total_asset_count = limit = 2
+        generated_assets, lower_bound_symbol = self.proliferate_asset_names(asset_name_base, total_asset_count)
         lcc.log_info('Generated asset names: {}'.format(generated_assets))
 
         lcc.set_step("Perform assets creation operation")
@@ -171,11 +192,12 @@ class PositiveTesting(BaseTest):
             collected_operations.append(collected_operation)
         lcc.log_info("Assets was created, ids='{}'".format(asset_ids))
 
-        lcc.set_step("Get assets")
-        response_id = self.send_request(self.get_request("get_assets", [asset_ids]),
+        lcc.set_step("List assets")
+        response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol, limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_assets' with param: {}".format(asset_ids))
+        lcc.log_info("Call method 'list_assets' with params: lower_bound_symbol='{}', limit={}".format(
+            lower_bound_symbol, limit))
 
         lcc.set_step("Check created assets")
         assets_info = response["result"]
@@ -185,20 +207,104 @@ class PositiveTesting(BaseTest):
                 self.check_created_asset(asset_info, performed_operation)
 
     @lcc.prop("type", "method")
-    @lcc.test("Get info about nonexistent asset id")
-    @lcc.depends_on("DatabaseApi.GetAssets.GetAssets.method_main_check")
-    def get_info_about_nonexistent_asset_id(self):
-        lcc.set_step("Generate nonexistent asset_id")
-        nonexistent_asset_id = [self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)]
-        lcc.log_info('Nonexistent asset id: {}'.format(nonexistent_asset_id))
+    @lcc.test("List assets with setted `limit` parameter more than exist in chain")
+    @lcc.depends_on("DatabaseApi.ListAssets.ListAssets.method_main_check")
+    def list_more_assets_than_exists(self):
+        lcc.set_step("Get assets limit, more than exists")
+        limit, lower_bound_symbol = self.get_assets_limit_more_than_exists(return_symbol=True)
+        lcc.log_info("Total assets count in chain: {}".format(limit))
 
-        lcc.set_step("Get assets")
-        response_id = self.send_request(self.get_request("get_assets", [nonexistent_asset_id]),
+        limit, limit_change_status = self.check_limit_value_range(limit)
+        if limit_change_status:
+            lcc.log_info("'Limit' value change to {}, reason - {} is a maximum available value".format(
+                limit, 100))
+        lcc.log_info("Got 'limit' value={}, 'lower_bound_symbol' value = '{}'".format(limit,
+                                                                                      lower_bound_symbol))
+
+        lcc.set_step("List assets")
+        response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol,
+                                                                         limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_assets' with param: {}".format(nonexistent_asset_id))
+        lcc.log_info("Call method 'list_assets' with params: lower_bound_symbol='{}', limit={}".format(
+            lower_bound_symbol, limit))
 
-        lcc.set_step("Check nonexistent asset")
-        asset_info = response["result"]
-        for nonexistent_result in asset_info:
-            check_that("'get_assets result'", nonexistent_result, is_none())
+        lcc.set_step("Check listed assets")
+        assets = response["result"]
+        require_that(
+            "'length of listed assets'",
+            assets, has_length(limit - 1)
+        )
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check alphabet order in full listed assets")
+    @lcc.depends_on("DatabaseApi.ListAssets.ListAssets.method_main_check")
+    def check_alphabet_order_in_full_listed_assets(self):
+        limit, lower_bound_symbol = 100, ""
+
+        lcc.set_step("List assets")
+        response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol, limit]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'list_assets' with params: lower_bound_symbol='{}', limit={}".format(
+            lower_bound_symbol, limit))
+
+        assets = response["result"]
+
+        lcc.set_step("Make listed assets symbols list")
+        listed_asset_symbols = [asset["symbol"] for asset in assets]
+        lcc.log_info("Symbols list: {}".format(listed_asset_symbols))
+
+        lcc.set_step("Make sorted listed assets symbols list")
+        sorted_listed_asset_symbols = [asset["symbol"] for asset in assets]
+        lcc.log_info("Sorted symbols list: {}".format(sorted_listed_asset_symbols))
+
+        lcc.set_step("Check alphabet order by Symbol")
+        require_that(
+            "'alphabet symbol order in listed assets'",
+            listed_asset_symbols, equal_to(sorted(listed_asset_symbols.copy()))
+        )
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check alphabet symbol order in cut listed assets and cutting rules")
+    @lcc.depends_on("DatabaseApi.ListAssets.ListAssets.method_main_check")
+    def check_alphabet_order_in_cut_listed_assets(self, get_random_valid_asset_name):
+        lcc.set_step("Generate asset symbol")
+        asset_symbol = get_random_valid_asset_name
+        lower_bound_symbol = asset_symbol[:2]
+        limit = 100
+        lcc.log_info('Generated asset name: {}'.format(asset_symbol))
+
+        lcc.set_step("Perform asset creation operation")
+        created_asset_id = self.utils.get_asset_id(self, asset_symbol,
+                                                   self.__database_api_identifier)
+        lcc.log_info("Asset was created, symbol='{}' id='{}'".format(asset_symbol, created_asset_id))
+
+        lcc.set_step("List assets")
+        response_id = self.send_request(self.get_request("list_assets", [lower_bound_symbol, limit]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'list_assets' with params: lower_bound_symbol='{}', limit={}".format(
+            lower_bound_symbol, limit))
+
+        assets = response["result"]
+
+        lcc.set_step("Make listed assets symbols list")
+        listed_asset_symbols = [asset["symbol"] for asset in assets]
+        lcc.log_info("Symbols list: {}".format(listed_asset_symbols))
+
+        lcc.set_step("Make sorted listed assets symbols list")
+        sorted_listed_asset_symbols = [asset["symbol"] for asset in assets]
+        lcc.log_info("Sorted symbols list: {}".format(sorted_listed_asset_symbols))
+
+        lcc.set_step("Check alphabet symbol order")
+        check_that(
+            "'symbol order in listed assets'",
+            listed_asset_symbols, equal_to(sorted(listed_asset_symbols.copy()))
+        )
+
+        lcc.set_step("Check cutting rules of symbols")
+        pattern_regex = "^[{}-Z][A-Z]*$".format(lower_bound_symbol[0])
+        pattern = re.compile(pattern_regex)
+        for asset in assets:
+            check_that_entry("symbol", match_pattern(pattern), in_=asset)
