@@ -67,14 +67,19 @@ class BaseTest(object):
             check_that_entry(key, is_integer(), quiet=quiet)
 
     @staticmethod
-    def get_time():
+    def get_time(global_time=False):
+        if global_time:
+            return time.strftime("%H:%M:%S", time.gmtime())
         return time.strftime("%H:%M:%S", time.localtime())
 
     def set_timeout_wait(self, seconds, print_log=True):
         if print_log:
-            lcc.log_info("Start a '{}' second sleep... local_time:'{}'".format(seconds, self.get_time()))
+            lcc.log_info(
+                "Start a '{}' second(s) sleep... global_time:'{}'".format(seconds, self.get_time(global_time=True)))
+            lcc.log_info("Start a '{}' second(s) sleep... local_time:'{}'".format(seconds, self.get_time()))
         time.sleep(seconds)
         if print_log:
+            lcc.log_info("Sleep is over, global_time:'{}'".format(self.get_time(global_time=True)))
             lcc.log_info("Sleep is over, local_time:'{}'".format(self.get_time()))
 
     @staticmethod
@@ -85,12 +90,17 @@ class BaseTest(object):
     def get_byte_code(contract_name, code_or_method_name):
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
 
+    @staticmethod
+    def make_hex_param(param):
+        hex_param = "0000000000000000000000000000000000000000000000000000000000000000"
+        return hex_param[:-len(param)] + param
+
     def get_byte_code_param(self, param):
         if self.validator.is_object_id(param):
             param = hex(int(param.split('.')[2])).split('x')[-1]
-            hex_param = "0000000000000000000000000000000000000000000000000000000000000000"
-            hex_param = hex_param[:-len(param)] + param
-            return hex_param
+            return self.make_hex_param(param)
+        if self.validator.is_eth_address(param):
+            return self.make_hex_param(param)
         lcc.log_error("Param not valid, got: {}".format(param))
         raise Exception("Param not valid")
 
@@ -452,6 +462,28 @@ class BaseTest(object):
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
+
+    def get_next_maintenance(self, database_api_identifier):
+        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), database_api_identifier)
+        next_maintenance_time = self.get_response(response_id)["result"]["next_maintenance_time"].split('T')[1]
+        lcc.log_info("Next maintenance time: '{}' in global time".format(next_maintenance_time))
+        return next_maintenance_time
+
+    @staticmethod
+    def convert_time_in_seconds(time_format, separator=":"):
+        time_format = time_format.split(separator)
+        time_in_seconds = (int(time_format[0]) * 3600 + int(time_format[1]) * 60 + int(time_format[2]))
+        return time_in_seconds
+
+    def wait_for_next_maintenance(self, database_api_identifier, print_log=True):
+        time_now_in_sec = self.convert_time_in_seconds(self.get_time(global_time=True))
+        next_maintenance_time_in_sec = self.convert_time_in_seconds(self.get_next_maintenance(database_api_identifier))
+        if next_maintenance_time_in_sec < time_now_in_sec:
+            raise Exception("Next maintenance time less than current time")
+        waiting_time = next_maintenance_time_in_sec - time_now_in_sec
+        lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
+        self.set_timeout_wait(waiting_time, print_log=print_log)
+        lcc.log_info("Maintenance start")
 
     @staticmethod
     def _login_status(response):

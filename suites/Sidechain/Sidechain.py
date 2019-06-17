@@ -31,13 +31,13 @@ class Sidechain(BaseTest):
 
     def withdraw_eth_to_ethereum_address(self, from_account, withdraw_amount):
         lcc.set_step("Get address balance in ethereum network")
-        eth_address_balance = self.utils.get_address_balance_in_eth_network(self, self.eth_address, currency="wei")
+        eth_address_balance = self.eth_trx.get_address_balance_in_eth_network(self.web3, self.eth_address,
+                                                                              currency="wei")
         lcc.log_info("Ethereum address has '{}' balance in ethereum".format(eth_address_balance))
 
         lcc.set_step("Withdraw eth to ethereum address")
-        self.utils.perform_withdraw_eth_operation_operation(self, from_account, self.eth_address[2:],
-                                                            withdraw_amount, self.__database_api_identifier,
-                                                            log_broadcast=True)
+        self.utils.perform_withdraw_eth_operation(self, from_account, self.eth_address, withdraw_amount,
+                                                  self.__database_api_identifier, log_broadcast=True)
 
         lcc.set_step("Get updated address balance in ethereum network")
         eth_address_balance_after_withdraw = self.utils.get_updated_address_balance_in_eth_network(self,
@@ -115,7 +115,7 @@ class Sidechain(BaseTest):
         eth_amount = get_random_float_up_to_ten
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.utils.get_unpaid_fee(self, self.new_account)
+        unpaid_fee = self.eth_trx.get_unpaid_fee(self, self.new_account)
 
         lcc.set_step("First send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,

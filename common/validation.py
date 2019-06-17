@@ -304,6 +304,6 @@ class Validator(object):
         if not self.is_hex(value):
             return False
         if value[:2] == "0x":
-            return len(value) == 40
+            return len(value) == 42
         else:
-            return len(value) == 38
+            return len(value) == 40

@@ -88,9 +88,9 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 
 
 def distribute_balance_between_committee_addresses(base_test):
-    default_account_balance = base_test.utils.get_address_balance_in_eth_network(base_test,
-                                                                                 base_test.web3.eth.accounts[0])
-    balance_to_transfer = default_account_balance / INITIAL_ACCOUNTS_COUNT
+    default_account_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3,
+                                                                                   base_test.web3.eth.accounts[0])
+    balance_to_transfer = int('{:.0f}'.format(default_account_balance / 100 * 5))
     for i in range(len(INITIAL_ACCOUNTS_ETH_ADDRESSES)):
         transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
                                                                  to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],

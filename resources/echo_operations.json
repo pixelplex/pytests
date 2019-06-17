@@ -131,6 +131,18 @@
             "extensions": []
         }
     ],
+    "committee_member_create_operation": [
+        27,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "committee_member_account": "1.2.0",
+            "url": "http://example.com/",
+            "address": "62bd9ce7112d42663c6293ec48a5de3b575bb356"
+        }
+    ],
     "balance_claim_operation": [
         34,
         {

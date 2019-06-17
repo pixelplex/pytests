@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import math
 
-from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD
+from project import BLOCK_RELEASE_INTERVAL
 
 
 class Utils(object):
@@ -15,7 +15,8 @@ class Utils(object):
     def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
-                                   only_in_history=False, log_broadcast=False):
+                                   lifetime=None, address=None, update_account=None, only_in_history=False,
+                                   log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -44,6 +45,19 @@ class Utils(object):
         if label is not None:
             operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=account,
                                                                                 label=label)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if lifetime is not None:
+            operation = base_test.echo_ops.get_account_upgrade_operation(echo=base_test.echo,
+                                                                         account_to_upgrade=account,
+                                                                         upgrade_to_lifetime_member=lifetime)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if address is not None:
+            operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
+                                                                                 committee_member_account=account,
+                                                                                 address=address)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if update_account is not None:
+            operation = base_test.echo_ops.get_operation_json("get_account_update_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo,
                                                               from_account_id=base_test.echo_acc0,
@@ -264,6 +278,8 @@ class Utils(object):
 
     @staticmethod
     def perform_withdraw_eth_operation(base_test, registrar, eth_addr, value, database_api_id, log_broadcast=False):
+        if eth_addr[:2] == "0x":
+            eth_addr = eth_addr[2:]
         operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, account=registrar,
                                                                   eth_addr=eth_addr, value=value)
         collected_operation = base_test.collect_operations(operation, database_api_id)
@@ -321,14 +337,11 @@ class Utils(object):
         if response["result"] is not None:
             raise Exception("Can't cancel all cancel_all_subscriptions, got:\n{}".format(str(response)))
 
-    @staticmethod
-    def get_address_balance_in_eth_network(base_test, account_address, currency="ether"):
-        return base_test.web3.fromWei(base_test.web3.eth.getBalance(account_address), currency)
-
     def get_updated_address_balance_in_eth_network(self, base_test, account_address, previous_balance, currency="ether",
                                                    temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
-        current_balance = self.get_address_balance_in_eth_network(base_test, account_address, currency=currency)
+        current_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3, account_address,
+                                                                               currency=currency)
         if previous_balance != current_balance:
             return current_balance
         if temp_count <= self.block_count:
@@ -339,18 +352,6 @@ class Utils(object):
         raise Exception(
             "Ethereum balance of '{}' account not updated. Waiting time result='{}'".format(account_address,
                                                                                             self.waiting_time_result))
-
-    @staticmethod
-    def get_unpaid_fee(base_test, account_id, in_ethereum=False):
-        method_call_result = base_test.web3.eth.call(
-            {
-                "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
-                "data": UNPAID_FEE_METHOD + base_test.get_byte_code_param(account_id)
-            }
-        )
-        if in_ethereum:
-            return int(method_call_result.hex()[-64:], 16) / 1e18
-        return round(int(method_call_result.hex()[-64:], 16) / 1e12)
 
     @staticmethod
     def convert_ethereum_to_eeth(value):
@@ -392,4 +393,65 @@ class Utils(object):
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception(
                 "Error: fund pool from '{}' account is not performed, response:\n{}".format(sender, broadcast_result))
+        return broadcast_result
+
+    def perform_account_account_upgrade_operation(self, base_test, account_id, database_api_id, lifetime=True,
+                                                  log_broadcast=False):
+        if account_id != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id,
+                                                               lifetime=lifetime)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_account_upgrade_operation(base_test.echo, account_to_upgrade=account_id,
+                                                                     upgrade_to_lifetime_member=lifetime)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: '{}' account did not become lifetime member, response:\n{}".format(account_id,
+                                                                                           broadcast_result))
+        return broadcast_result
+
+    def perform_committee_member_create_operation(self, base_test, account_id, address, database_api_id,
+                                                  log_broadcast=False):
+        if account_id != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id, address=address)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
+                                                                             committee_member_account=account_id,
+                                                                             address=address, url="test_url")
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception(
+                "Error: '{}' account did not become new committee member, response:\n{}".format(account_id,
+                                                                                                broadcast_result))
+        return broadcast_result
+
+    def perform_account_update_operation(self, base_test, account_id, account_info, database_api_id,
+                                         update_account=True, log_broadcast=False):
+        if account_id != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id,
+                                                               update_account=update_account)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        active, echorand_key, options = account_info["active"], account_info["echorand_key"], account_info["options"]
+        operation = base_test.echo_ops.get_account_update_operation(echo=base_test.echo, account=account_id,
+                                                                    weight_threshold=active["weight_threshold"],
+                                                                    account_auths=active["account_auths"],
+                                                                    key_auths=active["key_auths"],
+                                                                    echorand_key=echorand_key,
+                                                                    voting_account=options["voting_account"],
+                                                                    delegating_account=options["delegating_account"],
+                                                                    num_committee=options["num_committee"],
+                                                                    votes=options["votes"])
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: '{}' account did not update, response:\n{}".format(account_id, broadcast_result))
         return broadcast_result

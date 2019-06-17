@@ -71,7 +71,7 @@ class GetAccountDeposits(BaseTest):
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.utils.get_unpaid_fee(self, new_account)
+        unpaid_fee = self.eth_trx.get_unpaid_fee(self, new_account)
 
         lcc.set_step("First send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,

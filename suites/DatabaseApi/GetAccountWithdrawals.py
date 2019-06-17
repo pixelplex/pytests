@@ -88,8 +88,8 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("First withdraw eth from ECHO network to Ethereum network")
         withdraw_amount = self.get_random_amount(_to=ethereum_balance)
         withdraw_values.append(withdraw_amount)
-        self.utils.perform_withdraw_eth_operation_operation(self, new_account, eth_account_address[2:],
-                                                            withdraw_amount, self.__database_api_identifier)
+        self.utils.perform_withdraw_eth_operation(self, new_account, eth_account_address, withdraw_amount,
+                                                  self.__database_api_identifier)
         lcc.log_info("Withdraw '{}' eeth from '{}' account".format(withdraw_amount, new_account))
 
         lcc.set_step("Store the first withdraw operation EchoToEth")
@@ -106,8 +106,8 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("Second withdraw eth from ECHO network to Ethereum network")
         withdraw_amount = self.get_random_amount(_to=ethereum_balance)
         withdraw_values.append(withdraw_amount)
-        self.utils.perform_withdraw_eth_operation_operation(self, new_account, eth_account_address[2:],
-                                                            withdraw_amount, self.__database_api_identifier)
+        self.utils.perform_withdraw_eth_operation(self, new_account, eth_account_address, withdraw_amount,
+                                                  self.__database_api_identifier)
         lcc.log_info("Withdraw '{}' eeth from '{}' account".format(withdraw_amount, new_account))
 
         lcc.set_step("Store the second withdraw operation EchoToEth")

@@ -36,10 +36,11 @@ INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
 INITIAL_ACCOUNTS_NAMES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
     INITIAL_ACCOUNTS_NAMES.append(INITIAL_ACCOUNTS[i]["name"])
+# todo: change in 0.7.1. get from 'initial_committee_candidates'
 INITIAL_ACCOUNTS_ETH_ADDRESSES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
     if "eth_address" in INITIAL_ACCOUNTS[i]:
-        INITIAL_ACCOUNTS_ETH_ADDRESSES.append("0x" + INITIAL_ACCOUNTS[i]["eth_address"])
+        INITIAL_ACCOUNTS_ETH_ADDRESSES.append(INITIAL_ACCOUNTS[i]["eth_address"])
 ACCOUNT_PREFIX = "account"
 DEFAULT_ACCOUNTS_COUNT = 100
 MAIN_TEST_ACCOUNT_COUNT = 1
@@ -48,6 +49,7 @@ ETH_ASSET_SYMBOL = "EETH"
 ETH_ASSET_ID = json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["ETH_asset_id"]
 ETH_CONTRACT_ADDRESS = "0x" + json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["eth_contract_address"]
 UNPAID_FEE_METHOD = "0x19c4518a"
+COMMITTEE = "0x130f679d"
 
 ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
 with open(".env") as env_file:

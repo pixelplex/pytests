@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import lemoncheesecake.api as lcc
 
-from project import ETHEREUM_OPERATIONS, ETH_PRIVATE_KEY
+from project import ETHEREUM_OPERATIONS, ETH_PRIVATE_KEY, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD, COMMITTEE
 
 
 class EthereumTransactions(object):
@@ -47,3 +47,40 @@ class EthereumTransactions(object):
             lcc.log_info("Transaction:\n{}".format(web3.eth.getTransaction(transaction_hash)))
         if log_transaction_logs:
             lcc.log_info("Transaction logs:\n{}".format(web3.eth.getTransactionReceipt(transaction_hash).logs))
+
+    @staticmethod
+    def get_address_balance_in_eth_network(web3, account_address, currency="ether"):
+        return web3.fromWei(web3.eth.getBalance(account_address), currency)
+
+    def get_part_from_address_balance(self, web3, account_address, currency="ether", percent=5):
+        current_balance = self.get_address_balance_in_eth_network(web3, account_address, currency=currency)
+        return int('{:.0f}'.format(current_balance / 100 * percent))
+
+    def replenish_balance_of_committee_member(self, web3, from_address, to_address, currency="ether", percent=5):
+        balance_to_transfer = self.get_part_from_address_balance(web3, from_address, currency=currency, percent=percent)
+        transaction = self.get_transfer_transaction(web3, to_address, value=balance_to_transfer)
+        self.broadcast(web3=web3, transaction=transaction)
+
+    @staticmethod
+    def get_unpaid_fee(base_test, account_id, in_ethereum=False):
+        method_call_result = base_test.web3.eth.call(
+            {
+                "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
+                "data": UNPAID_FEE_METHOD + base_test.get_byte_code_param(account_id)
+            }
+        )
+        if in_ethereum:
+            return int(method_call_result.hex()[-64:], 16) / 1e18
+        return round(int(method_call_result.hex()[-64:], 16) / 1e12)
+
+    @staticmethod
+    def get_status_of_committee_member(base_test, committee_member_address):
+        if committee_member_address[:2] == "0x":
+            committee_member_address = committee_member_address[2:]
+        method_call_result = base_test.web3.eth.call(
+            {
+                "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
+                "data": COMMITTEE + base_test.get_byte_code_param(committee_member_address)
+            }
+        )
+        return bool(int(method_call_result.hex(), 16))
