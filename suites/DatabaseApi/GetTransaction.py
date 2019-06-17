@@ -1,0 +1,94 @@
+# -*- coding: utf-8 -*-
+import lemoncheesecake.api as lcc
+from lemoncheesecake.matching import require_that, check_that, has_length, is_true, equal_to
+
+from common.base_test import BaseTest
+
+SUITE = {
+    "description": "Method 'get_transaction'"
+}
+
+
+@lcc.prop("testing", "main")
+@lcc.prop("testing", "positive")
+@lcc.prop("testing", "negative")
+@lcc.tags("database_api", "get_transaction")
+@lcc.suite("Check work of method 'get_transaction'", rank=1)
+class GetTransaction(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+
+    @staticmethod
+    def compare_objects(first_field, second_field, key=None):
+        if isinstance(first_field, (list, dict)):
+            if isinstance(first_field, list) and len(first_field):
+                for key, elem in enumerate(first_field):
+                    GetTransaction.compare_objects(elem, second_field[key])
+            elif isinstance(first_field, dict) and len(first_field):
+                for key in first_field.keys():
+                    GetTransaction.compare_objects(first_field[key], second_field[key], key)
+        else:
+            description = "list element"
+            if key:
+                description = "'{}'".format(key)
+            check_that("{}".format(description), first_field, equal_to(second_field), quiet=True)
+
+    def setup_suite(self):
+        super().setup_suite()
+        self._connect_to_echopy_lib()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
+        self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
+                                                                       from_account_id=self.echo_acc0,
+                                                                       to_account_id=self.echo_acc1)
+        lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
+
+    @lcc.prop("type", "method")
+    @lcc.test("Simple work of method 'get_transaction'")
+    def method_main_check(self):
+        lcc.set_step("Broadcast transaction to blockchain that contains simple transfer operation")
+        self.add_fee_to_operation(self.transfer_operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=self.transfer_operation,
+                                                   log_broadcast=False)
+        require_that(
+            "broadcast transaction complete successfully",
+            self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
+        )
+
+        lcc.set_step("Get transaction")
+        broadcasted_transaction_block_num = broadcast_result["block_num"]
+        broadcasted_transaction_num = broadcast_result["trx_num"]
+        params = [broadcasted_transaction_block_num, broadcasted_transaction_num]
+        response_id = self.send_request(self.get_request("get_transaction", params),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_transaction' with block_num='{}', trx_num='{}' parameters".format(
+            broadcasted_transaction_block_num, broadcasted_transaction_num))
+
+        lcc.set_step("Compare transaction objects (broadcast_result, 'get_transaction' method)")
+        transaction_from_broadcast_result = broadcast_result["trx"]
+        transaction_from_api_method = response["result"]
+
+        require_that(
+            "'transaction from broadcast result'",
+            transaction_from_broadcast_result, has_length(8)
+        )
+        require_that(
+            "'transaction from 'get_transaction' method result'",
+            transaction_from_api_method, has_length(8)
+        )
+        self.compare_objects(transaction_from_broadcast_result, transaction_from_api_method)
