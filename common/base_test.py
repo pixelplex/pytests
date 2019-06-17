@@ -85,11 +85,24 @@ class BaseTest(object):
     def get_byte_code(contract_name, code_or_method_name):
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
 
-    def get_byte_code_param(self, param):
+    def get_byte_code_param(self, param, param_type=None):
+        hex_param_64 = "0000000000000000000000000000000000000000000000000000000000000000"
+        if param_type == int and self.validator.is_uint256(param):
+            param = hex(param).split('x')[-1]
+            hex_param = hex_param_64[:-len(param)] + param
+            return hex_param
+        if param_type == str and self.validator.is_string(param):
+            param_in_hex = codecs.encode(param).hex()
+            len_param_in_hex = hex(len(param)).split('x')[-1]
+            part_1 = hex_param_64[:-2] + "20"
+            part_2 = hex_param_64[:-len(len_param_in_hex)] + len_param_in_hex
+            part_3 = None
+            if len(param_in_hex) < 64:
+                part_3 = param_in_hex + hex_param_64[:-len(param_in_hex)]
+            return part_1 + part_2 + part_3
         if self.validator.is_object_id(param):
             param = hex(int(param.split('.')[2])).split('x')[-1]
-            hex_param = "0000000000000000000000000000000000000000000000000000000000000000"
-            hex_param = hex_param[:-len(param)] + param
+            hex_param = hex_param_64[:-len(param)] + param
             return hex_param
         lcc.log_error("Param not valid, got: {}".format(param))
         raise Exception("Param not valid")
@@ -309,15 +322,15 @@ class BaseTest(object):
             lcc.log_info("Transfer identifier is {}".format(transfer_id))
         return transfer_id
 
-    def get_contract_output(self, response, output_type, in_hex=False, debug_mode=False):
+    def get_contract_output(self, response, output_type, in_hex=False, len_output_string=0, debug_mode=False):
         contract_output = str(response["result"][1].get("exec_res").get("output"))
         if debug_mode:
             lcc.log_debug("Output is '{}'".format(str(contract_output)))
         if in_hex:
             return contract_output
         if output_type == str:
-            contract_output = str(codecs.decode(contract_output, "hex").decode('utf-8'))
-            return contract_output.replace("\u0000", "").replace("\u000e", "")
+            contract_output = (contract_output[128:])[:len_output_string * 2]
+            return str(codecs.decode(contract_output, "hex").decode('utf-8'))
         if output_type == int:
             return int(contract_output, 16)
         if output_type == "contract_address":
