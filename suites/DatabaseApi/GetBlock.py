@@ -159,7 +159,7 @@ class PositiveTesting(BaseTest):
             transaction_from_broadcast_result, has_length(8)
         )
         require_that(
-            "'transaction from 'get_transaction' method result'",
+            "'transaction from 'get_block' method result'",
             transaction_from_api_method, has_length(8)
         )
         self.compare_objects(transaction_from_broadcast_result, transaction_from_api_method)
