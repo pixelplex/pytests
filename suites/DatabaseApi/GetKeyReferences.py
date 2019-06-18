@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, is_list, equal_to, is_none, is_not_none
+from lemoncheesecake.matching import check_that, is_list, equal_to
 
 from common.base_test import BaseTest
 
@@ -113,64 +113,56 @@ class PositiveTesting(BaseTest):
             check_that("'echorand_key'", result[i]["echorand_key"], equal_to(echorand_keys[i]), quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test("Create new account and check method 'get_key_references'")
+    @lcc.test("Use 'get_key_references' with crated account")
     @lcc.depends_on("DatabaseApi.GetKeyReferences.GetKeyReferences.method_main_check")
-    def check_mothod_for_new_account(self, get_random_valid_account_name, get_random_integer):
-        lcc.set_step("Create new account")
-
-        lcc.set_step("Registration an account")
-        new_account = get_random_valid_account_name
+    def use_method_with_created_account(self, get_random_valid_account_name, get_random_integer):
+        new_account_name = get_random_valid_account_name
         callback = get_random_integer
+
+        lcc.set_step("Register an account in the ECHO network and store his data")
         generate_keys = self.generate_keys()
-        public_key = generate_keys[1]
-        account_params = [callback, new_account, public_key, public_key]
+        private_key = generate_keys[0]
+        echorand_key = generate_keys[1]
+        account_params = [callback, new_account_name, echorand_key, echorand_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
-        response = self.get_response(response_id)
-        self.get_notice(callback)
-        check_that(
-            "register account '{}'".format(new_account),
-            response["result"], is_none(), quiet=False
-        )
+        self.get_response(response_id)
+        self.get_notice(callback, log_response=False)
+        lcc.log_info("Account '{}' created. Private key: '{}', public key: '{}'".format(new_account_name, private_key,
+                                                                                        echorand_key))
 
-        lcc.set_step("Check that the account is registered on the network. Call method 'get_account_by_name'")
-        response_id = self.send_request(self.get_request("get_account_by_name", [new_account]),
+        lcc.set_step("Get accounts IDs associated with the given keys (private and public key)")
+        response_id = self.send_request(self.get_request("get_key_references", [[private_key, echorand_key]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id)["result"]
+        lcc.log_info("Get response from 'get_key_references' using private and public key")
 
-        check_that(
-            "'call method 'get_account_by_name''",
-            response["result"], is_not_none(), quiet=True
-        )
-        account_info = response
-        account_name = account_info["result"]["name"]
-        echorand_key = account_info["result"]["echorand_key"]
+        lcc.set_step("Check method work with the given keys (private and public key)")
+        check_that("'response from method with private key'", response[0], is_list([]))
+        referenced_id = response[1][0]
+        if not self.validator.is_account_id(response[1][0]):
+            lcc.log_error("Wrong format of 'id', got: {}".format(referenced_id))
+        else:
+            lcc.log_info("'id' has correct format using 'public key': account_id")
 
-        lcc.set_step("Get account ID associated with the given key")
-        response_id = self.send_request(self.get_request("get_key_references", [[echorand_key]]),
+        lcc.set_step("Get account by referenced id")
+        response_id = self.send_request(self.get_request("get_accounts", [[referenced_id]]),
                                         self.__database_api_identifier)
+        result = self.get_response(response_id)["result"][0]
+        lcc.log_info("Call method 'get_accounts' with param: '{}'".format(referenced_id))
 
-        response = self.get_response(response_id)
-        referenced_id = response["result"]
-        lcc.log_info("Get account id = {} of account = {}, associated with key = {}".format(referenced_id,
-                                                                                            account_name,
-                                                                                            echorand_key))
-        lcc.set_step("Get account id")
-        account_id = self.get_account_id(new_account, self.__database_api_identifier,
-                                         self.__registration_api_identifier)
-
-        check_that("'account id'", referenced_id[0][0], equal_to(account_id))
+        lcc.set_step("Check work of method 'get_key_references' with created account")
+        check_that("'account name'", result["name"], equal_to(new_account_name), quiet=True)
+        check_that("'echorand_key'", result["echorand_key"], equal_to(echorand_key), quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test("Check method 'get_key_references' with nonexistent account")
+    @lcc.test("Check method 'get_key_references' with no one's echorand_key")
     @lcc.depends_on("DatabaseApi.GetKeyReferences.GetKeyReferences.method_main_check")
-    def check_mothod_for_new_account(self):
+    def check_method_with_no_ones_echorand_key(self):
         generate_keys = self.generate_keys()
         echorand_key = generate_keys[1]
 
         response_id = self.send_request(self.get_request("get_key_references", [[echorand_key]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
-        account_id = response["result"]
-        check_that("account_id", account_id, is_list())
-        check_that("account_id", account_id, equal_to([[]]))
+        response = self.get_response(response_id)["result"]
+        check_that("response", response, is_list([[]]), quiet=True)
