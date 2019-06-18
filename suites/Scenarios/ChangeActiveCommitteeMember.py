@@ -67,11 +67,6 @@ class ChangeActiveCommitteeMember(BaseTest):
         self.utils.perform_account_account_upgrade_operation(self, new_account, self.__database_api_identifier)
         lcc.log_info("New '{}' account became lifetime member".format(new_account))
 
-        # todo: remove transfer to new account. Bug ECHO-926
-        operation = self.echo_ops.get_transfer_operation(self.echo, self.echo_acc0, new_account, amount=200000)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
         lcc.log_info("Ethereum address for '{}' account generated successfully".format(new_account))
