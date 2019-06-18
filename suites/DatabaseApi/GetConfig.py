@@ -31,7 +31,7 @@ class GetConfig(BaseTest):
     def method_main_check(self):
         lcc.set_step("Get config")
         response_id = self.send_request(self.get_request("get_config"), self.__database_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call method 'get_config'")
 
         lcc.set_step("Check main fields")
@@ -40,7 +40,7 @@ class GetConfig(BaseTest):
                         "ECHO_MAX_SIG_CHECK_DEPTH", "ECHO_MIN_TRANSACTION_SIZE_LIMIT", "ECHO_MIN_BLOCK_INTERVAL",
                         "ECHO_MAX_BLOCK_INTERVAL", "ECHO_DEFAULT_BLOCK_INTERVAL", "ECHO_DEFAULT_MAX_TRANSACTION_SIZE",
                         "ECHO_DEFAULT_MAX_BLOCK_SIZE", "ECHO_DEFAULT_MAX_TIME_UNTIL_EXPIRATION",
-                        "ECHO_DEFAULT_MAINTENANCE_INTERVAL", "ECHO_DEFAULT_MAINTENANCE_SKIP_SLOTS",
+                        "ECHO_DEFAULT_MAINTENANCE_INTERVAL", "ECHO_DEFAULT_MAINTENANCE_DURATION_SECONDS",
                         "ECHO_MIN_UNDO_HISTORY", "ECHO_MAX_UNDO_HISTORY", "ECHO_MIN_BLOCK_SIZE_LIMIT",
                         "ECHO_MIN_TRANSACTION_EXPIRATION_LIMIT", "ECHO_BLOCKCHAIN_PRECISION",
                         "ECHO_BLOCKCHAIN_PRECISION_DIGITS", "ECHO_DEFAULT_TRANSFER_FEE", "ECHO_MAX_INSTANCE_ID",
