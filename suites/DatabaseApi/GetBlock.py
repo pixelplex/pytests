@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict
+    is_dict, check_that
 
 from common.base_test import BaseTest
 
@@ -69,13 +69,16 @@ class GetBlock(BaseTest):
             check_that_entry("_signatures", is_list(), quiet=True)
 
         signatures = certificate["_signatures"]
-        require_that(
-            "'_signatures'",
-            len(signatures), is_(5)
-        )
-        for i in range(len(signatures)):
-            with this_dict(signatures[i]):
-                check_that_entry("_step", is_integer(), quiet=True)
-                check_that_entry("_value", is_integer(), quiet=True)
-                check_that_entry("_signer", is_integer(), quiet=True)
-                check_that_entry("_bba_sign", is_str(), quiet=True)
+        if block_header["account"] == "1.2.0":
+            check_that("'_signatures'", signatures, is_([]), quiet=True)
+        else:
+            require_that(
+                "'_signatures'",
+                len(signatures), is_(5)
+            )
+            for i in range(len(signatures)):
+                with this_dict(signatures[i]):
+                    check_that_entry("_step", is_integer(), quiet=True)
+                    check_that_entry("_value", is_integer(), quiet=True)
+                    check_that_entry("_signer", is_integer(), quiet=True)
+                    check_that_entry("_bba_sign", is_str(), quiet=True)
