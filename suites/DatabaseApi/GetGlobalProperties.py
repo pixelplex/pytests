@@ -85,7 +85,7 @@ class GetGlobalProperties(BaseTest):
 
     def check_sidechain_config(self, sidechain_config, eth_params, eth_methods):
         with this_dict(sidechain_config):
-            if check_that("sidechain_config", sidechain_config, has_length(9)):
+            if check_that("sidechain_config", sidechain_config, has_length(10)):
                 for i in range(len(eth_params)):
                     if not self.validator.is_hex(sidechain_config[eth_params[i]]):
                         lcc.log_error(
@@ -139,7 +139,7 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("current_fees", is_dict(), quiet=True)
                 check_that_entry("block_interval", is_integer(), quiet=True)
                 check_that_entry("maintenance_interval", is_integer(), quiet=True)
-                check_that_entry("maintenance_skip_slots", is_integer(), quiet=True)
+                check_that_entry("maintenance_duration_seconds", is_integer(), quiet=True)
                 check_that_entry("committee_proposal_review_period", is_integer(), quiet=True)
                 check_that_entry("maximum_transaction_size", is_integer(), quiet=True)
                 check_that_entry("maximum_block_size", is_integer(), quiet=True)
@@ -176,8 +176,7 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            # todo: Delete '-7' when all 55 operations will be added
-            len(current_fees["parameters"]), is_(len(self.all_operations) - 7)
+            len(current_fees["parameters"]), is_(len(self.all_operations))
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
@@ -235,8 +234,8 @@ class GetGlobalProperties(BaseTest):
         sidechain_config = parameters["sidechain_config"]
         eth_params = ["eth_contract_address", "eth_committee_updated_topic", "eth_gen_address_topic",
                       "eth_deposit_topic", "eth_withdraw_topic"]
-        # todo: add 'eth_update_addr_method'. Bug ECHO-917
-        eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method"]
+        eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method",
+                       "eth_update_addr_method"]
         self.check_sidechain_config(sidechain_config, eth_params, eth_methods)
 
         lcc.set_step("Check global parameters: 'gas_price' field")
