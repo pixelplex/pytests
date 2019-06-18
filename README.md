@@ -65,7 +65,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [ ] [cancel_all_subscriptions](https://echo-dev.io/developers/apis/database-api/#cancel_all_subscriptions)
 - [x] [get_block_header](https://echo-dev.io/developers/apis/database-api/#get_block_headerblock_num)
 - [x] [get_block](https://echo-dev.io/developers/apis/database-api/#get_blockblock_num)
-- [ ] [get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)
+- [x] [get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)
 - [ ] [get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)
 - [x] [get_chain_properties](https://echo-dev.io/developers/apis/database-api/#get_chain_properties)
 - [x] [get_config](https://echo-dev.io/developers/apis/database-api/#get_config)
