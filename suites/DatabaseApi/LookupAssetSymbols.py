@@ -142,10 +142,11 @@ class PositiveTesting(BaseTest):
     def proliferate_asset_names(asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
 
-    def compare_assets(self, asset_info, performed_operation, asset_is_created=False):
+    @staticmethod
+    def compare_assets(asset_info, performed_operation, asset_is_created=False):
         if performed_operation["symbol"] == asset_info["symbol"]:
             if asset_is_created:
-                performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
+                performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] = \
                     asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
             with this_dict(asset_info):
                 check_that_entry("issuer", equal_to(performed_operation["issuer"]))

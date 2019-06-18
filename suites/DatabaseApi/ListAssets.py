@@ -8,7 +8,6 @@ from lemoncheesecake.matching import require_that, this_dict, check_that_entry, 
 from common.base_test import BaseTest
 from project import ECHO_ASSET_SYMBOL
 
-
 SUITE = {
     "description": "Method 'list_assets'"
 }
@@ -144,9 +143,10 @@ class PositiveTesting(BaseTest):
             return limit, True
         return limit, False
 
-    def check_created_asset(self, asset_info, performed_operation):
+    @staticmethod
+    def check_created_asset(asset_info, performed_operation):
         if performed_operation["symbol"] == asset_info["symbol"]:
-            performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
+            performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] = \
                 asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
             with this_dict(asset_info):
                 check_that_entry("issuer", equal_to(performed_operation["issuer"]))

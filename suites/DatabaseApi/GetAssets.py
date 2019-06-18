@@ -120,10 +120,12 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
 
-    def proliferate_asset_names(self, asset_name_base, total_asset_count):
+    @staticmethod
+    def proliferate_asset_names(asset_name_base, total_asset_count):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
 
-    def check_created_asset(self, asset_info, performed_operation):
+    @staticmethod
+    def check_created_asset(asset_info, performed_operation):
         if performed_operation["symbol"] == asset_info["symbol"]:
             performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
                 asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
