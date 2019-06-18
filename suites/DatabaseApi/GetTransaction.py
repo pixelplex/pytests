@@ -48,10 +48,6 @@ class GetTransaction(BaseTest):
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
-        self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                       from_account_id=self.echo_acc0,
-                                                                       to_account_id=self.echo_acc1)
-        lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -60,9 +56,15 @@ class GetTransaction(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_transaction'")
     def method_main_check(self):
-        lcc.set_step("Broadcast transaction to blockchain that contains simple transfer operation")
-        self.add_fee_to_operation(self.transfer_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=self.transfer_operation,
+        lcc.set_step("Collect 'get_transaction' operation")
+        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
+                                                                  from_account_id=self.echo_acc0,
+                                                                  to_account_id=self.echo_acc1)
+        lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
+
+        lcc.set_step("Broadcast transaction that contains simple transfer operation to the ECHO network")
+        self.add_fee_to_operation(transfer_operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=transfer_operation,
                                                    log_broadcast=False)
         require_that(
             "broadcast transaction complete successfully",
@@ -70,14 +72,14 @@ class GetTransaction(BaseTest):
         )
 
         lcc.set_step("Get transaction")
-        broadcasted_transaction_block_num = broadcast_result["block_num"]
-        broadcasted_transaction_num = broadcast_result["trx_num"]
-        params = [broadcasted_transaction_block_num, broadcasted_transaction_num]
+        broadcast_transaction_block_num = broadcast_result["block_num"]
+        broadcast_transaction_num = broadcast_result["trx_num"]
+        params = [broadcast_transaction_block_num, broadcast_transaction_num]
         response_id = self.send_request(self.get_request("get_transaction", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call method 'get_transaction' with block_num='{}', trx_num='{}' parameters".format(
-            broadcasted_transaction_block_num, broadcasted_transaction_num))
+            broadcast_transaction_block_num, broadcast_transaction_num))
 
         lcc.set_step("Compare transaction objects (broadcast_result, 'get_transaction' method)")
         transaction_from_broadcast_result = broadcast_result["trx"]

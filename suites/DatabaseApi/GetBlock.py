@@ -119,10 +119,6 @@ class PositiveTesting(BaseTest):
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
-        self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                       from_account_id=self.echo_acc0,
-                                                                       to_account_id=self.echo_acc1)
-        lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -132,9 +128,15 @@ class PositiveTesting(BaseTest):
     @lcc.test("Broadcast transaction and check info about it in block")
     @lcc.depends_on("DatabaseApi.GetBlock.GetBlock.method_main_check")
     def check_transaction_info_in_block(self):
-        lcc.set_step("Broadcast transaction to blockchain that contains simple transfer operation")
-        self.add_fee_to_operation(self.transfer_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=self.transfer_operation,
+        lcc.set_step("Collect 'get_transaction' operation")
+        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
+                                                                  from_account_id=self.echo_acc0,
+                                                                  to_account_id=self.echo_acc1)
+        lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
+
+        lcc.set_step("Broadcast transaction that contains simple transfer operation to the ECHO network")
+        self.add_fee_to_operation(transfer_operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=transfer_operation,
                                                    log_broadcast=False)
         require_that(
             "broadcast transaction complete successfully",
@@ -142,13 +144,11 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Get block, that contains transaction")
-
-        broadcasted_transaction_block_num = broadcast_result["block_num"]
-        response_id = self.send_request(self.get_request("get_block", [broadcasted_transaction_block_num]),
+        broadcast_transaction_block_num = broadcast_result["block_num"]
+        response_id = self.send_request(self.get_request("get_block", [broadcast_transaction_block_num]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_block' with block_num='{}' parameter".format(
-            broadcasted_transaction_block_num))
+        lcc.log_info("Call method 'get_block' with block_num='{}' parameter".format(broadcast_transaction_block_num))
 
         lcc.set_step("Compare transaction objects (broadcast_result, 'get_block' method)")
         transaction_from_broadcast_result = broadcast_result["trx"]
