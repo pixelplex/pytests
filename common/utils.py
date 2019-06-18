@@ -16,7 +16,7 @@ class Utils(object):
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
                                    lifetime=None, address=None, update_account=None, only_in_history=False,
-                                   log_broadcast=False):
+                                   eth_addr=None, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -58,6 +58,9 @@ class Utils(object):
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if update_account is not None:
             operation = base_test.echo_ops.get_operation_json("get_account_update_operation", example=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if eth_addr is not None:
+            operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo,
                                                               from_account_id=base_test.echo_acc0,
@@ -284,10 +287,14 @@ class Utils(object):
                                                                                               broadcast_result))
         return broadcast_result
 
-    @staticmethod
-    def perform_withdraw_eth_operation(base_test, registrar, eth_addr, value, database_api_id, log_broadcast=False):
+    def perform_withdraw_eth_operation(self, base_test, registrar, eth_addr, value, database_api_id,
+                                       log_broadcast=False):
         if eth_addr[:2] == "0x":
             eth_addr = eth_addr[2:]
+        if registrar != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id, eth_addr=eth_addr)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, account=registrar,
                                                                   eth_addr=eth_addr, value=value)
         collected_operation = base_test.collect_operations(operation, database_api_id)

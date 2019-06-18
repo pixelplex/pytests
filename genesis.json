@@ -285,19 +285,61 @@
                 [
                     45,
                     {
-                        "fee": 2000000
+                        "fee": 20
                     }
                 ],
                 [
                     46,
                     {
-                        "fee": 200000
+                        "fee": 0
                     }
                 ],
                 [
                     47,
                     {
-                        "fee": 200000
+                        "fee": 0
+                    }
+                ],
+                [
+                    48,
+                    {
+                        "fee": 0
+                    }
+                ],
+                [
+                    49,
+                    {
+                        "fee": 200
+                    }
+                ],
+                [
+                    50,
+                    {
+                        "fee": 0
+                    }
+                ],
+                [
+                    51,
+                    {
+                        "fee": 2000
+                    }
+                ],
+                [
+                    52,
+                    {
+                        "fee": 200
+                    }
+                ],
+                [
+                    53,
+                    {
+                        "fee": 0
+                    }
+                ],
+                [
+                    54,
+                    {
+                        "fee": 0
                     }
                 ]
             ],
@@ -305,7 +347,7 @@
         },
         "block_interval": 5,
         "maintenance_interval": 60,
-        "maintenance_skip_slots": 3,
+        "maintenance_duration_seconds": 10,
         "committee_proposal_review_period": 3600,
         "maximum_transaction_size": 2097152,
         "maximum_block_size": 5242880,
@@ -368,7 +410,6 @@
     "initial_accounts": [
         {
             "name": "init0",
-            "owner_key": "ECHOHCm2TxVGHWD73VYGo2uXTt6SfJKAbgUpYK89Qn7SBWrk",
             "active_key": "ECHOHCm2TxVGHWD73VYGo2uXTt6SfJKAbgUpYK89Qn7SBWrk",
             "echorand_key": "ECHOHCm2TxVGHWD73VYGo2uXTt6SfJKAbgUpYK89Qn7SBWrk",
             "eth_address": "aB7e25b0458DF3BB8076cD35796Aa6f1756D31E7",
@@ -376,7 +417,6 @@
         },
         {
             "name": "init1",
-            "owner_key": "ECHOBkNyokP3TnvQNbQBNE7hkfuHNVbmczpP6cXx8D7BEH5T",
             "active_key": "ECHOBkNyokP3TnvQNbQBNE7hkfuHNVbmczpP6cXx8D7BEH5T",
             "echorand_key": "ECHOBkNyokP3TnvQNbQBNE7hkfuHNVbmczpP6cXx8D7BEH5T",
             "eth_address": "1770CE6DDFD6C7ea71c07cD17E63771DC22c89E8",
@@ -384,7 +424,6 @@
         },
         {
             "name": "init2",
-            "owner_key": "ECHO4fKHe1EH1rYBxxqvUzRgXdWFqKNWffPk2yK34Hkw18jq",
             "active_key": "ECHO4fKHe1EH1rYBxxqvUzRgXdWFqKNWffPk2yK34Hkw18jq",
             "echorand_key": "ECHO4fKHe1EH1rYBxxqvUzRgXdWFqKNWffPk2yK34Hkw18jq",
             "eth_address": "7E798A0e43D52D2E7BE0996820D7b9AF3CcD418B",
@@ -392,7 +431,6 @@
         },
         {
             "name": "init3",
-            "owner_key": "ECHOCYRALckympkHkSpHu4QHMQhAPE8xBpY7S1SMWjjk7SHM",
             "active_key": "ECHOCYRALckympkHkSpHu4QHMQhAPE8xBpY7S1SMWjjk7SHM",
             "echorand_key": "ECHOCYRALckympkHkSpHu4QHMQhAPE8xBpY7S1SMWjjk7SHM",
             "eth_address": "0F58e9e9a3260163ac9126eedfA6205f8c9B312D",
@@ -400,7 +438,6 @@
         },
         {
             "name": "init4",
-            "owner_key": "ECHOCh3WGJCMKkBJHFJpzaC378cwwYisNbNKpD6oYhcuA6nR",
             "active_key": "ECHOCh3WGJCMKkBJHFJpzaC378cwwYisNbNKpD6oYhcuA6nR",
             "echorand_key": "ECHOCh3WGJCMKkBJHFJpzaC378cwwYisNbNKpD6oYhcuA6nR",
             "eth_address": "4DE1618a5E0f038b78F7044Fa9dD8F778eA6d6ef",
@@ -408,7 +445,6 @@
         },
         {
             "name": "init5",
-            "owner_key": "ECHOD5vmsdJr82JAbXpLZgxsebCewQJvQFBpmeAjPUzQrPEB",
             "active_key": "ECHOD5vmsdJr82JAbXpLZgxsebCewQJvQFBpmeAjPUzQrPEB",
             "echorand_key": "ECHOD5vmsdJr82JAbXpLZgxsebCewQJvQFBpmeAjPUzQrPEB",
             "eth_address": "484035B3c9F0e0756B930A3A735e030Ce8fdc06E",
@@ -416,7 +452,6 @@
         },
         {
             "name": "nathan",
-            "owner_key": "ECHO9GUY5DUWy5bHZWPwhdmV1oi8QdvBcwxKF73WESeHDoWQ",
             "active_key": "ECHO9GUY5DUWy5bHZWPwhdmV1oi8QdvBcwxKF73WESeHDoWQ",
             "echorand_key": "ECHO9GUY5DUWy5bHZWPwhdmV1oi8QdvBcwxKF73WESeHDoWQ",
             "is_lifetime_member": true
@@ -433,22 +468,28 @@
     "initial_vesting_balances": [],
     "initial_committee_candidates": [
         {
-            "owner_name": "init0"
+            "owner_name": "init0",
+            "eth_address": "aB7e25b0458DF3BB8076cD35796Aa6f1756D31E7"
         },
         {
-            "owner_name": "init1"
+            "owner_name": "init1",
+            "eth_address": "1770CE6DDFD6C7ea71c07cD17E63771DC22c89E8"
         },
         {
-            "owner_name": "init2"
+            "owner_name": "init2",
+            "eth_address": "7E798A0e43D52D2E7BE0996820D7b9AF3CcD418B"
         },
         {
-            "owner_name": "init3"
+            "owner_name": "init3",
+            "eth_address": "0F58e9e9a3260163ac9126eedfA6205f8c9B312D"
         },
         {
-            "owner_name": "init4"
+            "owner_name": "init4",
+            "eth_address": "4DE1618a5E0f038b78F7044Fa9dD8F778eA6d6ef"
         },
         {
-            "owner_name": "init5"
+            "owner_name": "init5",
+            "eth_address": "484035B3c9F0e0756B930A3A735e030Ce8fdc06E"
         }
     ],
     "initial_chain_id": "aa34045518f1469a28fa4578240d5f039afa9959c0b95ce3b39674efa691fb21",

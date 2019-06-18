@@ -36,7 +36,6 @@ INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
 INITIAL_ACCOUNTS_NAMES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
     INITIAL_ACCOUNTS_NAMES.append(INITIAL_ACCOUNTS[i]["name"])
-# todo: change in 0.7.1. get from 'initial_committee_candidates'
 INITIAL_ACCOUNTS_ETH_ADDRESSES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
     if "eth_address" in INITIAL_ACCOUNTS[i]:
