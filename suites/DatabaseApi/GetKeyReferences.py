@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that_entry, check_that, \
-    require_that, ends_with, is_, is_list, equal_to, is_none, is_not_none
+from lemoncheesecake.matching import check_that, is_list, equal_to, is_none, is_not_none
+
 from common.base_test import BaseTest
 
 SUITE = {
@@ -14,54 +14,43 @@ SUITE = {
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_key_references")
 @lcc.suite("Check work of method 'get_key_references'", rank=1)
-
 class GetKeyReferences(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
-        self.__registration_api_identifier = None
+        self.nathan_name = "nathan"
 
     def setup_suite(self):
         super().setup_suite()
-        self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
-        self.__registration_api_identifier = self.get_identifier("registration")
-        lcc.log_info(
-            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
-                                                                           self.__registration_api_identifier))
-
-
-    def teardown_suite(self):
-        self._disconnect_to_echopy_lib()
-        super().teardown_suite()
+        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_key_references'")
     def method_main_check(self):
         lcc.set_step("Get the account by name")
-        account_info = self.get_account_by_name(self.echo_acc0, self.__database_api_identifier, debug_mode=True)
-
-        account_name = account_info["result"]["name"]
+        account_info = self.get_account_by_name(self.nathan_name, self.__database_api_identifier)
         echorand_key = account_info["result"]["echorand_key"]
+        lcc.log_info(
+            "Get default account '{}' by name and store his echorand_key: '{}'".format(self.nathan_name, echorand_key))
 
         lcc.set_step("Get account ID associated with the given key")
         response_id = self.send_request(self.get_request("get_key_references", [[echorand_key]]),
                                         self.__database_api_identifier)
+        referenced_id = self.get_response(response_id)["result"][0][0]
+        lcc.log_info("Get account id: '{}' associated with key: '{}'".format(referenced_id, echorand_key))
 
-        response = self.get_response(response_id)
-        referenced_id = response["result"]
-        lcc.log_info("Get account id = {} of account = {}, associated with key = {}".format(referenced_id,
-                                                                                            account_name,
-                                                                                            echorand_key))
-        lcc.set_step("Get account id")
-        account_id = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
-                                         self.__registration_api_identifier)
+        lcc.set_step("Get account by referenced id")
+        response_id = self.send_request(self.get_request("get_accounts", [[referenced_id]]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"][0]
+        lcc.log_info("Call method 'get_accounts' with param: '{}'".format(referenced_id))
 
-        check_that("'account id'", referenced_id[0][0], equal_to(account_id))
-
-        #keys = self.generate_keys()
+        lcc.set_step("Check simple work of method 'get_key_references'")
+        check_that("'account name'", result["name"], equal_to(self.nathan_name), quiet=True)
+        check_that("'echorand_key'", result["echorand_key"], equal_to(echorand_key), quiet=True)
 
 
 @lcc.prop("testing", "positive")
