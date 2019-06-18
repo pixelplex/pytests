@@ -30,7 +30,7 @@ class GetKeyReferences(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_key_references'")
     def method_main_check(self):
-        lcc.set_step("Get the account by name")
+        lcc.set_step("Get the account by name and store his echorand_key")
         account_info = self.get_account_by_name(self.nathan_name, self.__database_api_identifier)
         echorand_key = account_info["result"]["echorand_key"]
         lcc.log_info(
@@ -78,41 +78,39 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Check method 'get_key_references' for multiple accounts")
+    @lcc.test("Call method 'get_key_references' with multiple keys")
     @lcc.depends_on("DatabaseApi.GetKeyReferences.GetKeyReferences.method_main_check")
-    def check_for_multiple_accounts(self):
-        lcc.set_step("Get the account by name")
-        account_info0 = self.get_account_by_name(self.echo_acc0, self.__database_api_identifier, debug_mode=True)
-        account_info1 = self.get_account_by_name(self.echo_acc1, self.__database_api_identifier, debug_mode=True)
+    def call_method_with_multiple_keys(self):
+        initial_accounts_names = ["init0", "init1"]
+        echorand_keys = []
+        referenced_ids = []
 
-        account_name0 = account_info0["result"]["name"]
-        echorand_key0 = account_info0["result"]["echorand_key"]
-
-        account_name1 = account_info1["result"]["name"]
-        echorand_key1 = account_info1["result"]["echorand_key"]
+        lcc.set_step("Get initial accounts by name and store their echorand keys")
+        for i in range(len(initial_accounts_names)):
+            account_info = self.get_account_by_name(initial_accounts_names[i], self.__database_api_identifier)
+            echorand_keys.append(account_info["result"]["echorand_key"])
+            lcc.log_info(
+                "Get default account '{}' by name and store his echorand_key: '{}'".format(initial_accounts_names[i],
+                                                                                           echorand_keys[i]))
 
         lcc.set_step("Get accounts IDs associated with the given keys")
-        response_id = self.send_request(self.get_request("get_key_references", [[echorand_key0, echorand_key1]]),
+        response_id = self.send_request(self.get_request("get_key_references", [echorand_keys]),
                                         self.__database_api_identifier)
+        response = self.get_response(response_id)["result"]
+        for i in range(len(response)):
+            referenced_ids.append(response[i][0])
+            lcc.log_info("Get account id: '{}' associated with key: '{}'".format(referenced_ids[i], echorand_keys[i]))
 
-        response = self.get_response(response_id)
-        referenced_id = response["result"]
-        lcc.log_info("{}".format(referenced_id))
-        lcc.log_info("Get account id = {} of account = {}, associated with key = {}".format(referenced_id[0][0],
-                                                                                            account_name0,
-                                                                                            echorand_key0))
-        lcc.log_info("Get account id = {} of account = {}, associated with key = {}".format(referenced_id[1][0],
-                                                                                            account_name1,
-                                                                                            echorand_key1))
+        lcc.set_step("Get accounts by referenced ids")
+        response_id = self.send_request(self.get_request("get_accounts", [referenced_ids]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
+        lcc.log_info("Call method 'get_accounts' with param: '{}'".format(referenced_ids))
 
-        lcc.set_step("Get account id")
-        account_id0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
-                                          self.__registration_api_identifier)
-        account_id1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
-                                          self.__registration_api_identifier)
-
-        check_that("'account0 id'", referenced_id[0][0], equal_to(account_id0))
-        check_that("'account1 id'", referenced_id[1][0], equal_to(account_id1))
+        lcc.set_step("Check work of method 'get_key_references' with multiple keys")
+        for i in range(len(result)):
+            check_that("'account name'", result[i]["name"], equal_to(initial_accounts_names[i]), quiet=True)
+            check_that("'echorand_key'", result[i]["echorand_key"], equal_to(echorand_keys[i]), quiet=True)
 
     @lcc.prop("type", "method")
     @lcc.test("Create new account and check method 'get_key_references'")
