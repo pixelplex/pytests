@@ -249,19 +249,27 @@ class Utils(object):
         return broadcast_result
 
     def perform_account_address_create_operation(self, base_test, registrar, label, database_api_id,
-                                                 log_broadcast=False):
+                                                 operation_count=1, log_broadcast=False):
         if registrar != base_test.echo_acc0:
-            broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id, label=label)
+            broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id,
+                                                               operation_count=operation_count, label=label)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=registrar,
                                                                             label=label)
         collected_operation = base_test.collect_operations(operation, database_api_id)
-        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+        if operation_count == 1:
+            broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                            log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+                raise Exception("Error: new address of '{}' account is not created, "
+                                "response:\n{}".format(registrar, broadcast_result))
+            return broadcast_result
+        list_operations = []
+        for i in range(operation_count):
+            list_operations.append(collected_operation)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
                                                         log_broadcast=log_broadcast)
-        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
-            raise Exception(
-                "Error: new address of '{}' account is not created, response:\n{}".format(registrar, broadcast_result))
         return broadcast_result
 
     @staticmethod
