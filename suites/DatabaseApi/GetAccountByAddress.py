@@ -127,12 +127,15 @@ class PositiveTesting(BaseTest):
                                                                                    self.__database_api_identifier)
             account_address_object.append(self.get_operation_results_ids(broadcast_result))
 
-        # todo: change to 'get_account_addresses'. Bug: "ECHO-843"
-        lcc.set_step("Get objects 'impl_account_address_object_type' and store addresses")
-        for i in range(len(account_address_object)):
-            param = [[account_address_object[i]]]
-            response_id = self.send_request(self.get_request("get_objects", param), self.__database_api_identifier)
-            account_addresses.append(self.get_response(response_id)["result"][0]["address"])
+        lcc.set_step("Get addresses of created account in the network and store addresses")
+        _from, limit = 0, 100
+        params = [new_account, _from, limit]
+        response_id = self.send_request(self.get_request("get_account_addresses", params),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"]
+        for i in range(len(response)):
+            account_addresses.append(response[i]["address"])
+        lcc.log_info("Call method 'get_account_addresses' of new account")
 
         lcc.set_step("Check that generating addresses are not the same")
         for i in range(len(account_addresses)):
