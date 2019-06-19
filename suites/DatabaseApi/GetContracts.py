@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that_entry, is_str, is_false, check_that, has_length, \
-    require_that, require_that_in, is_true, is_
+    require_that, require_that_in, is_true, is_, not_equal_to
 
 from common.base_test import BaseTest
 
@@ -43,7 +43,7 @@ class GetContracts(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_contracts'")
     def method_main_check(self):
-        lcc.set_step("Create contract in the Echo network and get its contract id")
+        lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
         lcc.set_step("Get info about created contract")
@@ -67,8 +67,7 @@ class GetContracts(BaseTest):
                 check_that_entry("destroyed", is_false())
                 check_that_entry("type", is_str("evm"))
                 check_that_entry("supported_asset_id", is_str(self.echo_asset))
-                # todo: add when fixed. Bug ECHO-935
-                # check_that_entry("owner", is_(self.echo_acc0))
+                check_that_entry("owner", is_(self.echo_acc0))
 
 
 @lcc.prop("testing", "positive")
@@ -106,7 +105,9 @@ class PositiveTesting(BaseTest):
                                                                            self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -118,7 +119,7 @@ class PositiveTesting(BaseTest):
     def get_info_about_two_contracts(self):
         contracts = []
 
-        lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
+        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_1, self.__database_api_identifier)
         contracts.append(contract_id)
 
@@ -131,7 +132,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check contract id of created contract")
         self.check_contracts_ids(response, contracts)
 
-        lcc.set_step("Create 'asset_int' contract in the Echo network and get its contract id")
+        lcc.set_step("Create 'asset_int' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_2, self.__database_api_identifier)
         contracts.append(contract_id)
 
@@ -148,7 +149,7 @@ class PositiveTesting(BaseTest):
     @lcc.test("Check work of destroyed field")
     @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
     def check_destroyed_field(self):
-        lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
+        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_1, self.__database_api_identifier)
 
         lcc.set_step("Get info about created contract")
@@ -194,7 +195,7 @@ class PositiveTesting(BaseTest):
         asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
-        lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
+        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 value_asset_id=asset_id, bytecode=self.contract_1,
                                                                 supported_asset_id=asset_id)
@@ -221,7 +222,7 @@ class PositiveTesting(BaseTest):
     @lcc.test("Check work of statistics field")
     @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
     def check_statistics_field(self):
-        lcc.set_step("Create 'piggy' contract in the Echo network and get its contract id")
+        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_1, self.__database_api_identifier)
 
         lcc.set_step("Get info about created contract. Store statistics_id")
@@ -242,9 +243,33 @@ class PositiveTesting(BaseTest):
             response["result"][0]["owner"], is_str(contract_id)
         )
 
-        # todo: add test. Bug ECHO-935
-        @lcc.prop("type", "method")
-        @lcc.test("Check work of owner field")
-        @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
-        def check_owner_field(self):
-            pass
+    @lcc.prop("type", "method")
+    @lcc.test("Check work of owner field")
+    @lcc.depends_on("DatabaseApi.GetContracts.GetContracts.method_main_check")
+    def check_owner_field(self):
+        creators = [self.echo_acc0, self.echo_acc1]
+
+        lcc.set_step("Create two the same contracts in the Echo network and get their contract id")
+        contract_id_1 = self.utils.get_contract_id(self, creators[0], self.contract_1,
+                                                   self.__database_api_identifier)
+        contract_id_2 = self.utils.get_contract_id(self, creators[1], self.contract_1,
+                                                   self.__database_api_identifier)
+        contracts_ids = [contract_id_1, contract_id_2]
+
+        lcc.set_step("Get info about created contracts")
+        response_id = self.send_request(self.get_request("get_contracts", [contracts_ids]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        lcc.log_info("Call method 'get_contracts' with params: '{}'".format(contracts_ids))
+
+        lcc.set_step("Check that the same contracts have different owners (creators)")
+        for i in range(len(contracts_ids)):
+            require_that(
+                "'#{} contract owner'".format(str(i)),
+                response["result"][i]["owner"], is_str(creators[i])
+            )
+
+        check_that(
+            "'contract owners'",
+            response["result"][0]["owner"], not_equal_to(response["result"][1]["owner"])
+        )
