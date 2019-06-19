@@ -94,7 +94,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [ ] [get_committee_member_by_account](https://echo-dev.io/developers/apis/database-api/#get_committee_member_by_accountaccount)
 - [ ] [lookup_committee_member_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_committee_member_accountslower_bound_name-limit)
 - [ ] [lookup_vote_ids](https://echo-dev.io/developers/apis/database-api/#lookup_vote_idsvotes)
-- [ ] [get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)
+- [x] [get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)
 - [ ] [get_required_signatures](https://echo-dev.io/developers/apis/database-api/#get_required_signaturestrx-available_keys)
 - [ ] [get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)
 - [ ] [verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)
