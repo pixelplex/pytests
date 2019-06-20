@@ -273,7 +273,7 @@ class EchoOperations(object):
             return [operation_id, withdraw_eth_props, account]
         return [operation_id, withdraw_eth_props, signer]
 
-    def broadcast(self, echo, list_operations, log_broadcast=True, debug_mode=False):
+    def broadcast(self, echo, list_operations, get_signed_tx=False, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))
@@ -289,4 +289,6 @@ class EchoOperations(object):
         broadcast_result = tx.broadcast()
         if log_broadcast:
             lcc.log_info("Broadcast result: \n{}".format(json.dumps(broadcast_result, indent=4)))
+        if get_signed_tx:
+            return broadcast_result, tx.transaction_object
         return broadcast_result
