@@ -12,7 +12,6 @@ SUITE = {
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_contract_fee_pool_balances")
-# todo: remove hidden. Bug ECHO-935
 @lcc.hidden()
 @lcc.suite("Check work of method 'get_contract_fee_pool_balances '", rank=1)
 class GetContractFeePoolBalances(BaseTest):

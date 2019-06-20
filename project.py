@@ -10,7 +10,7 @@ project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
 
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
-GENESIS = os.path.join(os.path.dirname(__file__), "genesis.json")
+GENESIS = json.load(open(os.path.join(os.path.dirname(__file__), "genesis.json")))
 
 if "BASE_URL" not in os.environ:
     BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
@@ -30,8 +30,8 @@ else:
 ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
 WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
-ECHO_INITIAL_BALANCE = int(json.load(open(GENESIS))["initial_balances"][0]["amount"])
-INITIAL_ACCOUNTS = json.load(open(GENESIS))["initial_accounts"]
+ECHO_INITIAL_BALANCE = int(GENESIS["initial_balances"][0]["amount"])
+INITIAL_ACCOUNTS = GENESIS["initial_accounts"]
 INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
 INITIAL_ACCOUNTS_NAMES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
@@ -43,10 +43,10 @@ for i in range(INITIAL_ACCOUNTS_COUNT):
 ACCOUNT_PREFIX = "account"
 DEFAULT_ACCOUNTS_COUNT = 100
 MAIN_TEST_ACCOUNT_COUNT = 1
-BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_interval"]
+BLOCK_RELEASE_INTERVAL = GENESIS["initial_parameters"]["block_interval"]
 ETH_ASSET_SYMBOL = "EETH"
-ETH_ASSET_ID = json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["ETH_asset_id"]
-ETH_CONTRACT_ADDRESS = "0x" + json.load(open(GENESIS))["initial_parameters"]["sidechain_config"]["eth_contract_address"]
+ETH_ASSET_ID = GENESIS["initial_parameters"]["sidechain_config"]["ETH_asset_id"]
+ETH_CONTRACT_ADDRESS = "0x" + GENESIS["initial_parameters"]["sidechain_config"]["eth_contract_address"]
 UNPAID_FEE_METHOD = "0x19c4518a"
 COMMITTEE = "0x130f679d"
 

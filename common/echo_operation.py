@@ -175,13 +175,13 @@ class EchoOperations(object):
             return [operation_id, asset_issue_props, issuer]
         return [operation_id, asset_issue_props, signer]
 
-    def get_committee_member_create_operation(self, echo, committee_member_account, address, fee_amount=0,
+    def get_committee_member_create_operation(self, echo, committee_member_account, eth_address, fee_amount=0,
                                               fee_asset_id="1.3.0", url="", signer=None, debug_mode=False):
         operation_id = echo.config.operation_ids.COMMITTEE_MEMBER_CREATE
         committee_member_create_props = self.get_operation_json("committee_member_create_operation")
         committee_member_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         committee_member_create_props.update(
-            {"committee_member_account": committee_member_account, "url": url, "address": address})
+            {"committee_member_account": committee_member_account, "url": url, "eth_address": eth_address})
         if debug_mode:
             lcc.log_debug("Committee member create operation: \n{}".format(
                 json.dumps([operation_id, committee_member_create_props], indent=4)))

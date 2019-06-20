@@ -15,7 +15,7 @@ class Utils(object):
     def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
-                                   lifetime=None, address=None, update_account=None, only_in_history=False,
+                                   lifetime=None, eth_address=None, update_account=None, only_in_history=False,
                                    eth_addr=None, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
@@ -51,10 +51,10 @@ class Utils(object):
                                                                          account_to_upgrade=account,
                                                                          upgrade_to_lifetime_member=lifetime)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if address is not None:
+        if eth_address is not None:
             operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
                                                                                  committee_member_account=account,
-                                                                                 address=address)
+                                                                                 eth_address=eth_address)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if update_account is not None:
             operation = base_test.echo_ops.get_operation_json("get_account_update_operation", example=True)
@@ -410,8 +410,8 @@ class Utils(object):
                 "Error: fund pool from '{}' account is not performed, response:\n{}".format(sender, broadcast_result))
         return broadcast_result
 
-    def perform_account_account_upgrade_operation(self, base_test, account_id, database_api_id, lifetime=True,
-                                                  log_broadcast=False):
+    def perform_account_upgrade_operation(self, base_test, account_id, database_api_id, lifetime=True,
+                                          log_broadcast=False):
         if account_id != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id,
                                                                lifetime=lifetime)
@@ -428,15 +428,16 @@ class Utils(object):
                                                                                            broadcast_result))
         return broadcast_result
 
-    def perform_committee_member_create_operation(self, base_test, account_id, address, database_api_id,
+    def perform_committee_member_create_operation(self, base_test, account_id, eth_address, database_api_id,
                                                   log_broadcast=False):
         if account_id != base_test.echo_acc0:
-            broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id, address=address)
+            broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id,
+                                                               eth_address=eth_address)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
                                                                              committee_member_account=account_id,
-                                                                             address=address, url="test_url")
+                                                                             eth_address=eth_address, url="test_url")
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
