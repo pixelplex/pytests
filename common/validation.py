@@ -291,6 +291,9 @@ class Validator(object):
             return bool(self.iso8601_regex.match(value))
 
     def is_eth_address(self, value):
-        if not self.is_hex(value) or len(value) != 44 or value[:2] != "0x" and len(value) != 42:
+        if not self.is_hex(value):
             return False
-        return True
+        if value[:2] == "0x":
+            return len(value) == 42
+        else:
+            return len(value) == 40
