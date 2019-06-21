@@ -99,7 +99,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [ ] [get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)
 - [ ] [verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)
 - [ ] [verify_account_authority](https://echo-dev.io/developers/apis/database-api/#verify_account_authorityname_or_id-signers)
-- [ ] [validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)
+- [x] [validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)
 - [ ] [get_proposed_transactions](https://echo-dev.io/developers/apis/database-api/#get_proposed_transactionsid)
 - [ ] [get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)
 - [ ] [subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)
