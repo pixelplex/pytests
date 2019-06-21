@@ -3,7 +3,7 @@ import json
 import os
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import is_list, this_dict, is_not_none
+from lemoncheesecake.matching import this_dict, is_not_none
 
 from project import init0, EXECUTION_STATUS_PATH
 from common.base_test import BaseTest
@@ -42,17 +42,20 @@ class GetBalanceObjects(BaseTest):
                 self.state = False
 
     def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Check execution status")
-        self.check_status_file()
-        if self.state:
-            lcc.set_step("Setup for {}".format(self.__class__.__name__))
-            self.__database_api_identifier = self.get_identifier("database")
-            lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
-            lcc.set_step("Get account public key.")
-            self.public_key = self.get_account_by_name(self.init0,
-                                                       self.__database_api_identifier)["result"]["echorand_key"]
-            lcc.log_info("{}".format(self.public_key))
+        if self.utils.check_accounts_have_initial_balances([self.init0]):
+            super().setup_suite()
+            lcc.set_step("Check execution status")
+            self.check_status_file()
+            if self.state:
+                lcc.set_step("Setup for {}".format(self.__class__.__name__))
+                self.__database_api_identifier = self.get_identifier("database")
+                lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+                lcc.set_step("Get account public key.")
+                self.public_key = self.get_account_by_name(self.init0,
+                                                           self.__database_api_identifier)["result"]["echorand_key"]
+                lcc.log_info("{}".format(self.public_key))
+        else:
+            lcc.log_error("account: {}, is not in genesis".format(self.init0))
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_balance_objects'")
@@ -98,14 +101,19 @@ class PositiveTesting(BaseTest):
 
 
     def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Check execution status")
-        self.read_execution_status()
-        if self.state:
-            self._connect_to_echopy_lib()
-            lcc.set_step("Setup for {}".format(self.__class__.__name__))
-            self.__database_api_identifier = self.get_identifier("database")
-            lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        if self.utils.check_accounts_have_initial_balances([self.init0_account_name, self.init1_account_name]):
+
+            super().setup_suite()
+            lcc.set_step("Check execution status")
+            self.read_execution_status()
+            if self.state:
+                self._connect_to_echopy_lib()
+                lcc.set_step("Setup for {}".format(self.__class__.__name__))
+                self.__database_api_identifier = self.get_identifier("database")
+                lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        else:
+            lcc.log_error("account: {}, is not in genesis".format([self.init0_account_name,
+                                                                   self.init1_account_name]))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
