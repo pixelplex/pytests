@@ -160,7 +160,6 @@ class Utils(object):
     def perform_transfer_to_address_operations(self, base_test, account_1, to_address, database_api_id,
                                                transfer_amount=1, amount_asset_id="1.3.0", operation_count=1,
                                                log_broadcast=False):
-        add_balance_operation = 0
         if account_1 != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, account_1, database_api_id,
                                                                transfer_amount=transfer_amount,
@@ -169,7 +168,6 @@ class Utils(object):
                                                                operation_count=operation_count)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
-            add_balance_operation = 1
         operation = base_test.echo_ops.get_transfer_to_address_operation(echo=base_test.echo, from_account_id=account_1,
                                                                          to_address=to_address, amount=transfer_amount,
                                                                          amount_asset_id=amount_asset_id)
@@ -179,7 +177,7 @@ class Utils(object):
                                                             log_broadcast=log_broadcast)
             return broadcast_result
         list_operations = []
-        for i in range(operation_count - add_balance_operation):
+        for i in range(operation_count):
             list_operations.append(collected_operation)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
                                                         log_broadcast=log_broadcast)
