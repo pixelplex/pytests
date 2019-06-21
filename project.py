@@ -23,9 +23,14 @@ else:
     GANACHE_URL = os.environ["GANACHE_URL"]
 
 if "NATHAN" not in os.environ:
-    NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "nathan.json")))["NATHAN"]
+    NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "private_keys.json")))["NATHAN"]
 else:
     NATHAN = os.environ["NATHAN"]
+
+if "init0" not in os.environ:
+    init0 = json.load(open(os.path.join(RESOURCES_DIR, "private_keys.json")))["init0"]
+else:
+    init0 = os.environ["init0"]
 
 ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
@@ -51,6 +56,7 @@ ETH_CONTRACT_ADDRESS = "0x" + json.load(open(GENESIS))["initial_parameters"]["si
 UNPAID_FEE_METHOD = "0x19c4518a"
 
 ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
+EXECUTION_STATUS_PATH = os.path.join(RESOURCES_DIR, "execution_status.json")
 with open(".env") as env_file:
     ETH_PRIVATE_KEY = (env_file.readline().split('RPC_ACCOUNT=')[1]).split(",")[0]
 

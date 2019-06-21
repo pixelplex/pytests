@@ -6,7 +6,7 @@ import time
 
 import lemoncheesecake.api as lcc
 from echopy import Echo
-from lemoncheesecake.matching import is_str, is_integer, check_that_entry
+from lemoncheesecake.matching import is_str, is_integer, check_that_entry, check_that
 from web3 import Web3
 from websocket import create_connection
 
