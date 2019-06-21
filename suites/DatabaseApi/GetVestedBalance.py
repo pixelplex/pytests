@@ -20,18 +20,21 @@ class GetVestedBalance(BaseTest):
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
-        self.init0 = "init2"
+        self.init2 = "init2"
 
     def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Check execution status")
-        lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.__database_api_identifier = self.get_identifier("database")
-        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
-        lcc.set_step("Get account public key.")
-        self.public_key = self.get_account_by_name(self.init0,
-                                                   self.__database_api_identifier)["result"]["echorand_key"]
-        lcc.log_info("{}".format(self.public_key))
+        if self.utils.check_accounts_have_initial_balances([self.init2]):
+            super().setup_suite()
+            lcc.set_step("Check execution status")
+            lcc.set_step("Setup for {}".format(self.__class__.__name__))
+            self.__database_api_identifier = self.get_identifier("database")
+            lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+            lcc.set_step("Get account public key.")
+            self.public_key = self.get_account_by_name(self.init2,
+                                                       self.__database_api_identifier)["result"]["echorand_key"]
+            lcc.log_info("{}".format(self.public_key))
+        else:
+            lcc.log_error("account: {}, is not in genesis".format(self.init2))
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_vested_balances'")
@@ -63,11 +66,15 @@ class PositiveTesting(BaseTest):
         self.accounts = ["init2", "init3"]
 
     def setup_suite(self):
-        super().setup_suite()
-        self._connect_to_echopy_lib()
-        lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.__database_api_identifier = self.get_identifier("database")
-        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        if self.utils.check_accounts_have_initial_balances(self.accounts):
+            super().setup_suite()
+            self._connect_to_echopy_lib()
+            lcc.set_step("Setup for {}".format(self.__class__.__name__))
+            self.__database_api_identifier = self.get_identifier("database")
+            lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
+        else:
+            lcc.log_error("accounts: {}, is not in genesis".format(self.accounts))
+
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
