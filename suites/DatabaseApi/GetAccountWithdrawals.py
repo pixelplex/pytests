@@ -113,6 +113,8 @@ class GetAccountWithdrawals(BaseTest):
         lcc.log_info("Second withdraw operation stored")
 
         # todo: add check history. Bug ECHO-933
+
+        # todo: Вот этот код для проверки операции sidechain_burn_operation. Раскоментишь тест провалится
         # lcc.set_step("Get account history operations")
         # operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
         # response = self.utils.get_account_history_operations(self, new_account, operation_id,
