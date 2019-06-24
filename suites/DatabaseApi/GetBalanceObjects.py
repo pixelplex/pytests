@@ -33,15 +33,7 @@ class GetBalanceObjects(BaseTest):
             with open(EXECUTION_STATUS_PATH, "w") as file:
                 file.write(json.dumps({"get_balance_objects": True}))
         else:
-            execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
-            if execution_status["get_balance_objects"]:
-                execution_status["get_balance_objects"] = False
-                self.state = False
-                file = open(EXECUTION_STATUS_PATH, "w")
-                file.write(json.dumps(execution_status))
-                file.close()
-            else:
-                self.state = False
+            self.state = False
 
     def setup_suite(self):
         if self.utils.check_accounts_have_initial_balances([self.init0_account_name]):
@@ -145,6 +137,27 @@ class PositiveTesting(BaseTest):
         else:
             lcc.log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
 
+
+    def change_test_status(self):
+        execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
+        if execution_status["get_balance_objects"]:
+            execution_status["get_balance_objects"] = False
+            self.state = False
+            file = open(EXECUTION_STATUS_PATH, "w")
+            file.write(json.dumps(execution_status))
+            file.close()
+        else:
+            self.state = False
+
+
+    def add_log_info(self, log):
+        execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
+        execution_status["get_balance_objects"] = False
+        file = open(EXECUTION_STATUS_PATH, "w")
+        execution_status.update({"log_info": log})
+        file.write(json.dumps(execution_status))
+        file.close()
+
     @lcc.prop("type", "method")
     @lcc.test("Work of method after balance claim operation")
     @lcc.depends_on("DatabaseApi.GetBalanceObjects.GetBalanceObjects.method_main_check")
@@ -155,7 +168,8 @@ class PositiveTesting(BaseTest):
             account_id = account_info["result"]["id"]
             public_key = account_info["result"]["echorand_key"]
             lcc.log_info(
-                "'{}' account has id='{}' and public_key='{}'".format(self.init0_account_name, account_id, public_key))
+                "'{}' account has id='{}' and public_key='{}'".format(self.init0_account_name,
+                                                                      account_id, public_key))
 
             lcc.set_step("Get balance objects before balance claim operation. Store balance id and amount")
             response_id = self.send_request(self.get_request("get_balance_objects", [[public_key]]),
@@ -175,15 +189,23 @@ class PositiveTesting(BaseTest):
                                                                   balance_owner_private_key=init0,
                                                                   balance_to_claim=balance_id)
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+            broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+            if self.is_operation_completed(broadcast_result, expected_static_variant=0):
+                self.change_test_status()
 
             lcc.set_step("Get balance objects after balance claim operation")
             response_id = self.send_request(self.get_request("get_balance_objects", [[public_key]]),
                                             self.__database_api_identifier)
             result = self.get_response(response_id)["result"]
+            lcc.log_info("{}".format(result))
             lcc.log_info("Call method 'get_balance_objects' with param: '{}'".format(public_key))
 
             lcc.set_step("Check response from 'get_balance_objects' method after balance claim operation")
-            check_that("balance", result, is_([]))
+            if check_that("balance", result, is_([])):
+                self.add_log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
+            else:
+                self.add_log_info("Test of method 'get_balance_objects' failed during the previous run")
         else:
-            lcc.log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
+            execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
+
+            lcc.log_info(execution_status["log_info"])
