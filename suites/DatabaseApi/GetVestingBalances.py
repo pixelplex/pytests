@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer
 
 from common.base_test import BaseTest
 
 SUITE = {
-    "description": "Method 'get_balance_objects'"
+    "description": "Method 'get_vesting_balances'"
 }
 
 
@@ -43,15 +43,128 @@ class GetVestingBalances(BaseTest):
     @lcc.test("Simple work of method 'get_vesting_balances'")
     def method_main_check(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Perform vesting balance create operation")
         operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
                                                                        owner=self.echo_acc0, amount=value_amount)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier, debug_mode=True)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
         operation_result = self.get_operation_results_ids(broadcast_result)
         lcc.log_info("Vesting balance object '{}' created".format(operation_result))
 
-        lcc.set_step("Get vesting balance of '{}' account".format(self.echo_acc0))
+        lcc.set_step("Get vesting balance of account and store last vesting balance")
         response_id = self.send_request(self.get_request("get_vesting_balances", [self.echo_acc0]),
-                                        self.__database_api_identifier, debug_mode=True)
-        response = self.get_response(response_id, log_response=True)
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"][-1]
+        lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(self.echo_acc0))
+
+        lcc.set_step("Check simple work of method 'get_vesting_balances'")
+        with this_dict(result):
+            if check_that("balance_object", result, has_length(4)):
+                if not self.validator.is_vesting_balance_id(result["id"]):
+                    lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
+                else:
+                    lcc.log_info("'id' has correct format: vesting_balance_object_type")
+                check_that_entry("id", is_(operation_result), quiet=True)
+                check_that_entry("owner", is_(self.echo_acc0), quiet=True)
+                balance = result["balance"]
+                with this_dict(balance):
+                    if check_that("balance", balance, has_length(2)):
+                        self.check_uint256_numbers(balance, "amount", quiet=True)
+                        check_that_entry("amount", is_(value_amount), quiet=True)
+                        if not self.validator.is_asset_id(balance["asset_id"]):
+                            lcc.log_error("Wrong format of 'asset_id', got: {}".format(result["asset_id"]))
+                        else:
+                            lcc.log_info("'asset_id' has correct format: asset_object_type")
+                policy = result["policy"]
+                with this_dict(policy):
+                    if check_that("policy", policy, has_length(2)):
+                        first_element = policy[0]
+                        second_element = policy[1]
+                        check_that("first element", first_element, is_(0), quiet=True)
+                        with this_dict(second_element):
+                            if not self.validator.is_iso8601(second_element["begin_timestamp"]):
+                                lcc.log_error(
+                                    "Wrong format of 'begin_timestamp', got: {}".format(
+                                        second_element["begin_timestamp"]))
+                            else:
+                                lcc.log_info("'begin_timestamp' has correct format: iso8601")
+                            check_that_entry("vesting_cliff_seconds", is_integer(), quiet=True)
+                            check_that_entry("vesting_duration_seconds", is_integer(), quiet=True)
+                            self.check_uint256_numbers(second_element, "begin_balance", quiet=True)
+                            check_that_entry("begin_balance", is_(value_amount), quiet=True)
+
+
+@lcc.prop("testing", "positive")
+@lcc.tags("database_api", "get_vested_balances")
+@lcc.suite("Positive testing of method 'get_vested_balances'", rank=2)
+class PositiveTesting(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+
+    def setup_suite(self):
+        super().setup_suite()
+        self._connect_to_echopy_lib()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
+
+    @lcc.prop("type", "method")
+    @lcc.test("Work of method 'get_vesting_balances' with new account. In and withdraw balance")
+    @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
+    def in_and_out_vesting_balance_of_new_account(self, get_random_valid_account_name, get_random_integer):
+        new_account = get_random_valid_account_name
+        value_amount = get_random_integer
+
+        lcc.set_step("Create and get new account")
+        new_account = self.get_account_id(new_account, self.__database_api_identifier,
+                                          self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
+
+        lcc.set_step("Perform vesting balance create operation. Owner = new account")
+        operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
+                                                                       owner=new_account, amount=value_amount)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        operation_result = self.get_operation_results_ids(broadcast_result)
+        lcc.log_info("Vesting balance object '{}' created".format(operation_result))
+
+        lcc.set_step("Get vesting balance of created account and store last vesting balance")
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"][-1]
+        lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(new_account))
+
+        lcc.set_step("Check that 'get_vesting_balances' method return broadcast operation")
+        operation_data = operation[1]
+        with this_dict(result):
+            check_that_entry("id", is_(operation_result))
+            check_that_entry("owner", is_(new_account))
+            with this_dict(result["balance"]):
+                check_that_entry("amount", is_(operation_data["amount"]["amount"]))
+                check_that_entry("asset_id", is_(operation_data["amount"]["asset_id"]))
+            with this_dict(result["policy"]):
+                first_element = result["policy"][0]
+                second_element = result["policy"][1]
+                check_that("first element", first_element, is_(operation_data["policy"][0]))
+                with this_dict(second_element):
+                    check_that_entry("begin_timestamp", is_(operation_data["policy"][1]["begin_timestamp"]))
+                    check_that_entry("vesting_cliff_seconds", is_(operation_data["policy"][1]["vesting_cliff_seconds"]))
+                    check_that_entry("vesting_duration_seconds",
+                                     is_(operation_data["policy"][1]["vesting_duration_seconds"]))
+                    check_that_entry("begin_balance", is_(operation_data["amount"]["amount"]))

@@ -52,7 +52,7 @@ class GetVestedBalance(BaseTest):
         result = self.get_response(response_id)["result"][0]
         lcc.log_info("Call method 'get_vested_balances' with param: '{}'".format(balance_id))
 
-        lcc.set_step("Check simple work of method 'vested balance'")
+        lcc.set_step("Check simple work of method 'get_vested_balances'")
         with this_dict(result):
             if check_that("balance_object", result, has_length(2)):
                 self.check_uint256_numbers(result, "amount", quiet=True)
