@@ -37,6 +37,7 @@ services:
       - BASE_URL=ws://echo:6311/ws
       - GANACHE_URL=http://ganache:8545
       - NATHAN=9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw
+      - init0=3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy
     build: .
     command: ["python3", "test_runner.py"]
     container_name: '631.echo.pytests.${ENV}'
@@ -45,7 +46,7 @@ services:
 
 
   echo:
-    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
+    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:6fe3799e88cb6c260024076b2a0e25ddd1c384c2
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
     command: '--echorand --data-dir=/echo/datadir/
