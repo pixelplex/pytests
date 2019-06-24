@@ -35,6 +35,7 @@ else:
 ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
 WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
+EXECUTION_STATUS_PATH = os.path.join(RESOURCES_DIR, "execution_status.json")
 ECHO_INITIAL_BALANCE = int(json.load(open(GENESIS))["initial_balances"][0]["amount"])
 ECHO_ASSET_SYMBOL = json.load(open(GENESIS))["initial_balances"][0]["asset_symbol"]
 INITIAL_ACCOUNTS = json.load(open(GENESIS))["initial_accounts"]
@@ -56,7 +57,6 @@ ETH_CONTRACT_ADDRESS = "0x" + json.load(open(GENESIS))["initial_parameters"]["si
 UNPAID_FEE_METHOD = "0x19c4518a"
 
 ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
-EXECUTION_STATUS_PATH = os.path.join(RESOURCES_DIR, "execution_status.json")
 with open(".env") as env_file:
     ETH_PRIVATE_KEY = (env_file.readline().split('RPC_ACCOUNT=')[1]).split(",")[0]
 

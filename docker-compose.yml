@@ -37,6 +37,7 @@ services:
       - BASE_URL=ws://echo:6311/ws
       - GANACHE_URL=http://ganache:8545
       - NATHAN=9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw
+      - init0=3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy
     build: .
     command: ["python3", "test_runner.py"]
     container_name: '631.echo.pytests.${ENV}'
