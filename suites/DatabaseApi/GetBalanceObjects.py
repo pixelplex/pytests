@@ -154,7 +154,7 @@ class PositiveTesting(BaseTest):
         execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
         execution_status["get_balance_objects"] = False
         file = open(EXECUTION_STATUS_PATH, "w")
-        execution_status.update({"log_info": log})
+        execution_status.update({"passed": log})
         file.write(json.dumps(execution_status))
         file.close()
 
@@ -196,15 +196,17 @@ class PositiveTesting(BaseTest):
             lcc.set_step("Get balance objects after balance claim operation")
             response_id = self.send_request(self.get_request("get_balance_objects", [[public_key]]),
                                             self.__database_api_identifier)
-            self.add_log_info("Test of method 'get_balance_objects' failed during the previous run")
+            self.add_log_info(False)
             result = self.get_response(response_id)["result"]
-            lcc.log_info("{}".format(result))
             lcc.log_info("Call method 'get_balance_objects' with param: '{}'".format(public_key))
 
             lcc.set_step("Check response from 'get_balance_objects' method after balance claim operation")
             if check_that("balance", result, is_([])):
-                self.add_log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
+                self.add_log_info(True)
+
         else:
             execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
-
-            lcc.log_info(execution_status["log_info"])
+            if execution_status["passed"]:
+                lcc.log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
+            else:
+                lcc.log_error("Test of method 'get_balance_objects' failed during the previous run")
