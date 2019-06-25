@@ -46,7 +46,7 @@ services:
 
 
   echo:
-    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:6fe3799e88cb6c260024076b2a0e25ddd1c384c2
+    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
     command: '--echorand --data-dir=/echo/datadir/
