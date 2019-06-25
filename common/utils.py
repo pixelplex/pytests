@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import json
+
 import math
 
-from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD
 from fixtures.base_fixtures import get_random_valid_asset_name
+from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD, GENESIS
 
 
 class Utils(object):
@@ -189,6 +191,18 @@ class Utils(object):
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
                                                         log_broadcast=log_broadcast)
         return broadcast_result
+
+    @staticmethod
+    def check_accounts_have_initial_balances(accounts):
+        genesis = json.load(open(GENESIS))
+        initial_accounts = {account["name"]: account["owner_key"] for account in genesis["initial_accounts"]
+                            if account["name"] in accounts}
+        initial_balances_keys = [balance["owner"] for balance in genesis["initial_balances"]]
+        initial_balances_keys = list(filter(lambda balance: balance in initial_accounts.values(),
+                                            initial_balances_keys))
+        if len(initial_balances_keys) < len(accounts):
+            return False
+        return True
 
     @staticmethod
     def get_account_id(base_test, account_names, account_keys, database_api_id, signer=None,

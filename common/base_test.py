@@ -16,7 +16,8 @@ from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
+    EXECUTION_STATUS_PATH
 
 
 class BaseTest(object):
@@ -520,6 +521,8 @@ class BaseTest(object):
         lcc.log_info("Empty node. Start pre-deploy setup...")
         if os.path.exists(WALLETS):
             os.remove(WALLETS)
+        if os.path.exists(EXECUTION_STATUS_PATH):
+            os.remove(EXECUTION_STATUS_PATH)
         pre_deploy_echo(self, database_api_identifier, lcc)
         lcc.log_info("Pre-deploy setup completed successfully")
         self._disconnect_to_echopy_lib()

@@ -23,13 +23,19 @@ else:
     GANACHE_URL = os.environ["GANACHE_URL"]
 
 if "NATHAN" not in os.environ:
-    NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "nathan.json")))["NATHAN"]
+    NATHAN = json.load(open(os.path.join(RESOURCES_DIR, "private_keys.json")))["NATHAN"]
 else:
     NATHAN = os.environ["NATHAN"]
+
+if "init0" not in os.environ:
+    init0 = json.load(open(os.path.join(RESOURCES_DIR, "private_keys.json")))["init0"]
+else:
+    init0 = os.environ["init0"]
 
 ECHO_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "echo_operations.json")))
 ECHO_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "echo_contracts.json")))
 WALLETS = os.path.join(RESOURCES_DIR, "wallets.json")
+EXECUTION_STATUS_PATH = os.path.join(RESOURCES_DIR, "execution_status.json")
 ECHO_INITIAL_BALANCE = int(json.load(open(GENESIS))["initial_balances"][0]["amount"])
 ECHO_ASSET_SYMBOL = json.load(open(GENESIS))["initial_balances"][0]["asset_symbol"]
 INITIAL_ACCOUNTS = json.load(open(GENESIS))["initial_accounts"]

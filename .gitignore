@@ -5,4 +5,5 @@ reports
 public
 venv
 resources/wallets.json
-resources/nathan.json
+resources/private_keys.json
+resources/execution_status.json
