@@ -83,7 +83,7 @@ class GetAccountAddresses(BaseTest):
         lcc.set_step("Check new account address object in method 'get_account_addresses'")
         result = response["result"][0]
         with this_dict(result):
-            if check_that("account_addresses", result, has_length(4)):
+            if check_that("account_addresses", result, has_length(5)):
                 if not self.validator.is_account_address_id(result["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
@@ -97,6 +97,7 @@ class GetAccountAddresses(BaseTest):
                     lcc.log_error("Wrong format of 'address', got: {}".format(result["owner"]))
                 else:
                     lcc.log_info("'address' has correct format: hex")
+                check_that_entry("extensions", is_list([]), quiet=True)
 
 
 @lcc.prop("testing", "positive")
@@ -273,8 +274,9 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Compare address object from 'get_account_addresses' and 'get_objects'")
         with this_dict(response):
-            if check_that("account_addresses", response, has_length(4)):
+            if check_that("account_addresses", response, has_length(5)):
                 check_that_entry("id", equal_to(response_from_get_objects["id"]))
                 check_that_entry("owner", equal_to(response_from_get_objects["owner"]))
                 check_that_entry("label", equal_to(response_from_get_objects["label"]))
                 check_that_entry("address", equal_to(response_from_get_objects["address"]))
+                check_that_entry("extensions", equal_to(response_from_get_objects["extensions"]))

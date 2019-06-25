@@ -48,7 +48,7 @@ services:
     image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
-    command: '--echorand --data-dir=/echo/datadir/
+    command: '--data-dir=/echo/datadir/
       --genesis-json=/echo/genesis.json
       --rpc-endpoint=0.0.0.0:6311
       --start-echorand
