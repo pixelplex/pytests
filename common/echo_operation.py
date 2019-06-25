@@ -175,6 +175,39 @@ class EchoOperations(object):
             return [operation_id, asset_issue_props, issuer]
         return [operation_id, asset_issue_props, signer]
 
+    def get_vesting_balance_create_operation(self, echo, creator, owner, fee_amount=0, fee_asset_id="1.3.0", amount=1,
+                                             amount_asset_id="1.3.0", begin_timestamp="1970-01-01T00:00:00",
+                                             vesting_cliff_seconds=0, vesting_duration_seconds=0, signer=None,
+                                             debug_mode=False):
+        operation_id = echo.config.operation_ids.VESTING_BALANCE_CREATE
+        vesting_balance_create_props = deepcopy(self.get_operation_json("vesting_balance_create_operation"))
+        vesting_balance_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        vesting_balance_create_props.update({"creator": creator, "owner": owner})
+        vesting_balance_create_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
+        vesting_balance_create_props["policy"][1].update(
+            {"begin_timestamp": begin_timestamp, "vesting_cliff_seconds": vesting_cliff_seconds,
+             "vesting_duration_seconds": vesting_duration_seconds})
+        if debug_mode:
+            lcc.log_debug("Vesting balance create operation: \n{}".format(
+                json.dumps([operation_id, vesting_balance_create_props], indent=4)))
+        if signer is None:
+            return [operation_id, vesting_balance_create_props, creator]
+        return [operation_id, vesting_balance_create_props, signer]
+
+    def get_vesting_balance_withdraw_operation(self, echo, vesting_balance, owner, fee_amount=0, fee_asset_id="1.3.0",
+                                               amount=1, amount_asset_id="1.3.0", signer=None, debug_mode=False):
+        operation_id = echo.config.operation_ids.VESTING_BALANCE_WITHDRAW
+        vesting_balance_withdraw_props = deepcopy(self.get_operation_json("vesting_balance_withdraw_operation"))
+        vesting_balance_withdraw_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        vesting_balance_withdraw_props.update({"vesting_balance": vesting_balance, "owner": owner})
+        vesting_balance_withdraw_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
+        if debug_mode:
+            lcc.log_debug("Vesting balance withdraw operation: \n{}".format(
+                json.dumps([operation_id, vesting_balance_withdraw_props], indent=4)))
+        if signer is None:
+            return [operation_id, vesting_balance_withdraw_props, owner]
+        return [operation_id, vesting_balance_withdraw_props, signer]
+
     def get_balance_claim_operation(self, echo, deposit_to_account, balance_owner_public_key, value_amount,
                                     balance_owner_private_key=None, fee_amount=0, fee_asset_id="1.3.0",
                                     balance_to_claim="1.13.0", value_asset_id="1.3.0", signer=None, debug_mode=False):
