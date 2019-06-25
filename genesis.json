@@ -427,7 +427,7 @@
         {
             "owner": "ECHO9GUY5DUWy5bHZWPwhdmV1oi8QdvBcwxKF73WESeHDoWQ",
             "asset_symbol": "ECHO",
-            "amount": "999999999999830"
+            "amount": "999999999999900"
         },
         {
             "owner": "ECHOHCm2TxVGHWD73VYGo2uXTt6SfJKAbgUpYK89Qn7SBWrk",
@@ -442,12 +442,12 @@
         {
             "owner": "ECHO4fKHe1EH1rYBxxqvUzRgXdWFqKNWffPk2yK34Hkw18jq",
             "asset_symbol": "ECHO",
-            "amount": "40"
+            "amount": "30"
         },
         {
             "owner": "ECHOCYRALckympkHkSpHu4QHMQhAPE8xBpY7S1SMWjjk7SHM",
             "asset_symbol": "ECHO",
-            "amount": "100"
+            "amount": "40"
         }
     ],
     "initial_vesting_balances": [],

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, is_not_none, has_length, check_that
 
@@ -16,7 +14,7 @@ SUITE = {
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_vested_balances")
 @lcc.suite("Check work of method 'get_vested_balances'", rank=1)
-class GetVestedBalance(BaseTest):
+class GetVestedBalances(BaseTest):
 
     def __init__(self):
         super().__init__()
@@ -52,7 +50,7 @@ class GetVestedBalance(BaseTest):
         result = self.get_response(response_id)["result"][0]
         lcc.log_info("Call method 'get_vested_balances' with param: '{}'".format(balance_id))
 
-        lcc.set_step("Check simple work of method 'get_vested_balances'")
+        lcc.set_step("Check simple work of method 'vested balance'")
         with this_dict(result):
             if check_that("balance_object", result, has_length(2)):
                 self.check_uint256_numbers(result, "amount", quiet=True)
@@ -89,7 +87,7 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Get vested balances for several accounts")
-    @lcc.depends_on("DatabaseApi.GetVestedBalance.GetVestedBalance.method_main_check")
+    @lcc.depends_on("DatabaseApi.GetVestedBalances.GetVestedBalances.method_main_check")
     def get_vested_balance_for_several_address(self):
         lcc.set_step("Get accounts public keys and store")
         public_key_init2 = self.get_account_by_name(
