@@ -19,7 +19,7 @@ class Validator(object):
     operation_history_id_regex = re.compile(r"^1\.10\.(0|[1-9]\d*)$")
     withdraw_permission_id_regex = re.compile(r"^1\.11\.(0|[1-9]\d*)$")
     vesting_balance_id_regex = re.compile(r"^1\.12\.(0|[1-9]\d*)$")
-    balance_id_regex = re.compile(r"^1\.13\.(0|[1-9]\d)*$")
+    balance_id_regex = re.compile(r"^1\.13\.(0|[1-9]\d*)$")
     contract_id_regex = re.compile(r"^1\.14\.(0|[1-9]\d*)$")
     contract_result_id_regex = re.compile(r"^1\.15\.(0|[1-9]\d*)$")
     block_id_regex = re.compile(r"^1\.16\.(0|[1-9]\d*)$")
