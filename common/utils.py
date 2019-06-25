@@ -18,7 +18,7 @@ class Utils(object):
     def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
-                                   only_in_history=False, log_broadcast=False):
+                                   vesting_balance=None, only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -47,6 +47,9 @@ class Utils(object):
         if label is not None:
             operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=account,
                                                                                 label=label)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if vesting_balance is not None:
+            operation = base_test.echo_ops.get_operation_json("vesting_balance_withdraw_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo,
                                                               from_account_id=base_test.echo_acc0,
@@ -402,3 +405,22 @@ class Utils(object):
             return value * 10 ** 12
         if currency == "ether":
             return value / 10 ** 6
+
+    def perform_vesting_balance_withdraw_operation(self, base_test, vesting_balance, owner, amount, database_api_id,
+                                                   log_broadcast=False):
+        if owner != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, owner, database_api_id,
+                                                               vesting_balance=vesting_balance)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_vesting_balance_withdraw_operation(echo=base_test.echo,
+                                                                              vesting_balance=vesting_balance,
+                                                                              owner=owner, amount=amount)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: vesting balance of '{}' account is not withdrawn, response:\n{}".format(owner,
+                                                                                                broadcast_result))
+        return broadcast_result

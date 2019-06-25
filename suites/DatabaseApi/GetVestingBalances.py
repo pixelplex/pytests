@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer
@@ -50,8 +51,8 @@ class GetVestingBalances(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        operation_result = self.get_operation_results_ids(broadcast_result)
-        lcc.log_info("Vesting balance object '{}' created".format(operation_result))
+        vesting_balance_id = self.get_operation_results_ids(broadcast_result)
+        lcc.log_info("Vesting balance object '{}' created".format(vesting_balance_id))
 
         lcc.set_step("Get vesting balance of account and store last vesting balance")
         response_id = self.send_request(self.get_request("get_vesting_balances", [self.echo_acc0]),
@@ -66,7 +67,7 @@ class GetVestingBalances(BaseTest):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
                     lcc.log_info("'id' has correct format: vesting_balance_object_type")
-                check_that_entry("id", is_(operation_result), quiet=True)
+                check_that_entry("id", is_(vesting_balance_id), quiet=True)
                 check_that_entry("owner", is_(self.echo_acc0), quiet=True)
                 balance = result["balance"]
                 with this_dict(balance):
@@ -97,14 +98,18 @@ class GetVestingBalances(BaseTest):
 
 
 @lcc.prop("testing", "positive")
-@lcc.tags("database_api", "get_vested_balances")
-@lcc.suite("Positive testing of method 'get_vested_balances'", rank=2)
+@lcc.tags("database_api", "get_vesting_balances")
+@lcc.suite("Positive testing of method 'get_vesting_balances'", rank=2)
 class PositiveTesting(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+
+    @staticmethod
+    def get_random_amount(_to, _from=0):
+        return round(random.uniform(_from, _to))
 
     def setup_suite(self):
         super().setup_suite()
@@ -141,8 +146,8 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        operation_result = self.get_operation_results_ids(broadcast_result)
-        lcc.log_info("Vesting balance object '{}' created".format(operation_result))
+        vesting_balance_id = self.get_operation_results_ids(broadcast_result)
+        lcc.log_info("Vesting balance object '{}' created".format(vesting_balance_id))
 
         lcc.set_step("Get vesting balance of created account and store last vesting balance")
         response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
@@ -153,7 +158,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check that 'get_vesting_balances' method return broadcast operation")
         operation_data = operation[1]
         with this_dict(result):
-            check_that_entry("id", is_(operation_result))
+            check_that_entry("id", is_(vesting_balance_id))
             check_that_entry("owner", is_(new_account))
             with this_dict(result["balance"]):
                 check_that_entry("amount", is_(operation_data["amount"]["amount"]))
@@ -168,3 +173,39 @@ class PositiveTesting(BaseTest):
                     check_that_entry("vesting_duration_seconds",
                                      is_(operation_data["policy"][1]["vesting_duration_seconds"]))
                     check_that_entry("begin_balance", is_(operation_data["amount"]["amount"]))
+
+        lcc.set_step("Perform vesting balance withdraw operation. Owner = new account")
+        withdraw_amount_1 = self.get_random_amount(value_amount)
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account, withdraw_amount_1,
+                                                              self.__database_api_identifier)
+        lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account, withdraw_amount_1))
+
+        lcc.set_step("Get vesting balance of created account after first withdraw")
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][-1]
+        balance_amount = vesting_balance["balance"]["amount"]
+        begin_balance = vesting_balance["policy"][1]["begin_balance"]
+        lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(new_account))
+
+        lcc.set_step("Check balance amount in 'get_vesting_balances' method after first withdraw")
+        check_that("'balance_amount'", balance_amount, is_(value_amount - withdraw_amount_1))
+        check_that("'begin_balance'", begin_balance, is_(value_amount))
+
+        lcc.set_step("Perform vesting balance withdraw operation. Owner = new account. Withdraw all amount")
+        withdraw_amount_2 = value_amount - withdraw_amount_1
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account, withdraw_amount_2,
+                                                              self.__database_api_identifier)
+        lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account, withdraw_amount_2))
+
+        lcc.set_step("Get vesting balance of created account after second withdraw")
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][-1]
+        balance_amount = vesting_balance["balance"]["amount"]
+        begin_balance = vesting_balance["policy"][1]["begin_balance"]
+        lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(new_account))
+
+        lcc.set_step("Check balance amount in 'get_vesting_balances' method after second withdraw")
+        check_that("'balance_amount'", balance_amount, is_(0))
+        check_that("'begin_balance'", begin_balance, is_(value_amount))
