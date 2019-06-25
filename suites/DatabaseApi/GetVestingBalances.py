@@ -209,3 +209,6 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check balance amount in 'get_vesting_balances' method after second withdraw")
         check_that("'balance_amount'", balance_amount, is_(0))
         check_that("'begin_balance'", begin_balance, is_(value_amount))
+
+# todo: need add checks for changing 'asset_id', '0', 'begin_timestamp', 'vesting_cliff_seconds',
+#  'vesting_duration_seconds'
