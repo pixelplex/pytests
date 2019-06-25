@@ -83,9 +83,9 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] get_account_addresses
 - [x] get_account_by_address
 - [x] [get_named_account_balances](https://echo-dev.io/developers/apis/database-api/#get_named_account_balancesname-assets)
-- [ ] [get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)
-- [ ] [get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)
-- [ ] [get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)
+- [x] [get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)
+- [x] [get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)
+- [x] [get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)
 - [x] [get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)
 - [x] [list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)
 - [x] [lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)
