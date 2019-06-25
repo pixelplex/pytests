@@ -78,7 +78,7 @@ class GetAccountByName(BaseTest):
                 check_that_entry("blacklisted_accounts", is_list(), quiet=True)
                 check_that_entry("active_special_authority", is_list(), quiet=True)
                 check_that_entry("top_n_control_flags", is_integer(), quiet=True)
-                check_that_entry("extensions", is_list([]), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
                 lcc.set_step("Check 'active' field")
                 with this_dict(account_info["active"]):
@@ -95,7 +95,7 @@ class GetAccountByName(BaseTest):
                             self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
                         check_that_entry("num_committee", is_integer(), quiet=True)
                         check_that_entry("votes", is_list(), quiet=True)
-                        check_that_entry("extensions", is_list([]), quiet=True)
+                        check_that_entry("extensions", is_list(), quiet=True)
 
 
 @lcc.prop("testing", "positive")

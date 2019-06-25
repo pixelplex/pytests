@@ -97,7 +97,7 @@ class GetAccountAddresses(BaseTest):
                     lcc.log_error("Wrong format of 'address', got: {}".format(result["owner"]))
                 else:
                     lcc.log_info("'address' has correct format: hex")
-                check_that_entry("extensions", is_list([]), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
 
 @lcc.prop("testing", "positive")

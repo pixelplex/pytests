@@ -127,7 +127,7 @@ class GetAccountDeposits(BaseTest):
             lcc.set_step("Check account deposit #{}".format(str(i)))
             require_that(
                 "'first deposit of created account'",
-                deposit[i], has_length(6)
+                deposit[i], has_length(7)
             )
             with this_dict(deposit[i]):
                 if not self.validator.is_deposit_eth_id(deposit[i]["id"]):
@@ -140,6 +140,7 @@ class GetAccountDeposits(BaseTest):
                 check_that_entry("value", is_(deposit_values[i]), quiet=True)
                 check_that_entry("is_approved", is_bool(), quiet=True)
                 check_that_entry("approves", is_list(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
         lcc.set_step("Get deposit by id using 'get_objects'")
         response_id = self.send_request(self.get_request("get_objects", [deposit_ids]),
@@ -157,3 +158,4 @@ class GetAccountDeposits(BaseTest):
                 check_that_entry("value", is_(response[i]["value"]), quiet=True)
                 check_that_entry("is_approved", is_(response[i]["is_approved"]), quiet=True)
                 check_that_entry("approves", is_(response[i]["approves"]), quiet=True)
+                check_that_entry("extensions", is_(response[i]["extensions"]), quiet=True)
