@@ -2,7 +2,8 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, equal_to
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer,\
+    equal_to, require_that
 
 from common.base_test import BaseTest
 
@@ -229,18 +230,16 @@ class PositiveTesting(BaseTest):
         asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
         lcc.set_step("Get asset issue")
-        operation = self.echo_ops.get_asset_issue_operation(echo=self.echo, issuer=self.echo_acc0,
-                                                            value_amount=value_amount, value_asset_id=asset_id,
-                                                            issue_to_account=self.echo_acc0)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                log_broadcast=False)
-        response_id = self.send_request(self.get_request("get_vesting_balances", [self.echo_acc0]),
+
+        self.utils.add_assets_to_account(self, value_amount, asset_id, self.echo_acc0, self.__database_api_identifier)
+
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)["result"][-1]
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(asset_id))
+        require_that("amount", response["amount"], equal_to(value_amount))
 
         lcc.set_step("Create account")
-        lcc.log_info("{}".format(response))
         account = get_random_valid_account_name
         account_id = self.get_account_id(account, self.__database_api_identifier,
                                          self.__registration_api_identifier)
@@ -250,14 +249,24 @@ class PositiveTesting(BaseTest):
 
         operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
                                                                        owner=account_id, amount=value_amount,
-                                                                       amount_asset_id=asset_id, )
+                                                                       amount_asset_id=asset_id)
+
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
+
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
+                                        self.__database_api_identifier)
+
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(asset_id))
+        require_that("amount", response["amount"], equal_to(0))
+
         lcc.set_step("Get vesting balance for account: {}".format(account_id))
         response_id = self.send_request(self.get_request("get_vesting_balances", [account_id]),
                                         self.__database_api_identifier)
-        vesting_balance = self.get_response(response_id)["result"][-1]
+        vesting_balance = self.get_response(response_id)["result"][0]
         with this_dict(vesting_balance):
             check_that("owner", vesting_balance["owner"], equal_to(account_id))
             check_that("amount", vesting_balance["balance"]["amount"], equal_to(value_amount))
+            check_that("asset_id", vesting_balance["balance"]["asset_id"], equal_to(asset_id))
