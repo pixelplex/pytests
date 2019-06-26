@@ -230,37 +230,30 @@ class PositiveTesting(BaseTest):
         asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
         lcc.set_step("Get asset issue")
-
-        self.utils.add_assets_to_account(self, value_amount, asset_id, self.echo_acc0, self.__database_api_identifier)
-
+        self.utils.add_assets_to_account(self, value_amount, asset_id, self.echo_acc0,
+                                         self.__database_api_identifier)
         response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
         require_that("asset_id", response["asset_id"], equal_to(asset_id))
         require_that("amount", response["amount"], equal_to(value_amount))
-
         lcc.set_step("Create account")
         account = get_random_valid_account_name
         account_id = self.get_account_id(account, self.__database_api_identifier,
                                          self.__registration_api_identifier)
         lcc.log_info("New account is: {}, id of new account: {}".format(account, account_id))
-
         lcc.set_step("Get vesting balance with new owner: {}".format(account_id))
-
         operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
                                                                        owner=account_id, amount=value_amount,
                                                                        amount_asset_id=asset_id)
-
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
-
         response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
         require_that("asset_id", response["asset_id"], equal_to(asset_id))
         require_that("amount", response["amount"], equal_to(0))
-
         lcc.set_step("Get vesting balance for account: {}".format(account_id))
         response_id = self.send_request(self.get_request("get_vesting_balances", [account_id]),
                                         self.__database_api_identifier)
