@@ -207,7 +207,6 @@ class GetGlobalProperties(BaseTest):
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
-        # todo: move to 'only_fee' []. Bug ECHO-922
         operations = ["account_update", "asset_update", "proposal_create", "proposal_update", "custom",
                       "account_address_create"]
         self.check_default_fee_for_operation(current_fees["parameters"], operations, self.fee_with_price_per_kbyte)
