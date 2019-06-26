@@ -59,7 +59,7 @@ class GetVestingBalances(BaseTest):
         response_id = self.send_request(self.get_request("get_vesting_balances", [self.echo_acc0]),
                                         self.__database_api_identifier)
 
-        result = self.get_response(response_id, log_response=True)["result"][-1]
+        result = self.get_response(response_id)["result"][-1]
         lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(self.echo_acc0))
 
         lcc.set_step("Check simple work of method 'get_vesting_balances'")
@@ -184,7 +184,6 @@ class PositiveTesting(BaseTest):
                                                               self.__database_api_identifier)
         lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account,
                                                                                       withdraw_amount_1))
-
         lcc.set_step("Get vesting balance of created account after first withdraw")
         response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
                                         self.__database_api_identifier)
@@ -204,7 +203,6 @@ class PositiveTesting(BaseTest):
                                                               self.__database_api_identifier)
         lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account,
                                                                                       withdraw_amount_2))
-
         lcc.set_step("Get vesting balance of created account after second withdraw")
         response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
                                         self.__database_api_identifier)
