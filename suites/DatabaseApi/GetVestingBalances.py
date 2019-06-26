@@ -257,7 +257,6 @@ class PositiveTesting(BaseTest):
 
         response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
                                         self.__database_api_identifier)
-
         response = self.get_response(response_id)["result"][0]
         require_that("asset_id", response["asset_id"], equal_to(asset_id))
         require_that("amount", response["amount"], equal_to(0))
