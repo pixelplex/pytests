@@ -109,7 +109,8 @@ class PositiveTesting(BaseTest):
                                                                 value_amount=value_amount, bytecode=self.contract,
                                                                 value_asset_id=asset_id, supported_asset_id=asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
 
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
         contract_id = self.get_contract_id(contract_result)
@@ -126,7 +127,8 @@ class PositiveTesting(BaseTest):
                                                               bytecode=self.contract_getPennie, callee=contract_id,
                                                               value_asset_id=asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
