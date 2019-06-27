@@ -59,7 +59,6 @@ class GetContractBalances(BaseTest):
         with this_dict(response):
             check_that_entry("amount", equal_to(value_amount))
             check_that_entry("asset_id", equal_to(self.echo_asset))
-        lcc.log_info("asdasda")
 
 
 @lcc.prop("testing", "positive")
@@ -72,6 +71,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
+        self.contract_getPennie = self.get_byte_code("piggy", "getPennie")
 
     def setup_suite(self):
         super().setup_suite()
@@ -91,7 +91,7 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Work of method 'get_contract_balances' with new owner and asset")
+    @lcc.test("Work of method 'get_contract_balances' with getPennie method and asset")
     @lcc.depends_on("DatabaseApi.GetContractBalances.GetContractBalances.method_main_check")
     def check_method_with_new_asset(self, get_random_integer, get_random_valid_asset_name):
         value_amount = get_random_integer
@@ -100,24 +100,37 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create asset and get new asset id")
         asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
-
+        lcc.set_step("Add asset to account")
         self.utils.add_assets_to_account(self, value_amount, asset_id, self.echo_acc0,
                                          self.__database_api_identifier)
 
         lcc.set_step("Create contract with new asset id")
         operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 value_amount=value_amount, bytecode=self.contract,
-                                                                value_asset_id=asset_id,
-                                                                supported_asset_id=asset_id)
-
+                                                                value_asset_id=asset_id, supported_asset_id=asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
         contract_id = self.get_contract_id(contract_result)
+
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
         with this_dict(response):
             check_that_entry("amount", equal_to(value_amount))
+            check_that_entry("asset_id", equal_to(asset_id))
+
+        lcc.set_step("Call 'getPennie' method")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.contract_getPennie, callee=contract_id,
+                                                              value_asset_id=asset_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+
+        with this_dict(response):
+            check_that_entry("amount", equal_to(value_amount - 1))
             check_that_entry("asset_id", equal_to(asset_id))
