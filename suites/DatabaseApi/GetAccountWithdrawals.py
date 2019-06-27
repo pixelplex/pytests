@@ -115,25 +115,25 @@ class GetAccountWithdrawals(BaseTest):
         # todo: add check history. Bug ECHO-933
 
         # todo: Вот этот код для проверки операции sidechain_burn_operation. Раскоментишь тест провалится
-        # lcc.set_step("Get account history operations")
-        # operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
-        # response = self.utils.get_account_history_operations(self, new_account, operation_id,
-        #                                                      self.__history_api_identifier, limit=2)
-        # lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
-        #
-        # lcc.set_step("Check response from method 'get_account_history_operations'")
-        # for i in range(len(response["result"])):
-        #     operation_in_history = response["result"][i]["op"]
-        #     lcc.set_step("Check operation #{} in account history operations".format(str(i)))
-        #     check_that("operation_id", operation_in_history[0], equal_to(operation_id))
-        #     with this_dict(operation_in_history[1]):
-        #         check_that_entry("fee", equal_to(sidechain_burn_operations[i][1]["fee"]))
-        #         with this_dict(operation_in_history[1]["value"]):
-        #             check_that_entry("amount", equal_to(sidechain_burn_operations[i][1]["value"]["amount"]))
-        #             check_that_entry("asset_id", equal_to(sidechain_burn_operations[i][1]["value"]["asset_id"]))
-        #         check_that_entry("account", equal_to(sidechain_burn_operations[i][1]["account"]))
-        #         check_that_entry("withdraw_id",
-        #                          starts_with(self.get_object_type(self.echo.config.object_types.WITHDRAW_ETH)))
+        lcc.set_step("Get account history operations")
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
+        response = self.utils.get_account_history_operations(self, new_account, operation_id,
+                                                             self.__history_api_identifier, limit=2)
+        lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
+
+        lcc.set_step("Check response from method 'get_account_history_operations'")
+        for i in range(len(response["result"])):
+            operation_in_history = response["result"][i]["op"]
+            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            check_that("operation_id", operation_in_history[0], equal_to(operation_id))
+            with this_dict(operation_in_history[1]):
+                check_that_entry("fee", equal_to(sidechain_burn_operations[i][1]["fee"]))
+                with this_dict(operation_in_history[1]["value"]):
+                    check_that_entry("amount", equal_to(sidechain_burn_operations[i][1]["value"]["amount"]))
+                    check_that_entry("asset_id", equal_to(sidechain_burn_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_burn_operations[i][1]["account"]))
+                check_that_entry("withdraw_id",
+                                 starts_with(self.get_object_type(self.echo.config.object_types.WITHDRAW_ETH)))
 
         lcc.set_step("Get withdrawals of created account")
         params = [new_account]

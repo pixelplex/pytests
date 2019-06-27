@@ -23,7 +23,7 @@ services:
 
 
   migrate:
-    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:latest
+    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:v0.8.1
     container_name: '631.echo.contracts.${ENV}'
     command: /bin/sh -c "sleep 5; npm run migrate -- --network docker;"
     depends_on:
@@ -45,10 +45,10 @@ services:
 
 
   echo:
-    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
+    image: registry-gitlab.pixelplex.by/631_echo/echo:235cef00f54743bbba93f51e5044ba4677b30ce3
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
-    command: '--echorand --data-dir=/echo/datadir/
+    command: '--data-dir=/echo/datadir/
       --genesis-json=/echo/genesis.json
       --rpc-endpoint=0.0.0.0:6311
       --start-echorand
