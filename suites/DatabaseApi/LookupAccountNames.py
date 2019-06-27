@@ -143,8 +143,7 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Create accounts using account_create operation and get info about them")
-    @lcc.tags("qa")
-    # @lcc.depends_on("DatabaseApi.LookupAccountNames.LookupAccountNames.method_main_check")
+    @lcc.depends_on("DatabaseApi.LookupAccountNames.LookupAccountNames.method_main_check")
     def get_info_about_created_accounts(self, get_random_valid_account_name):
         accounts = [get_random_valid_account_name + "0", get_random_valid_account_name + "1"]
         accounts_public_keys = [self.generate_keys(), self.generate_keys()]

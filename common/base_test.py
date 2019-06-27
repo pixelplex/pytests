@@ -74,13 +74,13 @@ class BaseTest(object):
 
     def set_timeout_wait(self, seconds, print_log=True):
         if print_log:
-            lcc.log_info(
-                "Start a '{}' second(s) sleep... global_time:'{}'".format(seconds, self.get_time(global_time=True)))
-            lcc.log_info("Start a '{}' second(s) sleep... local_time:'{}'".format(seconds, self.get_time()))
+            lcc.log_info("Start a '{}' second(s) sleep..."
+                         "\nglobal_time:'{}'"
+                         "\nlocal_time:'{}'".format(seconds, self.get_time(global_time=True), self.get_time()))
         time.sleep(seconds)
         if print_log:
-            lcc.log_info("Sleep is over, global_time:'{}'".format(self.get_time(global_time=True)))
-            lcc.log_info("Sleep is over, local_time:'{}'".format(self.get_time()))
+            lcc.log_info("Sleep is over.\nglobal_time:'{}'\nlocal_time:'{}'".format(self.get_time(global_time=True),
+                                                                                    self.get_time()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):
@@ -483,7 +483,7 @@ class BaseTest(object):
         waiting_time = next_maintenance_time_in_sec - time_now_in_sec
         lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
         self.set_timeout_wait(waiting_time, print_log=print_log)
-        lcc.log_info("Maintenance start")
+        lcc.log_info("Maintenance finished")
 
     @staticmethod
     def _login_status(response):

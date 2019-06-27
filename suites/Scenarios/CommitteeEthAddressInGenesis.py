@@ -38,7 +38,7 @@ class CommitteeEthAddressInGenesis(BaseTest):
         lcc.set_step("Get committees members names and eth_addresses from genesis file")
         for i in range(len(initial_committee_candidates)):
             committee_members_names.append(GENESIS["initial_committee_candidates"][i]["owner_name"])
-            committee_members_eth_addresses.append(GENESIS["initial_committee_candidates"][i]["eth_address"].lower())
+            committee_members_eth_addresses.append(GENESIS["initial_committee_candidates"][i]["eth_address"])
             lcc.log_info("Committee member #{}: name='{}', eth_address='{}'".format(str(i), committee_members_names[i],
                                                                                     committee_members_eth_addresses[i]))
 
