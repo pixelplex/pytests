@@ -23,7 +23,7 @@ services:
 
 
   migrate:
-    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:d6b3d4d36858350f418670de1e4fa7c61b2181e0
+    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:v0.8.1
     container_name: '631.echo.contracts.${ENV}'
     command: /bin/sh -c "sleep 5; npm run migrate -- --network docker;"
     depends_on:
