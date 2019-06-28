@@ -100,8 +100,7 @@ class LookupAssetSymbols(BaseTest):
         response_id = self.send_request(self.get_request("lookup_asset_symbols", [symbols_or_ids]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'lookup_asset_symbols' with symbols_or_ids='{}' parameter".format(
-            symbols_or_ids))
+        lcc.log_info("Call method 'lookup_asset_symbols' with symbols_or_ids='{}' parameter".format(symbols_or_ids))
 
         lcc.set_step("Check simple work of method 'lookup_asset_symbols'")
         asset_by_symbol = response["result"][0]

@@ -2,6 +2,7 @@
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_integer, is_dict, \
     is_list, require_that, equal_to
+
 from common.base_test import BaseTest
 
 SUITE = {
@@ -124,8 +125,7 @@ class PositiveTesting(BaseTest):
             referrer_percent_field_name = "referrer_percent"
             if account_is_created:
                 referrer_percent_field_name = "referrer_rewards_percentage"
-            check_that_entry("referrer_rewards_percentage",
-                             equal_to(performed_account[referrer_percent_field_name]))
+            check_that_entry("referrer_rewards_percentage", equal_to(performed_account[referrer_percent_field_name]))
             check_that_entry("name", equal_to(performed_account["name"]))
             check_that_entry("active", equal_to(performed_account["active"]))
             check_that_entry("echorand_key", equal_to(performed_account["echorand_key"]))
@@ -209,5 +209,5 @@ class PositiveTesting(BaseTest):
         account_info_1 = response_1["result"]
         account_info_2 = response_2["result"]
         for account_num in range(len(account_info_1)):
-                self.compare_accounts(account_info_1[account_num], account_info_2[account_num],
-                                      account_is_created=True)
+            self.compare_accounts(account_info_1[account_num], account_info_2[account_num],
+                                  account_is_created=True)

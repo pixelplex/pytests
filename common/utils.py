@@ -63,14 +63,12 @@ class Utils(object):
         if list_asset_ids is None:
             list_asset_ids = []
         max_limit = 100
-        response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]),
-                                             database_api_id)
+        response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]), database_api_id)
         response = base_test.get_response(response_id)
         for asset in response["result"]:
             list_asset_ids.append(asset["id"])
         if len(response["result"]) == max_limit:
-            return self.get_nonexistent_asset_id(base_test, database_api_id,
-                                                 symbol=list_asset_ids[-1],
+            return self.get_nonexistent_asset_id(base_test, database_api_id, symbol=list_asset_ids[-1],
                                                  list_asset_ids=list_asset_ids, return_symbol=return_symbol)
         sorted_list_asset_ids = sorted(list_asset_ids, key=base_test.get_value_for_sorting_func)
         asset_id = "{}{}".format(base_test.get_object_type(base_test.echo.config.object_types.ASSET),
@@ -84,14 +82,12 @@ class Utils(object):
         if list_asset_symbols is None:
             list_asset_symbols = []
         max_limit = 100
-        response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]),
-                                             database_api_id)
+        response_id = base_test.send_request(base_test.get_request("list_assets", [symbol, max_limit]), database_api_id)
         response = base_test.get_response(response_id)
         for asset in response["result"]:
             list_asset_symbols.append(asset["symbol"])
         if len(response["result"]) == max_limit:
-            return self.get_nonexistent_asset_symbol(base_test, database_api_id,
-                                                     symbol=list_asset_symbols[-1],
+            return self.get_nonexistent_asset_symbol(base_test, database_api_id, symbol=list_asset_symbols[-1],
                                                      list_asset_symbols=list_asset_symbols)
         nonexistent_asset_symbol = list_asset_symbols[0]
         while nonexistent_asset_symbol in list_asset_symbols:
@@ -103,22 +99,20 @@ class Utils(object):
         if list_account_names is None:
             list_account_names = []
         max_limit = 1000
-        response_id = base_test.send_request(base_test.get_request("lookup_accounts",
-                                                                   [lower_bound_name, max_limit]),
+        response_id = base_test.send_request(base_test.get_request("lookup_accounts", [lower_bound_name, max_limit]),
                                              database_api_id)
         response = base_test.get_response(response_id)
         for account in response["result"]:
             list_account_names.append(account[0])
-
         if len(response["result"]) == max_limit:
             return self.get_nonexistent_account_name_for_lookup(base_test, database_api_id,
                                                                 lower_bound_name=list_account_names[-1],
                                                                 list_account_names=list_account_names)
 
         account_names_count = len(list_account_names)
-        result_lower_bound_name = list_account_names[len(list_account_names) // max_limit * max_limit]\
+        result_lower_bound_name = list_account_names[len(list_account_names) // max_limit * max_limit] \
             if account_names_count > 1000 else lower_bound_name
-        result_limit = account_names_count % max_limit + 1 if account_names_count > 1000\
+        result_limit = account_names_count % max_limit + 1 if account_names_count > 1000 \
             else account_names_count + 1
 
         return result_lower_bound_name, result_limit

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    is_dict, equal_to, check_that, is_none, has_length, is_not_none, starts_with
+from lemoncheesecake.matching import require_that, equal_to, check_that, has_length, starts_with
 
 from common.base_test import BaseTest
 
@@ -44,8 +43,7 @@ class LookupAccounts(BaseTest):
     def method_main_check(self):
         lcc.set_step("Lookup nathan account and check result structure")
         limit = 1
-        response_id = self.send_request(self.get_request("lookup_accounts",
-                                        [self.account_name, limit]),
+        response_id = self.send_request(self.get_request("lookup_accounts", [self.account_name, limit]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call method 'lookup_accounts' with lower_bound_name='{}',limit='{}' parameters".format(
@@ -55,7 +53,6 @@ class LookupAccounts(BaseTest):
         lookup_accounts = response["result"]
 
         for lookup_account in lookup_accounts:
-
             require_that(
                 "'lookup account",
                 lookup_account, has_length(2)
@@ -111,12 +108,10 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier)
 
         require_that("created account count", len(accounts_ids), equal_to(account_count))
-        lcc.log_info("Two accounts created, ids: '{}', '{}'".format(accounts_ids[0],
-                                                                    accounts_ids[1]))
+        lcc.log_info("Two accounts created, ids: '{}', '{}'".format(accounts_ids[0], accounts_ids[1]))
 
         lcc.set_step("Lookup created accounts")
-        response_id = self.send_request(self.get_request("lookup_accounts",
-                                        [valid_account_name, account_count]),
+        response_id = self.send_request(self.get_request("lookup_accounts", [valid_account_name, account_count]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call method 'lookup_accounts' with params: lower_bound_name='{}', limit='{}'".format(
@@ -183,9 +178,9 @@ class PositiveTesting(BaseTest):
         )
 
     @lcc.prop("type", "method")
-    @lcc.test("Check alphabet order in cutted accounts lookup info")
+    @lcc.test("Check alphabet order in cut accounts lookup info")
     @lcc.depends_on("DatabaseApi.LookupAccounts.LookupAccounts.method_main_check")
-    def check_alphabet_order_in_cutted_accounts_lookup_info(self, get_random_valid_account_name):
+    def check_alphabet_order_in_cut_accounts_lookup_info(self, get_random_valid_account_name):
         valid_account_name = get_random_valid_account_name
         limit = 1000
         account_public_key = self.generate_keys()
@@ -204,11 +199,11 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Call method 'lookup_accounts' with lower_bound_name='{}', limit='{}' parameters".format(
             valid_account_name, limit))
 
-        lcc.set_step("Check alphabet order in cutted accounts lookup info")
+        lcc.set_step("Check alphabet order in cut accounts lookup info")
         accounts = response["result"]
 
         account_names = [account[0] for account in accounts]
         require_that(
-            "'alphabet symbol order in cutted accounts lookup info'",
+            "'alphabet symbol order in cut accounts lookup info'",
             account_names, equal_to(sorted(account_names.copy()))
         )
