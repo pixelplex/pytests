@@ -226,14 +226,20 @@ class EchoOperations(object):
         return [operation_id, balance_claim_operation_props, signer]
 
     def get_create_contract_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
-                                      value_amount=0, value_asset_id="1.3.0", supported_asset_id="1.3.0",
+                                      value_amount=0, value_asset_id="1.3.0", supported_asset_id=None,
                                       eth_accuracy=False, signer=None, debug_mode=False):
+
+        def check(param, create_contract_props, key):
+            if param:
+                create_contract_props.update({key: param})
+
+            return create_contract_props
         operation_id = echo.config.operation_ids.CREATE_CONTRACT
         create_contract_props = deepcopy(self.get_operation_json("create_contract_operation"))
         create_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         create_contract_props.update(
-            {"registrar": registrar, "code": bytecode, "supported_asset_id": supported_asset_id,
-             "eth_accuracy": eth_accuracy})
+            {"registrar": registrar, "code": bytecode, "eth_accuracy": eth_accuracy})
+        create_contract_props = check(supported_asset_id, create_contract_props, "supported_asset_id")
         create_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug(
