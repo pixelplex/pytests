@@ -3,7 +3,7 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, is_, this_dict, greater_than_or_equal_to, check_that_entry, is_bool, \
-    is_list, has_length
+    is_list, has_length, check_that, equal_to, starts_with
 
 from common.base_test import BaseTest
 
@@ -71,9 +71,11 @@ class GetAccountWithdrawals(BaseTest):
                                                          self.__database_api_identifier)["result"]["eth_addr"]
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
+        unpaid_fee = self.eth_trx.get_unpaid_fee(self, new_account)
+
         lcc.set_step("Send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
-                                                            value=eth_amount)
+                                                            value=eth_amount + unpaid_fee)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get account balance in ethereum")
@@ -81,7 +83,7 @@ class GetAccountWithdrawals(BaseTest):
                                                            self.eth_asset)["amount"]
 
         lcc.set_step("First withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount = self.get_random_amount(_to=ethereum_balance)
+        withdraw_amount = self.get_random_amount(_to=int(ethereum_balance))
         withdraw_values.append(withdraw_amount)
         self.utils.perform_withdraw_eth_operation(self, new_account, eth_account_address, withdraw_amount,
                                                   self.__database_api_identifier)
@@ -99,7 +101,7 @@ class GetAccountWithdrawals(BaseTest):
                                                            self.eth_asset)["amount"]
 
         lcc.set_step("Second withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount = self.get_random_amount(_to=ethereum_balance)
+        withdraw_amount = self.get_random_amount(_to=int(ethereum_balance))
         withdraw_values.append(withdraw_amount)
         self.utils.perform_withdraw_eth_operation(self, new_account, eth_account_address, withdraw_amount,
                                                   self.__database_api_identifier)
