@@ -3,7 +3,7 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, \
-    equal_to, require_that, require_that_entry, less_than
+    equal_to, require_that, require_that_entry, greater_than
 
 from common.base_test import BaseTest
 
@@ -249,9 +249,8 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [self.echo_asset]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
-        with this_dict(response):
-            require_that_entry("asset_id", equal_to(self.echo_acc0))
-            require_that_entry("amount", less_than(new_asset_amount))
+        require_that("balance asset_id", response["asset_id"], equal_to(self.echo_asset))
+        require_that("balance asset amount", int(response["amount"]), greater_than(new_asset_amount))
 
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -265,9 +264,10 @@ class PositiveTesting(BaseTest):
             operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
                                                                            owner=new_account, amount=amounts[i],
                                                                            amount_asset_id=assets[i])
-            list_operations.append(operation)
-        collected_operation = self.collect_operations(list_operations, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            list_operations.append(collected_operation)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations)
 
         lcc.set_step("Get created vesting account balance")
         response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
@@ -277,5 +277,5 @@ class PositiveTesting(BaseTest):
             with this_dict(vesting_balances[i]):
                 check_that_entry("owner",  equal_to(new_account))
                 with this_dict(vesting_balances[i]["balance"]):
-                    check_that_entry("amount", ["amount"], equal_to(amounts[i]))
-                    check_that_entry("asset_id", ["asset_id"], equal_to(assets[i]))
+                    check_that_entry("amount", equal_to(amounts[i]))
+                    check_that_entry("asset_id", equal_to(assets[i]))
