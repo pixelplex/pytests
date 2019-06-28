@@ -48,7 +48,7 @@ for i in range(INITIAL_ACCOUNTS_COUNT):
     if "eth_address" in INITIAL_ACCOUNTS[i]:
         INITIAL_ACCOUNTS_ETH_ADDRESSES.append("0x" + INITIAL_ACCOUNTS[i]["eth_address"])
 ACCOUNT_PREFIX = "account"
-DEFAULT_ACCOUNTS_COUNT = 100
+DEFAULT_ACCOUNTS_COUNT = 1000
 MAIN_TEST_ACCOUNT_COUNT = 1
 BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_interval"]
 ETH_ASSET_SYMBOL = "EETH"
