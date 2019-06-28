@@ -15,6 +15,7 @@ services:
       - --db
       - /ganache_data
       - --defaultBalanceEther
+      - --verbose
       - '10000000'
     ports:
       - '56452:8545'
