@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_none, this_dict, has_length, check_that_entry, is_integer, is_, \
-    equal_to
+    equal_to, is_list
 
 from common.base_test import BaseTest
 
@@ -87,7 +87,7 @@ class SubscribeContracts(BaseTest):
 
         lcc.set_step("Check notice 'subscribe_contracts'")
         with this_dict(notice):
-            if check_that("global_properties", notice, has_length(5)):
+            if check_that("global_properties", notice, has_length(6)):
                 if not self.validator.is_contract_history_id(notice["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(notice["id"]))
                 else:
@@ -106,6 +106,7 @@ class SubscribeContracts(BaseTest):
                 else:
                     lcc.log_info("'next' has correct format: contract_history_object_type")
                 check_that_entry("next", is_("2.16.{}".format(str((int(notice["id"].split('.')[2]) - 1)))))
+                check_that_entry("extensions", is_list(), quiet=True)
 
 
 @lcc.prop("testing", "positive")
