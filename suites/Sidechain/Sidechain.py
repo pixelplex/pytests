@@ -110,11 +110,11 @@ class Sidechain(BaseTest):
         eth_amount = get_random_float_up_to_ten
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.eth_trx.get_unpaid_fee(self, self.new_account)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.new_account, in_ethereum=True)
 
         lcc.set_step("First send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
-                                                            value=min_eth_amount)
+                                                            value=min_eth_amount + unpaid_fee_in_ethereum)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get updated account balance in ethereum after first in")
@@ -124,7 +124,7 @@ class Sidechain(BaseTest):
         check_that(
             "'updated balance in ethereum'",
             ethereum_balance_first_in,
-            equal_to(self.utils.convert_ethereum_to_eeth(min_eth_amount) - unpaid_fee)
+            equal_to(self.utils.convert_ethereum_to_eeth(min_eth_amount))
         )
 
         lcc.set_step("Second send eth to ethereum address of created account")
@@ -222,7 +222,7 @@ class Sidechain(BaseTest):
                                                                 self.__database_api_identifier,
                                                                 log_broadcast=True)
 
-        lcc.set_step("Get addresses of created account in the network and store addresses")
+        lcc.set_step("Get addresses of account in the network and store addresses")
         _from, limit = 0, 100
         params = [self.echo_acc0, _from, limit]
         response_id = self.send_request(self.get_request("get_account_addresses", params),
@@ -230,11 +230,11 @@ class Sidechain(BaseTest):
         response = self.get_response(response_id)["result"]
         for i in range(len(response)):
             account_addresses.append(response[i]["address"])
-        lcc.log_info("Call method 'get_account_addresses' of new account")
+        lcc.log_info("Call method 'get_account_addresses' of '{}' account".format(self.echo_acc0))
 
         lcc.set_step("Transfer eeth assets via first account_address")
         transfer_amount = self.get_random_amount(_to=ethereum_balance)
-        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[0],
+        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[-1],
                                                           self.__database_api_identifier,
                                                           transfer_amount=transfer_amount,
                                                           amount_asset_id=self.eth_asset, log_broadcast=True)
@@ -254,7 +254,7 @@ class Sidechain(BaseTest):
 
         lcc.set_step("Transfer assets via second account_address")
         transfer_amount = self.get_random_amount(_to=ethereum_balance - transfer_amount)
-        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[1],
+        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[-2],
                                                           self.__database_api_identifier,
                                                           transfer_amount=transfer_amount,
                                                           amount_asset_id=self.eth_asset, log_broadcast=True)

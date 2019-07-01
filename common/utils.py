@@ -61,13 +61,12 @@ class Utils(object):
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if eth_addr is not None:
             operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id, debug_mode=True)[0]["amount"]
-        operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo,
-                                                              from_account_id=base_test.echo_acc0,
-                                                              to_account_id=account, amount=amount, debug_mode=True)
-        collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
+                                                              to_account_id=account, amount=amount)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
         return base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-                                            log_broadcast=True, debug_mode=True)
+                                            log_broadcast=log_broadcast)
 
     def get_nonexistent_asset_id(self, base_test, database_api_id, symbol=""):
         max_limit = 100
@@ -294,10 +293,10 @@ class Utils(object):
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_withdraw_eth_operation(echo=base_test.echo, account=registrar,
-                                                                  eth_addr=eth_addr, value=value, debug_mode=True)
-        collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
+                                                                  eth_addr=eth_addr, value=value)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-                                                        log_broadcast=True)
+                                                        log_broadcast=log_broadcast)
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception(
                 "Error: withdraw ethereum from '{}' account is not performed, response:\n{}".format(registrar,
@@ -384,7 +383,7 @@ class Utils(object):
         response_id = base_test.send_request(base_test.get_request("get_account_history_operations", params),
                                              history_api_id)
         response = base_test.get_response(response_id)
-        if response["result"]:
+        if len(response["result"]) == limit:
             return response
         if temp_count <= self.block_count:
             base_test.set_timeout_wait(timeout, print_log=False)
