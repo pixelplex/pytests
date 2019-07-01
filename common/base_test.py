@@ -16,7 +16,8 @@ from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
+    MAINTENANCE_INTERVAL
 
 
 class BaseTest(object):
@@ -478,9 +479,12 @@ class BaseTest(object):
     def wait_for_next_maintenance(self, database_api_identifier, print_log=True):
         time_now_in_sec = self.convert_time_in_seconds(self.get_time(global_time=True))
         next_maintenance_time_in_sec = self.convert_time_in_seconds(self.get_next_maintenance(database_api_identifier))
-        if next_maintenance_time_in_sec < time_now_in_sec:
+        if next_maintenance_time_in_sec == time_now_in_sec:
+            waiting_time = MAINTENANCE_INTERVAL
+        elif next_maintenance_time_in_sec < time_now_in_sec:
             raise Exception("Next maintenance time less than current time")
-        waiting_time = next_maintenance_time_in_sec - time_now_in_sec
+        else:
+            waiting_time = next_maintenance_time_in_sec - time_now_in_sec
         lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
         self.set_timeout_wait(waiting_time, print_log=print_log)
         lcc.log_info("Maintenance finished")

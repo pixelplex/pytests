@@ -44,6 +44,7 @@ ACCOUNT_PREFIX = "account"
 DEFAULT_ACCOUNTS_COUNT = 100
 MAIN_TEST_ACCOUNT_COUNT = 1
 BLOCK_RELEASE_INTERVAL = GENESIS["initial_parameters"]["block_interval"]
+MAINTENANCE_INTERVAL = GENESIS["initial_parameters"]["maintenance_interval"]
 ETH_ASSET_SYMBOL = "EETH"
 ETH_ASSET_ID = GENESIS["initial_parameters"]["sidechain_config"]["ETH_asset_id"]
 ETH_CONTRACT_ADDRESS = "0x" + GENESIS["initial_parameters"]["sidechain_config"]["eth_contract_address"]

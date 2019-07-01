@@ -13,6 +13,7 @@ SUITE = {
 @lcc.prop("testing", "main")
 @lcc.tags("change_active_committee_member")
 @lcc.suite("Check scenario 'Change active committee members'")
+@lcc.disabled()
 class ChangeActiveCommitteeMember(BaseTest):
 
     def __init__(self):

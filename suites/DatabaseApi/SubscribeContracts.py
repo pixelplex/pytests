@@ -236,7 +236,8 @@ class PositiveTesting(BaseTest):
         notice = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
-        response = self.get_contract_history(contract_id, limit=2)["result"]
+        limit = 2
+        response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
         self.check_operations_ids_in_notice(response, notice, contract_id)
@@ -251,7 +252,8 @@ class PositiveTesting(BaseTest):
         notice = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
-        response = self.get_contract_history(contract_id, limit=2)["result"]
+        limit = 2
+        response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
         self.check_operations_ids_in_notice(response, notice, contract_id)
@@ -312,7 +314,10 @@ class PositiveTesting(BaseTest):
         notice = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
-        response = self.get_contract_history(created_contract_id, limit=2, log_response=True)["result"]
+        limit = 2
+        response = self.get_contract_history(created_contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history created by another contract")
+        # todo: add info balance_obj, remove 'pop(0)'. Improve: ECHO-815
+        del response[0]
         self.check_operations_ids_in_notice(response, notice, created_contract_id)
