@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, has_entry, greater_than_or_equal_to, \
-    not_equal_to, equal_to
+    not_equal_to, equal_to, check_that_entry, is_list
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Method 'get_dynamic_global_properties'"
@@ -44,19 +43,19 @@ class GetDynamicGlobalProperties(BaseTest):
         dynamic_global_properties_time = ["time", "next_maintenance_time", "last_budget_time"]
         result = response["result"]
         with this_dict(result):
-            if check_that("dynamic global properties", result, has_length(13)):
+            if check_that("dynamic global properties", result, has_length(14)):
                 if not self.validator.is_dynamic_global_object_id(result["id"]):
-                    lcc.log_error("Wrong format of 'dynamic_global_object_id', got: {}".format(response["result"]))
+                    lcc.log_error("Wrong format of 'dynamic_global_object_id', got: {}".format(result))
                 else:
                     lcc.log_info("'id' has correct format: dynamic_global_object_id")
 
                 for i in range(len(dynamic_global_properties)):
-                    self.check_uint64_numbers(response["result"], dynamic_global_properties[i], quiet=True)
-                    value = int(response["result"][dynamic_global_properties[i]])
+                    self.check_uint64_numbers(result, dynamic_global_properties[i], quiet=True)
+                    value = int(result[dynamic_global_properties[i]])
                     check_that(dynamic_global_properties[i], value, greater_than_or_equal_to(0), quiet=True)
 
                 if not self.validator.is_hex(result["head_block_id"]):
-                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(response["result"]))
+                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(result))
                 else:
                     lcc.log_info("'head_block_id' has correct format: hex")
 
@@ -67,9 +66,10 @@ class GetDynamicGlobalProperties(BaseTest):
                                                                    result[dynamic_global_properties_time[i]]))
                     else:
                         lcc.log_info("'{}' has correct format: iso8601".format(dynamic_global_properties_time[i]))
-                self.check_uint256_numbers(response["result"], "recent_slots_filled", quiet=True)
-                value = int(response["result"]["recent_slots_filled"])
-                check_that(response["result"]["recent_slots_filled"], value, greater_than_or_equal_to(0), quiet=True)
+                self.check_uint256_numbers(result, "recent_slots_filled", quiet=True)
+                value = int(result["recent_slots_filled"])
+                check_that(result["recent_slots_filled"], value, greater_than_or_equal_to(0), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
 
 @lcc.prop("testing", "positive")
@@ -96,9 +96,8 @@ class PositiveTesting(BaseTest):
         response_1 = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_dynamic_global_properties' first time")
 
-        lcc.set_step("Wait for the release of a new block")
-        self.set_timeout_wait(BLOCK_RELEASE_INTERVAL)
-        lcc.log_info("Wait for the release of a new block, sleep='{}' seconds".format(BLOCK_RELEASE_INTERVAL))
+        lcc.set_step("Waiting for maintenance")
+        self.wait_for_next_maintenance(self.__api_identifier)
 
         lcc.set_step("Get dynamic global properties")
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"), self.__api_identifier)
@@ -111,15 +110,29 @@ class PositiveTesting(BaseTest):
         for i in (range(len(dynamic_properties))):
             check_that("'{}'".format(dynamic_properties[i]),
                        response_1[dynamic_properties[i]],
-                       not_equal_to(response_2[dynamic_properties[i]]), quiet=True)
+                       not_equal_to(response_2[dynamic_properties[i]]))
 
-        lcc.set_step("Check matching fields")
-        same_properties = ["id", "next_maintenance_time", "last_budget_time", "committee_budget",
-                           "accounts_registered_this_interval", "dynamic_flags"]
+        lcc.set_step("Check that the dynamic fields that can change at the time of maintenance")
+        properties = ["next_maintenance_time", "last_budget_time", "dynamic_flags"]
+        if response_1["dynamic_flags"] == response_2["dynamic_flags"]:
+            lcc.log_info("Checking the fields at the time after maintenance")
+            for i in (range(len(properties))):
+                check_that("'{}'".format(properties[i]),
+                           response_1[properties[i]],
+                           equal_to(response_2[properties[i]]))
+        else:
+            lcc.log_info("Checking the fields at the time of maintenance")
+            for i in (range(len(properties))):
+                check_that("'{}'".format(properties[i]),
+                           response_1[properties[i]],
+                           not_equal_to(response_2[properties[i]]))
+
+        lcc.set_step("Check matching dynamic fields")
+        same_properties = ["id", "committee_budget", "accounts_registered_this_interval"]
         for i in (range(len(same_properties))):
             check_that("'{}'".format(same_properties[i]),
                        response_1[same_properties[i]],
-                       equal_to(response_2[same_properties[i]]), quiet=True)
+                       equal_to(response_2[same_properties[i]]))
 
 
 @lcc.prop("testing", "negative")

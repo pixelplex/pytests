@@ -59,11 +59,7 @@ class GetEthAddress(BaseTest):
         lcc.log_info("Call method 'get_eth_address' of new account '{}'".format(new_account))
 
         lcc.set_step("Check simple work of method 'get_eth_address'")
-        check_that(
-            "'new account eth address'",
-            response["result"],
-            is_none(), quiet=True
-        )
+        check_that("'new account eth address'", response["result"], is_none(), quiet=True)
 
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
@@ -78,7 +74,7 @@ class GetEthAddress(BaseTest):
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
         with this_dict(result):
-            if check_that("account_eth_address", result, has_length(5)):
+            if check_that("account_eth_address", result, has_length(6)):
                 if not self.validator.is_eth_address_id(result["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
@@ -93,3 +89,4 @@ class GetEthAddress(BaseTest):
                     lcc.log_info("'eth_addr' has correct format: hex")
                 check_that_entry("is_approved", is_bool(), quiet=True)
                 check_that_entry("approves", is_list(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)

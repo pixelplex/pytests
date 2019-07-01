@@ -53,9 +53,10 @@ class LookupAccountNames(BaseTest):
             lcc.set_step("Checking account #{} - '{}'".format(i, params[i]))
             account_info = response["result"][i]
             with this_dict(account_info):
-                if not (18 < len(account_info) < 21):
+                if not (19 < len(account_info) < 22):
                     raise Exception(
-                        "Account object has wrong structure. Need len=[19, 20], got: {}".format(str(account_info)))
+                        "Account object has wrong structure. Need len=[20, 21], got len={}, response: {}".format(
+                            str(len(account_info)), str(account_info)))
                 self.check_fields_account_ids_format(account_info, "id")
                 if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
                     lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
@@ -86,13 +87,14 @@ class LookupAccountNames(BaseTest):
                 check_that_entry("blacklisting_accounts", is_list(), quiet=True)
                 check_that_entry("whitelisted_accounts", is_list(), quiet=True)
                 check_that_entry("blacklisted_accounts", is_list(), quiet=True)
-                if len(account_info) == 20:
+                if len(account_info) == 21:
                     if not self.validator.is_vesting_balance_id(account_info["cashback_vb"]):
                         lcc.log_error("Wrong format of 'cashback_vb', got: {}".format(account_info["cashback_vb"]))
                     else:
                         lcc.log_info("'cashback_vb' has correct format: vesting_balance_object_type")
                 check_that_entry("active_special_authority", is_list(), quiet=True)
                 check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
                 lcc.set_step("Check 'active' field")
                 with this_dict(account_info["active"]):
@@ -170,6 +172,7 @@ class PositiveTesting(BaseTest):
                 check_that_entry("active", equal_to(performed_operations["active"]))
                 check_that_entry("echorand_key", equal_to(performed_operations["echorand_key"]))
                 check_that_entry("options", equal_to(performed_operations["options"]))
+                check_that_entry("extensions", equal_to(performed_operations["extensions"]))
 
     @lcc.prop("type", "method")
     @lcc.test("Create account using account_create operation and "
@@ -216,3 +219,4 @@ class PositiveTesting(BaseTest):
                 check_that_entry("active", equal_to(account_info_2[i]["active"]))
                 check_that_entry("echorand_key", equal_to(account_info_2[i]["echorand_key"]))
                 check_that_entry("options", equal_to(account_info_2[i]["options"]))
+                check_that_entry("extensions", equal_to(account_info_2[i]["extensions"]))
