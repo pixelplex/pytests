@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import random
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, is_, this_dict, check_that_entry, greater_than, is_bool, is_list, \
     equal_to, check_that, starts_with, has_length
@@ -22,6 +24,10 @@ class GetAccountDeposits(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+
+    @staticmethod
+    def get_random_amount(_to, _from=0.01):
+        return round(random.uniform(_from, _to))
 
     def setup_suite(self):
         super().setup_suite()
@@ -66,13 +72,13 @@ class GetAccountDeposits(BaseTest):
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.eth_trx.get_unpaid_fee(self, new_account)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, new_account, in_ethereum=True)
 
         lcc.set_step("First send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
-                                                            value=eth_amount)
+                                                            value=eth_amount + unpaid_fee_in_ethereum)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
-        deposit_values.append(self.utils.convert_ethereum_to_eeth(eth_amount) - unpaid_fee)
+        deposit_values.append(self.utils.convert_ethereum_to_eeth(eth_amount))
 
         lcc.set_step("Store the first sent operation EthToEcho")
         sidechain_issue_operation = self.echo_ops.get_operation_json("sidechain_issue_operation", example=True)
@@ -82,6 +88,7 @@ class GetAccountDeposits(BaseTest):
         lcc.log_info("First deposit operation stored")
 
         lcc.set_step("Second send eth to ethereum address of created account")
+        eth_amount = eth_amount + eth_amount
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
@@ -108,7 +115,7 @@ class GetAccountDeposits(BaseTest):
             with this_dict(operation_in_history[1]):
                 check_that_entry("fee", equal_to(sidechain_issue_operations[i][1]["fee"]))
                 with this_dict(operation_in_history[1]["value"]):
-                    check_that_entry("amount", equal_to(sidechain_issue_operations[i][1]["value"]["amount"]))
+                    self.check_uint256_numbers(operation_in_history[1]["value"], "amount")
                     check_that_entry("asset_id", equal_to(sidechain_issue_operations[i][1]["value"]["asset_id"]))
                 check_that_entry("account", equal_to(sidechain_issue_operations[i][1]["account"]))
                 check_that_entry("deposit_id",
@@ -137,7 +144,7 @@ class GetAccountDeposits(BaseTest):
                 deposit_ids.append(deposit[i]["id"])
                 check_that_entry("deposit_id", greater_than(0), quiet=True)
                 check_that_entry("account", is_(new_account), quiet=True)
-                check_that_entry("value", is_(deposit_values[i]), quiet=True)
+                check_that("value", int(deposit[i]["value"]), is_(deposit_values[i]), quiet=False)
                 check_that_entry("is_approved", is_bool(), quiet=True)
                 check_that_entry("approves", is_list(), quiet=True)
                 check_that_entry("extensions", is_list(), quiet=True)

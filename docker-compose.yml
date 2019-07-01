@@ -15,6 +15,7 @@ services:
       - --db
       - /ganache_data
       - --defaultBalanceEther
+      - --verbose
       - '10000000'
     ports:
       - '56452:8545'
@@ -45,7 +46,7 @@ services:
 
 
   echo:
-    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
+    image: registry-gitlab.pixelplex.by/631_echo/echo:235cef00f54743bbba93f51e5044ba4677b30ce3
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
     command: '--data-dir=/echo/datadir/

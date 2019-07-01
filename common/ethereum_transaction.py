@@ -70,7 +70,7 @@ class EthereumTransactions(object):
             }
         )
         if in_ethereum:
-            return int(method_call_result.hex()[-64:], 16) / 1e18
+            return round(int(method_call_result.hex()[-64:], 16) / 1e18, 6)
         return round(int(method_call_result.hex()[-64:], 16) / 1e12)
 
     @staticmethod

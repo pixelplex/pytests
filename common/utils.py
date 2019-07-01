@@ -62,8 +62,7 @@ class Utils(object):
         if eth_addr is not None:
             operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo,
-                                                              from_account_id=base_test.echo_acc0,
+        operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         return base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
@@ -384,7 +383,7 @@ class Utils(object):
         response_id = base_test.send_request(base_test.get_request("get_account_history_operations", params),
                                              history_api_id)
         response = base_test.get_response(response_id)
-        if response["result"]:
+        if len(response["result"]) == limit:
             return response
         if temp_count <= self.block_count:
             base_test.set_timeout_wait(timeout, print_log=False)
