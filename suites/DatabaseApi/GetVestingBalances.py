@@ -2,7 +2,8 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, \
+    equal_to, require_that, require_that_entry, greater_than
 
 from common.base_test import BaseTest
 
@@ -57,6 +58,7 @@ class GetVestingBalances(BaseTest):
         lcc.set_step("Get vesting balance of account and store last vesting balance")
         response_id = self.send_request(self.get_request("get_vesting_balances", [self.echo_acc0]),
                                         self.__database_api_identifier)
+
         result = self.get_response(response_id)["result"][-1]
         lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(self.echo_acc0))
 
@@ -169,17 +171,19 @@ class PositiveTesting(BaseTest):
                 check_that("first element", first_element, is_(operation_data["policy"][0]))
                 with this_dict(second_element):
                     check_that_entry("begin_timestamp", is_(operation_data["policy"][1]["begin_timestamp"]))
-                    check_that_entry("vesting_cliff_seconds", is_(operation_data["policy"][1]["vesting_cliff_seconds"]))
+                    check_that_entry("vesting_cliff_seconds",
+                                     is_(operation_data["policy"][1]["vesting_cliff_seconds"]))
                     check_that_entry("vesting_duration_seconds",
                                      is_(operation_data["policy"][1]["vesting_duration_seconds"]))
                     check_that_entry("begin_balance", is_(operation_data["amount"]["amount"]))
 
         lcc.set_step("Perform vesting balance withdraw operation. Owner = new account")
         withdraw_amount_1 = self.get_random_amount(value_amount)
-        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account, withdraw_amount_1,
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account,
+                                                              withdraw_amount_1,
                                                               self.__database_api_identifier)
-        lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account, withdraw_amount_1))
-
+        lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account,
+                                                                                      withdraw_amount_1))
         lcc.set_step("Get vesting balance of created account after first withdraw")
         response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
                                         self.__database_api_identifier)
@@ -194,10 +198,11 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Perform vesting balance withdraw operation. Owner = new account. Withdraw all amount")
         withdraw_amount_2 = value_amount - withdraw_amount_1
-        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account, withdraw_amount_2,
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account,
+                                                              withdraw_amount_2,
                                                               self.__database_api_identifier)
-        lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account, withdraw_amount_2))
-
+        lcc.log_info("Withdraw vesting balance from '{}' account, amount='{}'".format(new_account,
+                                                                                      withdraw_amount_2))
         lcc.set_step("Get vesting balance of created account after second withdraw")
         response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
                                         self.__database_api_identifier)
@@ -210,5 +215,67 @@ class PositiveTesting(BaseTest):
         check_that("'balance_amount'", balance_amount, is_(0))
         check_that("'begin_balance'", begin_balance, is_(value_amount))
 
-# todo: need add checks for changing 'asset_id', '0', 'begin_timestamp', 'vesting_cliff_seconds',
-#  'vesting_duration_seconds'
+    # todo: need add checks for changing 'asset_id', '0', 'begin_timestamp', 'vesting_cliff_seconds',
+    #  'vesting_duration_seconds'
+    @lcc.prop("type", "method")
+    @lcc.test("Work of method 'get_vesting_balances' with created asset and echo asset")
+    @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
+    def create_vesting_balances_with_several_assets(self, get_random_valid_asset_name, get_random_integer,
+                                                    get_random_valid_account_name, get_random_integer_up_to_fifty):
+        new_asset_amount = get_random_integer
+        echo_asset_amount = get_random_integer_up_to_fifty
+        new_asset = get_random_valid_asset_name
+        new_account = get_random_valid_account_name
+        list_operations = []
+
+        lcc.set_step("Create asset and get new asset id")
+        new_asset = self.utils.get_asset_id(self, new_asset, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset))
+
+        lcc.set_step("Add created assets to account")
+        self.utils.add_assets_to_account(self, new_asset_amount, new_asset, self.echo_acc0,
+                                         self.__database_api_identifier)
+        lcc.log_info("Created '{}' assets added to '{}' account successfully".format(new_asset, self.echo_acc0))
+
+        lcc.set_step("Check that new assets are displayed on the account balance")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        with this_dict(response):
+            require_that_entry("asset_id", equal_to(new_asset))
+            require_that_entry("amount", equal_to(new_asset_amount))
+
+        lcc.set_step("Check that account have enough echo assets")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [self.echo_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("balance asset_id", response["asset_id"], equal_to(self.echo_asset))
+        require_that("balance asset amount", int(response["amount"]), greater_than(new_asset_amount))
+
+        lcc.set_step("Create and get new account")
+        new_account = self.get_account_id(new_account, self.__database_api_identifier,
+                                          self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
+
+        lcc.set_step("Perform vesting balance create operation. Owner = new account")
+        assets = [self.echo_asset, new_asset]
+        amounts = [echo_asset_amount, new_asset_amount]
+        for i in range(len(assets)):
+            operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
+                                                                           owner=new_account, amount=amounts[i],
+                                                                           amount_asset_id=assets[i])
+
+            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            list_operations.append(collected_operation)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations)
+
+        lcc.set_step("Get created vesting account balance")
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
+                                        self.__database_api_identifier)
+        vesting_balances = self.get_response(response_id)["result"]
+        for i in range(len(vesting_balances)):
+            with this_dict(vesting_balances[i]):
+                check_that_entry("owner",  equal_to(new_account))
+                with this_dict(vesting_balances[i]["balance"]):
+                    check_that_entry("amount", equal_to(amounts[i]))
+                    check_that_entry("asset_id", equal_to(assets[i]))
