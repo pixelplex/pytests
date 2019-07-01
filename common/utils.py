@@ -407,7 +407,7 @@ class Utils(object):
             return value / 10 ** 6
 
     def perform_vesting_balance_withdraw_operation(self, base_test, vesting_balance, owner, amount, database_api_id,
-                                                   log_broadcast=False):
+                                                   amount_asset_id="1.3.0", log_broadcast=False):
         if owner != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, owner, database_api_id,
                                                                vesting_balance=vesting_balance)
@@ -415,7 +415,8 @@ class Utils(object):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_vesting_balance_withdraw_operation(echo=base_test.echo,
                                                                               vesting_balance=vesting_balance,
-                                                                              owner=owner, amount=amount)
+                                                                              owner=owner, amount=amount,
+                                                                              amount_asset_id=amount_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)

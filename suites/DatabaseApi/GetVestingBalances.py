@@ -2,8 +2,8 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer,\
-    equal_to, require_that
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, \
+    equal_to, require_that, require_that_entry, greater_than
 
 from common.base_test import BaseTest
 
@@ -215,74 +215,67 @@ class PositiveTesting(BaseTest):
         check_that("'balance_amount'", balance_amount, is_(0))
         check_that("'begin_balance'", begin_balance, is_(value_amount))
 
-# todo: need add checks for changing 'asset_id', '0', 'begin_timestamp', 'vesting_cliff_seconds',
-#  'vesting_duration_seconds'
+    # todo: need add checks for changing 'asset_id', '0', 'begin_timestamp', 'vesting_cliff_seconds',
+    #  'vesting_duration_seconds'
     @lcc.prop("type", "method")
-    @lcc.test("Work of method 'get_vesting_balances' with new owner and asset")
-    #@lcc.tags("asd")
+    @lcc.test("Work of method 'get_vesting_balances' with created asset and echo asset")
     @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
-    def create_asset_and_get_vesting_balance_for_new_account(self, get_random_valid_asset_name, get_random_integer,
-                                                             get_random_valid_account_name):
-        value_amount = get_random_integer
-        asset_name = get_random_valid_asset_name
+    def create_vesting_balances_with_several_assets(self, get_random_valid_asset_name, get_random_integer,
+                                                    get_random_valid_account_name, get_random_integer_up_to_fifty):
+        new_asset_amount = get_random_integer
+        echo_asset_amount = get_random_integer_up_to_fifty
+        new_asset = get_random_valid_asset_name
+        new_account = get_random_valid_account_name
+        list_operations = []
+
         lcc.set_step("Create asset and get new asset id")
-        asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
-        lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
-        lcc.set_step("Get asset issue")
-        self.utils.add_assets_to_account(self, value_amount, asset_id, self.echo_acc0,
+        new_asset = self.utils.get_asset_id(self, new_asset, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset))
+
+        lcc.set_step("Add created assets to account")
+        self.utils.add_assets_to_account(self, new_asset_amount, new_asset, self.echo_acc0,
                                          self.__database_api_identifier)
-        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
+        lcc.log_info("Created '{}' assets added to '{}' account successfully".format(new_asset, self.echo_acc0))
+
+        lcc.set_step("Check that new assets are displayed on the account balance")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
-        require_that("asset_id", response["asset_id"], equal_to(asset_id))
-        require_that("amount", response["amount"], equal_to(value_amount))
-        lcc.set_step("Create account")
-        account = get_random_valid_account_name
-        account_id = self.get_account_id(account, self.__database_api_identifier,
-                                         self.__registration_api_identifier)
-        lcc.log_info("New account is: {}, id of new account: {}".format(account, account_id))
-        lcc.set_step("Get vesting balance with new owner: {}".format(account_id))
-        operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
-                                                                       owner=account_id, amount=value_amount,
-                                                                       amount_asset_id=asset_id,
-                                                                       begin_timestamp="2019-06-28T14:53:00",
-                                                                       vesting_cliff_seconds=0,
-                                                                       vesting_duration_seconds=2000,
-                                                                       debug_mode=True)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier, debug_mode=True)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=True)
-        vesting_balance_id = self.get_operation_results_ids(broadcast_result)
+        with this_dict(response):
+            require_that_entry("asset_id", equal_to(new_asset))
+            require_that_entry("amount", equal_to(new_asset_amount))
 
-        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [asset_id]]),
+        lcc.set_step("Check that account have enough echo assets")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [self.echo_asset]]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
-        require_that("asset_id", response["asset_id"], equal_to(asset_id))
-        require_that("amount", response["amount"], equal_to(0))
-        lcc.set_step("Get vesting balance for account: {}".format(account_id))
-        response_id = self.send_request(self.get_request("get_vesting_balances", [account_id]),
-                                        self.__database_api_identifier)
-        vesting_balance = self.get_response(response_id)["result"][0]
+        require_that("balance asset_id", response["asset_id"], equal_to(self.echo_asset))
+        require_that("balance asset amount", int(response["amount"]), greater_than(new_asset_amount))
 
-        with this_dict(vesting_balance):
-            check_that("owner", vesting_balance["owner"], equal_to(account_id))
-            check_that("amount", vesting_balance["balance"]["amount"], equal_to(value_amount))
-            check_that("asset_id", vesting_balance["balance"]["asset_id"], equal_to(asset_id))
-        balance_amount = vesting_balance["balance"]["amount"]
-        lcc.log_info("{}".format(balance_amount))
-        response_id = self.send_request(self.get_request("get_vesting_balances", [account_id]),
-                                        self.__database_api_identifier)
+        lcc.set_step("Create and get new account")
+        new_account = self.get_account_id(new_account, self.__database_api_identifier,
+                                          self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
-        vesting_balance = self.get_response(response_id)["result"][0]
-        balance_amount = vesting_balance["balance"]["amount"]
-        lcc.log_info("new account balance: {}".format(balance_amount))
-        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
-                                                              owner=account_id,
-                                                              amount=value_amount // 3,
-                                                              database_api_id=self.__database_api_identifier,
-                                                              amount_asset_id=asset_id)
-        response_id = self.send_request(self.get_request("get_vesting_balances", [account_id]),
+        lcc.set_step("Perform vesting balance create operation. Owner = new account")
+        assets = [self.echo_asset, new_asset]
+        amounts = [echo_asset_amount, new_asset_amount]
+        for i in range(len(assets)):
+            operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
+                                                                           owner=new_account, amount=amounts[i],
+                                                                           amount_asset_id=assets[i])
+
+            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            list_operations.append(collected_operation)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations)
+
+        lcc.set_step("Get created vesting account balance")
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account]),
                                         self.__database_api_identifier)
-        vesting_balance = self.get_response(response_id)["result"][0]
-        balance_amount = vesting_balance["balance"]["amount"]
-        lcc.log_info("{}".format(balance_amount))
+        vesting_balances = self.get_response(response_id)["result"]
+        for i in range(len(vesting_balances)):
+            with this_dict(vesting_balances[i]):
+                check_that_entry("owner",  equal_to(new_account))
+                with this_dict(vesting_balances[i]["balance"]):
+                    check_that_entry("amount", equal_to(amounts[i]))
+                    check_that_entry("asset_id", equal_to(assets[i]))
