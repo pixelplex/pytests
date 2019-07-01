@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that_entry, is_str, is_false, check_that, has_length, \
-    require_that, require_that_in, is_true, is_, not_equal_to
+    require_that, require_that_in, is_true, is_, not_equal_to, is_list
 
 from common.base_test import BaseTest
 
@@ -55,7 +55,7 @@ class GetContracts(BaseTest):
         lcc.set_step("Check simple work of method 'get_contracts'")
         result = response["result"][0]
         with this_dict(result):
-            if check_that("config", result, has_length(6)):
+            if check_that("config", result, has_length(7)):
                 if not self.validator.is_contract_id(result["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
@@ -68,6 +68,7 @@ class GetContracts(BaseTest):
                 check_that_entry("type", is_str("evm"))
                 check_that_entry("supported_asset_id", is_str(self.echo_asset))
                 check_that_entry("owner", is_(self.echo_acc0))
+                check_that_entry("extensions", is_list(), quiet=True)
 
 
 @lcc.prop("testing", "positive")

@@ -112,21 +112,6 @@ class PositiveTesting(BaseTest):
                        response_1[dynamic_properties[i]],
                        not_equal_to(response_2[dynamic_properties[i]]))
 
-        lcc.set_step("Check that the dynamic fields that can change at the time of maintenance")
-        properties = ["next_maintenance_time", "last_budget_time", "dynamic_flags"]
-        if response_1["dynamic_flags"] == response_2["dynamic_flags"]:
-            lcc.log_info("Checking the fields at the time after maintenance")
-            for i in (range(len(properties))):
-                check_that("'{}'".format(properties[i]),
-                           response_1[properties[i]],
-                           equal_to(response_2[properties[i]]))
-        else:
-            lcc.log_info("Checking the fields at the time of maintenance")
-            for i in (range(len(properties))):
-                check_that("'{}'".format(properties[i]),
-                           response_1[properties[i]],
-                           not_equal_to(response_2[properties[i]]))
-
         lcc.set_step("Check matching dynamic fields")
         same_properties = ["id", "committee_budget", "accounts_registered_this_interval"]
         for i in (range(len(same_properties))):

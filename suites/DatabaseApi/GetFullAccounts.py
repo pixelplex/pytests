@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_integer, is_str, is_dict, \
-    is_list, require_that, is_, equal_to
+    is_list, require_that, is_, equal_to, is_bool
 
 from common.base_test import BaseTest
 
@@ -56,7 +56,7 @@ class GetFullAccounts(BaseTest):
             if check_that("full_account_info", full_account_info, has_length(14)):
                 account_info = full_account_info.get("account")
                 with this_dict(account_info):
-                    if check_that("account_info", account_info, has_length(19)):
+                    if check_that("account_info", account_info, has_length(20)):
                         check_that_entry("id", is_str(params[i]))
                         if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
                             lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
@@ -89,6 +89,7 @@ class GetFullAccounts(BaseTest):
                         check_that_entry("blacklisted_accounts", is_list(), quiet=True)
                         check_that_entry("active_special_authority", is_list(), quiet=True)
                         check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+                        check_that_entry("extensions", is_list(), quiet=True)
 
                         lcc.set_step("Check 'active' field")
                         with this_dict(account_info["active"]):
@@ -110,7 +111,7 @@ class GetFullAccounts(BaseTest):
                 lcc.set_step("Check 'statistics' field")
                 account_statistics = full_account_info.get("statistics")
                 with this_dict(account_statistics):
-                    if check_that("account_statistics", account_statistics, has_length(10)):
+                    if check_that("account_statistics", account_statistics, has_length(13)):
                         if not self.validator.is_account_statistics_id(account_statistics["id"]):
                             lcc.log_error("Wrong format of 'id', got: {}".format(account_statistics["id"]))
                         else:
@@ -128,6 +129,9 @@ class GetFullAccounts(BaseTest):
                         check_that_entry("lifetime_fees_paid", is_integer(), quiet=True)
                         check_that_entry("pending_fees", is_integer(), quiet=True)
                         check_that_entry("pending_vested_fees", is_integer(), quiet=True)
+                        check_that_entry("generated_eth_address", is_bool(), quiet=True)
+                        check_that_entry("committeeman_rating", is_integer(), quiet=True)
+                        check_that_entry("extensions", is_list(), quiet=True)
 
                 with this_dict(full_account_info):
                     lcc.set_step("Check 'registrar_name', 'referrer_name', 'lifetime_referrer_name' fields")
@@ -154,7 +158,7 @@ class GetFullAccounts(BaseTest):
                     if balance:
                         for j in range(len(balance)):
                             lcc.set_step("Check 'balance #{}' field".format(str(j)))
-                            if check_that("account_balances", balance[j], has_length(4)):
+                            if check_that("account_balances", balance[j], has_length(5)):
                                 with this_dict(balance[j]):
                                     if not self.validator.is_account_balance_id(balance[j]["id"]):
                                         lcc.log_error(
@@ -168,6 +172,7 @@ class GetFullAccounts(BaseTest):
                                     else:
                                         lcc.log_info("'asset_type' has correct format: asset_object_type")
                                     check_that_entry("balance", is_integer(), quiet=True)
+                                    check_that_entry("extensions", is_list(), quiet=True)
                     lcc.set_step("Check 'vesting_balances' field")
                     check_that_entry("vesting_balances", is_list(), quiet=True)
                     lcc.set_step("Check 'limit_orders' field")
