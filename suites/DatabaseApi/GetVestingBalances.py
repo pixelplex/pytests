@@ -3,7 +3,8 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, \
-    equal_to, require_that, require_that_entry, greater_than
+    equal_to, require_that, require_that_entry, greater_than, less_than
+from echopy.echoapi.ws.exceptions import RPCError
 
 from common.base_test import BaseTest
 
@@ -112,6 +113,10 @@ class PositiveTesting(BaseTest):
     @staticmethod
     def get_random_amount(_to, _from=0):
         return round(random.uniform(_from, _to))
+
+    @staticmethod
+    def get_random_time_in_seconds(_from, _to):
+        return random.randint(_from, _to)
 
     def setup_suite(self):
         super().setup_suite()
@@ -279,3 +284,245 @@ class PositiveTesting(BaseTest):
                 with this_dict(vesting_balances[i]["balance"]):
                     check_that_entry("amount", equal_to(amounts[i]))
                     check_that_entry("asset_id", equal_to(assets[i]))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check policy with incorrect begin_timestamp")
+    @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
+    def check_withdraw_with_incorrect_begin_timestamp(self, get_random_valid_asset_name, get_random_integer,
+                                                      get_random_valid_account_name):
+        new_asset_amount = get_random_integer
+        new_asset = get_random_valid_asset_name
+        new_account = get_random_valid_account_name
+        begin_timestamp_future_seconds = 20
+        lcc.set_step("Create asset and get new asset id")
+        new_asset = self.utils.get_asset_id(self, new_asset, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset))
+
+        lcc.set_step("Add created assets to account")
+        self.utils.add_assets_to_account(self, new_asset_amount, new_asset, self.echo_acc0,
+                                         self.__database_api_identifier)
+        lcc.log_info("Created '{}' assets added to '{}' account successfully".format(new_asset, self.echo_acc0))
+
+        lcc.set_step("Check that new assets are displayed on the account balance")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(new_asset))
+        require_that("asset amount", response["amount"], equal_to(new_asset_amount))
+        lcc.set_step("Create new account")
+        new_account_id = self.get_account_id(new_account, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("New account is: {}, id of new account: {}".format(new_account, new_account_id))
+
+        lcc.set_step("Get vesting balance with new owner: {}".format(new_account_id))
+        time = self.utils.set_datetime(self.get_datetime(global_datetime=True),
+                                       seconds=begin_timestamp_future_seconds)
+        operation = self.echo_ops.get_vesting_balance_create_operation(
+            echo=self.echo, creator=self.echo_acc0,
+            owner=new_account_id, amount=new_asset_amount,
+            amount_asset_id=new_asset,
+            begin_timestamp=time,
+            vesting_cliff_seconds=0,
+            vesting_duration_seconds=0)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        vesting_balance_id = self.get_operation_results_ids(broadcast_result)
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(new_asset))
+        require_that("asset amount", int(response["amount"]), equal_to(0))
+
+        lcc.set_step("Get created vesting account balance")
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+
+        lcc.set_step("Withdraw balance form future to fall test")
+        try:
+            self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
+                                                                  owner=new_account_id,
+                                                                  amount=new_asset_amount,
+                                                                  database_api_id=self.__database_api_identifier,
+                                                                  amount_asset_id=new_asset)
+        except RPCError as e:
+            lcc.log_info(str(e))
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+        balance_amount = vesting_balance["balance"]["amount"]
+        check_that("balance_amount", balance_amount, equal_to(new_asset_amount))
+
+        lcc.set_step("Wait and withdraw balance to pass test")
+        self.set_timeout_wait(begin_timestamp_future_seconds)
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
+                                                              owner=new_account_id,
+                                                              amount=new_asset_amount,
+                                                              database_api_id=self.__database_api_identifier,
+                                                              amount_asset_id=new_asset)
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+        balance_amount = vesting_balance["balance"]["amount"]
+        check_that("balance_amount", balance_amount, equal_to(0))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check policy with incorrect vesting_cliff_seconds")
+    @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
+    def check_withdraw_with_incorrect_vesting_cliff_seconds(self, get_random_valid_asset_name, get_random_integer,
+                                                            get_random_valid_account_name):
+        new_asset_amount = get_random_integer
+        new_asset = get_random_valid_asset_name
+        new_account = get_random_valid_account_name
+        vesting_cliff_seconds = 20
+
+        lcc.set_step("Create asset and get new asset id")
+        new_asset = self.utils.get_asset_id(self, new_asset, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset))
+
+        lcc.set_step("Add created assets to account")
+        self.utils.add_assets_to_account(self, new_asset_amount, new_asset, self.echo_acc0,
+                                         self.__database_api_identifier)
+        lcc.log_info("Created '{}' assets added to '{}' account successfully".format(new_asset, self.echo_acc0))
+
+        lcc.set_step("Check that new assets are displayed on the account balance")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(new_asset))
+        require_that("asset amount", response["amount"], equal_to(new_asset_amount))
+
+        new_account_id = self.get_account_id(new_account, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("New account is: {}, id of new account: {}".format(new_account, new_account_id))
+
+        lcc.set_step("Get vesting balance with new owner: {}".format(new_account_id))
+        time = self.get_datetime(global_datetime=True)
+        operation = self.echo_ops.get_vesting_balance_create_operation(
+            echo=self.echo, creator=self.echo_acc0,
+            owner=new_account_id, amount=new_asset_amount,
+            amount_asset_id=new_asset,
+            begin_timestamp=time,
+            vesting_cliff_seconds=vesting_cliff_seconds,
+            vesting_duration_seconds=0)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        vesting_balance_id = self.get_operation_results_ids(broadcast_result)
+
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(new_asset))
+        require_that("asset amount", int(response["amount"]), equal_to(0))
+  
+        lcc.set_step("Withdraw balance with cliff second to fall test")
+        try:
+            self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
+                                                                  owner=new_account_id,
+                                                                  amount=new_asset_amount,
+                                                                  database_api_id=self.__database_api_identifier,
+                                                                  amount_asset_id=new_asset)
+            lcc.log_error("Error: balance ")
+        except RPCError as e:
+            lcc.log_info(str(e))
+
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+        balance_amount = vesting_balance["balance"]["amount"]
+        check_that("balance_amount", balance_amount, equal_to(new_asset_amount))
+
+        lcc.set_step("Wait 'cliff second' and Withdraw balance to pass test")
+        self.set_timeout_wait(vesting_cliff_seconds)
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
+                                                              owner=new_account_id,
+                                                              amount=new_asset_amount,
+                                                              database_api_id=self.__database_api_identifier,
+                                                              amount_asset_id=new_asset)
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+        balance_amount = vesting_balance["balance"]["amount"]
+        check_that("balance_amount", balance_amount, equal_to(0))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check policy with incorrect vesting_duration_seconds")
+    @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
+    def check_withdraw_with_correct_vesting_duration_seconds(self, get_random_valid_asset_name, get_random_integer,
+                                                             get_random_valid_account_name):
+        new_asset_amount = get_random_integer
+        new_asset = get_random_valid_asset_name
+        new_account = get_random_valid_account_name
+        vesting_duration_seconds = 60
+
+        lcc.set_step("Create asset and get new asset id")
+        new_asset = self.utils.get_asset_id(self, new_asset, self.__database_api_identifier)
+
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset))
+
+        lcc.set_step("Add created assets to account")
+        self.utils.add_assets_to_account(self, new_asset_amount, new_asset, self.echo_acc0,
+                                         self.__database_api_identifier)
+
+        lcc.log_info("Created '{}' assets added to '{}' account successfully".format(new_asset, self.echo_acc0))
+
+        lcc.set_step("Check that new assets are displayed on the account balance")
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(new_asset))
+        require_that("asset amount", response["amount"], equal_to(new_asset_amount))
+
+        new_account_id = self.get_account_id(new_account, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("New account is: {}, id of new account: {}".format(new_account, new_account_id))
+        lcc.set_step("Get vesting balance with new owner: {}".format(new_account_id))
+        time = self.get_datetime(global_datetime=True)
+        operation = self.echo_ops.get_vesting_balance_create_operation(
+            echo=self.echo, creator=self.echo_acc0,
+            owner=new_account_id, amount=new_asset_amount,
+            amount_asset_id=new_asset,
+            begin_timestamp=time,
+            vesting_cliff_seconds=0,
+            vesting_duration_seconds=vesting_duration_seconds)
+
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        vesting_balance_id = self.get_operation_results_ids(broadcast_result)
+        response_id = self.send_request(self.get_request("get_account_balances", [self.echo_acc0, [new_asset]]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"][0]
+        require_that("asset_id", response["asset_id"], equal_to(new_asset))
+        require_that("asset amount", int(response["amount"]), equal_to(0))
+
+        try:
+            self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
+                                                                  owner=new_account_id,
+                                                                  amount=new_asset_amount // 2,
+                                                                  database_api_id=self.__database_api_identifier,
+                                                                  amount_asset_id=new_asset)
+            lcc.log_error("Error: no access to balance")
+        except RPCError as e:
+            lcc.log_info(str(e))
+
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+        balance_amount = vesting_balance["balance"]["amount"]
+        check_that("balance_amount", balance_amount, equal_to(new_asset_amount))
+
+        lcc.set_step("Wait for third 'vesting_duration_seconds' to pass test")
+        self.set_timeout_wait(vesting_duration_seconds // 3)
+        self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,
+                                                              owner=new_account_id,
+                                                              amount=new_asset_amount // 3,
+                                                              database_api_id=self.__database_api_identifier,
+                                                              amount_asset_id=new_asset)
+        response_id = self.send_request(self.get_request("get_vesting_balances", [new_account_id]),
+                                        self.__database_api_identifier)
+        vesting_balance = self.get_response(response_id)["result"][0]
+        balance_amount = vesting_balance["balance"]["amount"]
+        check_that("balance_amount", balance_amount, less_than(new_asset_amount))

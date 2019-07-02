@@ -5,8 +5,8 @@ import math
 
 from fixtures.base_fixtures import get_random_valid_asset_name
 from project import BLOCK_RELEASE_INTERVAL, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD, GENESIS
-
-
+import datetime
+import time
 class Utils(object):
 
     def __init__(self):
@@ -448,3 +448,9 @@ class Utils(object):
                 "Error: vesting balance of '{}' account is not withdrawn, response:\n{}".format(owner,
                                                                                                 broadcast_result))
         return broadcast_result
+
+    def set_datetime(self, dt, year=0, month=0, day=0, hours=0, minutes=0, seconds=0):
+        ts = time.mktime(datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S").timetuple())
+        ts = ts + seconds + minutes * 60 + hours * 3600 + day * 3600 * 24 + month * 30 * 24 * 3600 + year * 12 * 30 * 24 * 3600
+        ts = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%dT%H:%M:%S")
+        return ts

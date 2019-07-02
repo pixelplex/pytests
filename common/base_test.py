@@ -71,6 +71,12 @@ class BaseTest(object):
     def get_time():
         return time.strftime("%H:%M:%S", time.localtime())
 
+    @staticmethod
+    def get_datetime(global_datetime=False):
+        if global_datetime:
+            return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+        return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+
     def set_timeout_wait(self, seconds, print_log=True):
         if print_log:
             lcc.log_info("Start a '{}' second sleep... local_time:'{}'".format(seconds, self.get_time()))
