@@ -12,7 +12,6 @@ SUITE = {
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_contract_fee_pool_balances")
-@lcc.hidden()
 @lcc.suite("Check work of method 'get_contract_fee_pool_balances '", rank=1)
 class GetContractFeePoolBalances(BaseTest):
 
@@ -52,6 +51,12 @@ class GetContractFeePoolBalances(BaseTest):
                                                                            value_to_poll,
                                                                            self.__database_api_identifier,
                                                                            log_broadcast=True)
+        contract_result = self.get_operation_results_ids(broadcast_result)
+        lcc.set_step("Get objects")
+        response_id = self.send_request(self.get_request("get_objects", [[contract_result]]),
+                                        self.__database_api_identifier, debug_mode=True)
+        response = self.get_response(response_id, log_response=True)
+        lcc.log_info("Call method")
 
         lcc.set_step("Get a contract's pool balance in default asset")
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),

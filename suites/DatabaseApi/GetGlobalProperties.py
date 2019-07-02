@@ -36,11 +36,7 @@ class GetGlobalProperties(BaseTest):
     def fee_with_price_per_kbyte(actual_fee):
         with this_dict(actual_fee):
             if check_that("fee", actual_fee, has_length(2)):
-                # todo: 44 operation has 'basic_fee'. Improve ECHO-916
-                if "fee" in actual_fee:
-                    check_that_entry("fee", is_integer(), quiet=True)
-                if "basic_fee" in actual_fee:
-                    check_that_entry("basic_fee", is_integer(), quiet=True)
+                check_that_entry("fee", is_integer(), quiet=True)
                 check_that_entry("price_per_kbyte", is_integer(), quiet=True)
 
     @staticmethod
