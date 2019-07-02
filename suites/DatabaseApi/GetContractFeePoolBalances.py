@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, require_that_entry, \
-    equal_to
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, require_that_entry, equal_to
 
 from common.base_test import BaseTest
 
@@ -62,8 +61,8 @@ class GetContractFeePoolBalances(BaseTest):
         lcc.set_step("Check simple work of method 'get_contract'")
         with this_dict(result):
             if check_that("contract pool balance", result, has_length(2)):
-                check_that_entry("amount", is_(value_to_pool))
-                check_that_entry("asset_id", is_(self.echo_asset))
+                check_that_entry("amount", equal_to(value_to_pool))
+                check_that_entry("asset_id", equal_to(self.echo_asset))
 
 
 @lcc.prop("testing", "positive")
@@ -148,7 +147,7 @@ class PositiveTesting(BaseTest):
         updated_fee_pool_balance = self.get_response(response_id)["result"]["amount"]
 
         lcc.set_step("Check that contract pool balance became empty")
-        check_that("'contract pool balance'", updated_fee_pool_balance, is_(fee_pool_balance - needed_fee))
+        check_that("'contract pool balance'", updated_fee_pool_balance, equal_to(fee_pool_balance - needed_fee))
 
         lcc.set_step("Get balances of new account and check that it empty")
         params = [new_account, [self.echo_asset]]
@@ -185,4 +184,56 @@ class PositiveTesting(BaseTest):
         updated_fee_pool_balance = self.get_response(response_id)["result"]["amount"]
 
         lcc.set_step("Check that contract pool balance became empty")
-        check_that("'contract pool balance'", updated_fee_pool_balance, is_(fee_pool_balance - needed_fee))
+        check_that("'contract pool balance'", updated_fee_pool_balance, equal_to(fee_pool_balance - needed_fee))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Add fee pool and destroy contract")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-680'")
+    @lcc.depends_on("DatabaseApi.GetContractFeePoolBalances.GetContractFeePoolBalances.method_main_check")
+    def add_fee_pool_and_destroy_contract(self, get_random_integer):
+        value_to_pool = get_random_integer
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+
+        lcc.set_step("Add fee pool to new contract")
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Fee pool added to '{}' contract successfully".format(contract_id))
+
+        lcc.set_step("Get balance of account and store")
+        params = [self.echo_acc0, [self.echo_asset]]
+        response_id = self.send_request(self.get_request("get_account_balances", params),
+                                        self.__database_api_identifier)
+        account_balance = self.get_response(response_id)["result"][0]["amount"]
+        lcc.log_info("'{}' account has '{}' '{}' assets".format(self.echo_acc0, account_balance, self.echo_asset))
+
+        lcc.set_step("Get a contract's fee pool balance before contract destroyed")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
+                                        self.__database_api_identifier)
+        fee_pool_balance = self.get_response(response_id)["result"]["amount"]
+        lcc.log_info(
+            "Call method 'get_contract_pool_balance' with param: '{}'. "
+            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+
+        lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.break_piggy, callee=contract_id)
+        needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        lcc.set_step("Check contract fee pool balance after contract destroyed")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
+                                        self.__database_api_identifier)
+        fee_pool_balance_after_destroy = self.get_response(response_id)["result"]["amount"]
+        check_that("'contract pool balance'", fee_pool_balance_after_destroy, equal_to(0))
+
+        lcc.set_step("Check account balance for refund")
+        params = [self.echo_acc0, [self.echo_asset]]
+        response_id = self.send_request(self.get_request("get_account_balances", params),
+                                        self.__database_api_identifier)
+        updated_account_balance = self.get_response(response_id)["result"][0]["amount"]
+        check_that("'account balance'", updated_account_balance,
+                   equal_to(account_balance + fee_pool_balance - needed_fee))
