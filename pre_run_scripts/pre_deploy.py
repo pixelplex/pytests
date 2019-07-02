@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
-from project import ECHO_INITIAL_BALANCE, NATHAN, INITIAL_ACCOUNTS_COUNT, INITIAL_ACCOUNTS_NAMES, \
+from project import ECHO_INITIAL_BALANCE, NATHAN_PK, INITIAL_ACCOUNTS_COUNT, INITIAL_ACCOUNTS_NAMES, \
     ACCOUNT_PREFIX, DEFAULT_ACCOUNTS_COUNT, MAIN_TEST_ACCOUNT_COUNT, WALLETS, INITIAL_ACCOUNTS_ETH_ADDRESSES, \
     ETH_ASSET_SYMBOL
 
@@ -13,7 +13,7 @@ def make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
     for i in range(1, DEFAULT_ACCOUNTS_COUNT):
         to_account_id = get_account_id(get_account(base_test, ACCOUNT_PREFIX + str(i), database_api))
         operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id, 1,
-                                                              signer=NATHAN)
+                                                              signer=NATHAN_PK)
         collected_operation = base_test.collect_operations(operation, database_api)
         list_operations.append(collected_operation)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
@@ -25,7 +25,7 @@ def add_balance_to_main_test_account(base_test, nathan_id, database_api):
     to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api))
     operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id,
                                                           BALANCE_TO_ACCOUNT,
-                                                          signer=NATHAN)
+                                                          signer=NATHAN_PK)
     collected_operation = base_test.collect_operations(operation, database_api)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                     log_broadcast=False)
@@ -54,7 +54,7 @@ def register_default_accounts(base_test, database_api):
         names = ACCOUNT_PREFIX + str(i)
         public_key = base_test.store_new_account(names)
         operation = base_test.echo_ops.get_account_create_operation(base_test.echo, names, public_key, public_key,
-                                                                    signer=NATHAN)
+                                                                    signer=NATHAN_PK)
         collected_operation = base_test.collect_operations(operation, database_api)
         list_operations.append(collected_operation)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
@@ -79,7 +79,7 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
         if INITIAL_ACCOUNTS_NAMES[i] != "nathan":
             to_account_id = get_account_id(get_account(base_test, INITIAL_ACCOUNTS_NAMES[i], database_api))
             operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id,
-                                                                  BALANCE_TO_ACCOUNT, signer=NATHAN)
+                                                                  BALANCE_TO_ACCOUNT, signer=NATHAN_PK)
             collected_operation = base_test.collect_operations(operation, database_api)
             list_operations.append(collected_operation)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=list_operations,
@@ -88,9 +88,9 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 
 
 def distribute_balance_between_committee_addresses(base_test):
-    default_account_balance = base_test.utils.get_address_balance_in_eth_network(base_test,
-                                                                                 base_test.web3.eth.accounts[0])
-    balance_to_transfer = default_account_balance / INITIAL_ACCOUNTS_COUNT
+    default_account_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3,
+                                                                                   base_test.web3.eth.accounts[0])
+    balance_to_transfer = int('{:.0f}'.format(default_account_balance / 100 * 5))
     for i in range(len(INITIAL_ACCOUNTS_ETH_ADDRESSES)):
         transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
                                                                  to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],
@@ -115,7 +115,7 @@ def get_account(base_test, account_name, database_api):
 
 def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
     operation = base_test.echo_ops.get_balance_claim_operation(base_test.echo, nathan_id, nathan_public_key,
-                                                               ECHO_INITIAL_BALANCE, NATHAN)
+                                                               ECHO_INITIAL_BALANCE, NATHAN_PK)
     collected_operation = base_test.collect_operations(operation, database_api)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                     log_broadcast=False)
@@ -124,7 +124,7 @@ def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_a
 
 def create_eth_asset_id(base_test, nathan_id, database_api):
     operation = base_test.echo_ops.get_asset_create_operation(base_test.echo, nathan_id, ETH_ASSET_SYMBOL,
-                                                              signer=NATHAN)
+                                                              signer=NATHAN_PK)
     collected_operation = base_test.collect_operations(operation, database_api)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                     log_broadcast=False)

@@ -3,8 +3,9 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, \
-    equal_to, require_that, require_that_entry, greater_than, less_than
+    equal_to, require_that, require_that_entry, greater_than, less_than, is_list
 from echopy.echoapi.ws.exceptions import RPCError
+
 
 from common.base_test import BaseTest
 
@@ -60,18 +61,19 @@ class GetVestingBalances(BaseTest):
         response_id = self.send_request(self.get_request("get_vesting_balances", [self.echo_acc0]),
                                         self.__database_api_identifier)
 
-        result = self.get_response(response_id)["result"][-1]
+        result = self.get_response(response_id, log_response=True)["result"][-1]
         lcc.log_info("Call method 'get_vesting_balances' with param: '{}'".format(self.echo_acc0))
 
         lcc.set_step("Check simple work of method 'get_vesting_balances'")
         with this_dict(result):
-            if check_that("balance_object", result, has_length(4)):
+            if check_that("balance_object", result, has_length(5)):
                 if not self.validator.is_vesting_balance_id(result["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
                     lcc.log_info("'id' has correct format: vesting_balance_object_type")
                 check_that_entry("id", is_(vesting_balance_id), quiet=True)
                 check_that_entry("owner", is_(self.echo_acc0), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
                 balance = result["balance"]
                 with this_dict(balance):
                     if check_that("balance", balance, has_length(2)):
@@ -416,7 +418,7 @@ class PositiveTesting(BaseTest):
         response = self.get_response(response_id)["result"][0]
         require_that("asset_id", response["asset_id"], equal_to(new_asset))
         require_that("asset amount", int(response["amount"]), equal_to(0))
-  
+
         lcc.set_step("Withdraw balance with cliff second to fall test")
         try:
             self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance=vesting_balance_id,

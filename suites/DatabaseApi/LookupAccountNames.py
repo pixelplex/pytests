@@ -29,56 +29,65 @@ class LookupAccountNames(BaseTest):
 
     def check_account_structure(self, account_info):
         with this_dict(account_info):
-            if check_that("account_info", account_info, has_length(19)):
-                self.check_fields_account_ids_format(account_info, "id")
-                if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
-                    lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
-                        account_info["membership_expiration_date"]))
+            if not (19 < len(account_info) < 22):
+                raise Exception(
+                    "Account object has wrong structure. Need len=[20, 21], got len={}, response: {}".format(
+                        str(len(account_info)), str(account_info)))
+            self.check_fields_account_ids_format(account_info, "id")
+            if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
+                lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
+                    account_info["membership_expiration_date"]))
+            else:
+                lcc.log_info("'membership_expiration_date' has correct format: iso8601")
+            account_ids_format = ["registrar", "referrer", "lifetime_referrer"]
+            for j in range(len(account_ids_format)):
+                self.check_fields_account_ids_format(account_info, account_ids_format[j])
+            check_that_entry("network_fee_percentage", is_integer(), quiet=True)
+            check_that_entry("lifetime_referrer_fee_percentage", is_integer(), quiet=True)
+            check_that_entry("referrer_rewards_percentage", is_integer(), quiet=True)
+            if not self.validator.is_account_name(account_info["name"]):
+                lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
+            else:
+                lcc.log_info("'name' has correct format: account_name")
+            check_that_entry("active", is_dict(), quiet=True)
+            if not self.validator.is_echo_rand_key(account_info["echorand_key"]):
+                lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
+            else:
+                lcc.log_info("'echorand_key' has correct format: echo_rand_key")
+            check_that_entry("options", is_dict(), quiet=True)
+            if not self.validator.is_account_statistics_id(account_info["statistics"]):
+                lcc.log_error("Wrong format of 'statistics', got: {}".format(account_info["statistics"]))
+            else:
+                lcc.log_info("'statistics' has correct format: account_statistics_object_type")
+            check_that_entry("whitelisting_accounts", is_list(), quiet=True)
+            check_that_entry("blacklisting_accounts", is_list(), quiet=True)
+            check_that_entry("whitelisted_accounts", is_list(), quiet=True)
+            check_that_entry("blacklisted_accounts", is_list(), quiet=True)
+            if len(account_info) == 21:
+                if not self.validator.is_vesting_balance_id(account_info["cashback_vb"]):
+                    lcc.log_error("Wrong format of 'cashback_vb', got: {}".format(account_info["cashback_vb"]))
                 else:
-                    lcc.log_info("'membership_expiration_date' has correct format: iso8601")
-                account_ids_format = ["registrar", "referrer", "lifetime_referrer"]
-                for j in range(len(account_ids_format)):
-                    self.check_fields_account_ids_format(account_info, account_ids_format[j])
-                check_that_entry("network_fee_percentage", is_integer(), quiet=True)
-                check_that_entry("lifetime_referrer_fee_percentage", is_integer(), quiet=True)
-                check_that_entry("referrer_rewards_percentage", is_integer(), quiet=True)
-                if not self.validator.is_account_name(account_info["name"]):
-                    lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
-                else:
-                    lcc.log_info("'name' has correct format: account_name")
-                check_that_entry("active", is_dict(), quiet=True)
-                if not self.validator.is_echo_rand_key(account_info["echorand_key"]):
-                    lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
-                else:
-                    lcc.log_info("'echorand_key' has correct format: echo_rand_key")
-                check_that_entry("options", is_dict(), quiet=True)
-                if not self.validator.is_account_statistics_id(account_info["statistics"]):
-                    lcc.log_error("Wrong format of 'statistics', got: {}".format(account_info["statistics"]))
-                else:
-                    lcc.log_info("'statistics' has correct format: account_statistics_object_type")
-                check_that_entry("whitelisting_accounts", is_list(), quiet=True)
-                check_that_entry("blacklisting_accounts", is_list(), quiet=True)
-                check_that_entry("whitelisted_accounts", is_list(), quiet=True)
-                check_that_entry("blacklisted_accounts", is_list(), quiet=True)
-                check_that_entry("active_special_authority", is_list(), quiet=True)
-                check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+                    lcc.log_info("'cashback_vb' has correct format: vesting_balance_object_type")
+            check_that_entry("active_special_authority", is_list(), quiet=True)
+            check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+            check_that_entry("extensions", is_list(), quiet=True)
 
-                lcc.set_step("Check 'active' field")
-                with this_dict(account_info["active"]):
-                    if check_that("active", account_info["active"], has_length(3)):
-                        check_that_entry("weight_threshold", is_integer(), quiet=True)
-                        check_that_entry("account_auths", is_list(), quiet=True)
-                        check_that_entry("key_auths", is_list(), quiet=True)
+            lcc.set_step("Check 'active' field")
+            with this_dict(account_info["active"]):
+                if check_that("active", account_info["active"], has_length(3)):
+                    check_that_entry("weight_threshold", is_integer(), quiet=True)
+                    check_that_entry("account_auths", is_list(), quiet=True)
+                    check_that_entry("key_auths", is_list(), quiet=True)
 
-                lcc.set_step("Check 'options' field")
-                with this_dict(account_info["options"]):
-                    if check_that("active", account_info["options"], has_length(5)):
-                        account_ids_format = ["voting_account", "delegating_account"]
-                        for k in range(len(account_ids_format)):
-                            self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
-                        check_that_entry("num_committee", is_integer(), quiet=True)
-                        check_that_entry("votes", is_list(), quiet=True)
-                        check_that_entry("extensions", is_list(), quiet=True)
+            lcc.set_step("Check 'options' field")
+            with this_dict(account_info["options"]):
+                if check_that("active", account_info["options"], has_length(5)):
+                    account_ids_format = ["voting_account", "delegating_account"]
+                    for k in range(len(account_ids_format)):
+                        self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
+                    check_that_entry("num_committee", is_integer(), quiet=True)
+                    check_that_entry("votes", is_list(), quiet=True)
+                    check_that_entry("extensions", is_list(), quiet=True)
 
     def setup_suite(self):
         super().setup_suite()

@@ -53,6 +53,7 @@ class GetAssets(BaseTest):
                 lcc.log_info("'issuer' has correct format: account_id")
 
             check_that_entry("options", is_dict(), quiet=True)
+            check_that_entry("extensions", is_list(), quiet=True)
             options = asset["options"]
             with this_dict(options):
                 require_that("'options'", options, has_length(12))
@@ -105,7 +106,7 @@ class GetAssets(BaseTest):
 
         require_that(
             "'length of default chain asset'",
-            asset, has_length(6)
+            asset, has_length(7)
         )
         self.check_asset_structure(asset)
 
@@ -127,7 +128,7 @@ class PositiveTesting(BaseTest):
     @staticmethod
     def check_created_asset(asset_info, performed_operation):
         if performed_operation["symbol"] == asset_info["symbol"]:
-            performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] =\
+            performed_operation["common_options"]["core_exchange_rate"]["quote"]["asset_id"] = \
                 asset_info["options"]["core_exchange_rate"]["quote"]["asset_id"]
             with this_dict(asset_info):
                 check_that_entry("issuer", equal_to(performed_operation["issuer"]))

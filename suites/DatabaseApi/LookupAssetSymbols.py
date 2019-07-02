@@ -85,6 +85,7 @@ class LookupAssetSymbols(BaseTest):
                 lcc.log_error("Wrong format of 'symbol', got: {}".format(asset["symbol"]))
             else:
                 lcc.log_info("'symbol' has correct format: asset_name")
+            check_that_entry("extensions", is_list(), quiet=True)
 
     def setup_suite(self):
         super().setup_suite()
@@ -107,7 +108,7 @@ class LookupAssetSymbols(BaseTest):
 
         require_that(
             "'length of asset got by symbol'",
-            asset_by_symbol, has_length(6)
+            asset_by_symbol, has_length(7)
         )
         self.check_asset_structure(asset_by_symbol)
 
@@ -121,7 +122,7 @@ class LookupAssetSymbols(BaseTest):
         asset_by_id = response["result"][0]
         require_that(
             "'length of asset got by id'",
-            asset_by_symbol, has_length(6)
+            asset_by_symbol, has_length(7)
         )
         self.check_asset_structure(asset_by_id)
         lcc.set_step("Compare 'lookup_asset_symbols' method calls results with different type of input params")

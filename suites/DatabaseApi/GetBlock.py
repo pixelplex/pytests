@@ -52,8 +52,7 @@ class GetBlock(BaseTest):
                 lcc.log_error("Wrong format of 'account id', got: {}".format(block_header["account"]))
             else:
                 lcc.log_info("'id' has correct format: account_id")
-            check_that_entry("transaction_merkle_root", is_str("0000000000000000000000000000000000000000"),
-                             quiet=True)
+            check_that_entry("transaction_merkle_root", is_str("0000000000000000000000000000000000000000"), quiet=True)
             check_that_entry("vm_root", is_str(), quiet=True)
             check_that_entry("extensions", is_list(), quiet=True)
             check_that_entry("ed_signature", is_str(), quiet=True)
@@ -70,16 +69,19 @@ class GetBlock(BaseTest):
             check_that_entry("_signatures", is_list(), quiet=True)
 
         signatures = certificate["_signatures"]
-        require_that(
-            "'_signatures'",
-            signatures, has_length(5)
-        )
-        for i in range(len(signatures)):
-            with this_dict(signatures[i]):
-                check_that_entry("_step", is_integer(), quiet=True)
-                check_that_entry("_value", is_integer(), quiet=True)
-                check_that_entry("_signer", is_integer(), quiet=True)
-                check_that_entry("_bba_sign", is_str(), quiet=True)
+        if block_header["account"] == "1.2.0":
+            check_that("'_signatures'", signatures, is_list([]), quiet=True)
+        else:
+            require_that(
+                "'_signatures'",
+                signatures, has_length(5)
+            )
+            for i in range(len(signatures)):
+                with this_dict(signatures[i]):
+                    check_that_entry("_step", is_integer(), quiet=True)
+                    check_that_entry("_value", is_integer(), quiet=True)
+                    check_that_entry("_signer", is_integer(), quiet=True)
+                    check_that_entry("_bba_sign", is_str(), quiet=True)
 
 
 @lcc.prop("testing", "positive")

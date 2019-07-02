@@ -31,13 +31,13 @@ class Sidechain(BaseTest):
 
     def withdraw_eth_to_ethereum_address(self, from_account, withdraw_amount):
         lcc.set_step("Get address balance in ethereum network")
-        eth_address_balance = self.utils.get_address_balance_in_eth_network(self, self.eth_address, currency="wei")
+        eth_address_balance = self.eth_trx.get_address_balance_in_eth_network(self.web3, self.eth_address,
+                                                                              currency="wei")
         lcc.log_info("Ethereum address has '{}' balance in ethereum".format(eth_address_balance))
 
         lcc.set_step("Withdraw eth to ethereum address")
-        self.utils.perform_withdraw_eth_operation_operation(self, from_account, self.eth_address[2:],
-                                                            withdraw_amount, self.__database_api_identifier,
-                                                            log_broadcast=True)
+        self.utils.perform_withdraw_eth_operation(self, from_account, self.eth_address, withdraw_amount,
+                                                  self.__database_api_identifier, log_broadcast=True)
 
         lcc.set_step("Get updated address balance in ethereum network")
         eth_address_balance_after_withdraw = self.utils.get_updated_address_balance_in_eth_network(self,
@@ -92,11 +92,6 @@ class Sidechain(BaseTest):
             equal_to(0)
         )
 
-        # todo: remove transfer to new account. Bug ECHO-926
-        operation = self.echo_ops.get_transfer_operation(self.echo, self.echo_acc0, self.new_account, amount=200000)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, self.new_account, self.__database_api_identifier,
                                                           log_broadcast=False)
@@ -115,11 +110,11 @@ class Sidechain(BaseTest):
         eth_amount = get_random_float_up_to_ten
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.utils.get_unpaid_fee(self, self.new_account)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.new_account, in_ethereum=True)
 
         lcc.set_step("First send eth to ethereum address of created account")
         transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
-                                                            value=min_eth_amount)
+                                                            value=min_eth_amount + unpaid_fee_in_ethereum)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get updated account balance in ethereum after first in")
@@ -129,7 +124,7 @@ class Sidechain(BaseTest):
         check_that(
             "'updated balance in ethereum'",
             ethereum_balance_first_in,
-            equal_to(self.utils.convert_ethereum_to_eeth(min_eth_amount) - unpaid_fee)
+            equal_to(self.utils.convert_ethereum_to_eeth(min_eth_amount))
         )
 
         lcc.set_step("Second send eth to ethereum address of created account")
@@ -204,7 +199,6 @@ class Sidechain(BaseTest):
         eth_amount = get_random_float_up_to_ten
         label = get_random_string
         addresses_count = 2
-        account_address_object = []
         account_addresses = []
 
         lcc.set_step("Send eth to ethereum address of created account")
@@ -224,21 +218,23 @@ class Sidechain(BaseTest):
 
         lcc.set_step("Create multiple account address for new account")
         for i in range(addresses_count):
-            broadcast_result = self.utils.perform_account_address_create_operation(self, self.echo_acc0, label + str(i),
-                                                                                   self.__database_api_identifier,
-                                                                                   log_broadcast=True)
-            account_address_object.append(self.get_operation_results_ids(broadcast_result))
+            self.utils.perform_account_address_create_operation(self, self.echo_acc0, label + str(i),
+                                                                self.__database_api_identifier,
+                                                                log_broadcast=True)
 
-        # todo: change to 'get_account_addresses'. Bug: "ECHO-843"
-        lcc.set_step("Get objects 'impl_account_address_object_type' and store addresses")
-        for i in range(len(account_address_object)):
-            param = [[account_address_object[i]]]
-            response_id = self.send_request(self.get_request("get_objects", param), self.__database_api_identifier)
-            account_addresses.append(self.get_response(response_id)["result"][0]["address"])
+        lcc.set_step("Get addresses of account in the network and store addresses")
+        _from, limit = 0, 100
+        params = [self.echo_acc0, _from, limit]
+        response_id = self.send_request(self.get_request("get_account_addresses", params),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"]
+        for i in range(len(response)):
+            account_addresses.append(response[i]["address"])
+        lcc.log_info("Call method 'get_account_addresses' of '{}' account".format(self.echo_acc0))
 
         lcc.set_step("Transfer eeth assets via first account_address")
         transfer_amount = self.get_random_amount(_to=ethereum_balance)
-        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[0],
+        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[-1],
                                                           self.__database_api_identifier,
                                                           transfer_amount=transfer_amount,
                                                           amount_asset_id=self.eth_asset, log_broadcast=True)
@@ -258,7 +254,7 @@ class Sidechain(BaseTest):
 
         lcc.set_step("Transfer assets via second account_address")
         transfer_amount = self.get_random_amount(_to=ethereum_balance - transfer_amount)
-        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[1],
+        self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[-2],
                                                           self.__database_api_identifier,
                                                           transfer_amount=transfer_amount,
                                                           amount_asset_id=self.eth_asset, log_broadcast=True)
