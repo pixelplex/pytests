@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
-    require_that, require_that_in
+    require_that, require_that_in, has_length
 
 from common.base_test import BaseTest
 
@@ -118,6 +118,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check new account history")
+    @lcc.tags("Bug: 'ECHO-700'")
+    @lcc.disabled()
     @lcc.depends_on("HistoryApi.GetAccountHistoryOperations.GetAccountHistoryOperations.method_main_check")
     def new_account_history(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
@@ -147,10 +149,10 @@ class PositiveTesting(BaseTest):
         new_asset_name = get_random_valid_asset_name
         operation_count = 1
         transfer_operation_id = self.echo.config.operation_ids.TRANSFER
-        create_asset_operation_id = 10
+        create_asset_operation_id = self.echo.config.operation_ids.ASSET_CREATE
         stop = start = "1.10.0"
-        # todo: change '2' to '100' . Bug: "ECHO-700"
-        limit = 2
+        # todo: change '1' to '100' . Bug: "ECHO-700"
+        limit = 1
         lcc.set_step("Create and get new account. Add balance to pay for asset_create_operation fee")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
@@ -164,7 +166,7 @@ class PositiveTesting(BaseTest):
             response = self.get_account_history_operations(new_account, transfer_operation_id, start, stop, limit)
             check_that(
                 "'number of history results'",
-                len(response["result"]), is_(operation_count)
+                response["result"], has_length(operation_count)
             )
 
         lcc.set_step("Perform asset create operation using a new account")
@@ -181,7 +183,7 @@ class PositiveTesting(BaseTest):
                                                            limit)
             check_that(
                 "'number of history results'",
-                len(response["result"]), is_(operation_count)
+                response["result"], has_length(operation_count)
             )
 
     @lcc.prop("type", "method")

@@ -43,7 +43,6 @@ class TransferAssetViaContactAddresses(BaseTest):
         new_account = get_random_valid_account_name
         label = get_random_string
         addresses_count = 2
-        account_address_object = []
         account_addresses = []
         transfer_amount = get_random_integer_up_to_hundred
         withdraw_amount = get_random_integer_up_to_fifty
@@ -59,16 +58,18 @@ class TransferAssetViaContactAddresses(BaseTest):
 
         lcc.set_step("Create multiple account address for new account")
         for i in range(addresses_count):
-            broadcast_result = self.utils.perform_account_address_create_operation(self, new_account, label + str(i),
-                                                                                   self.__database_api_identifier)
-            account_address_object.append(self.get_operation_results_ids(broadcast_result))
+            self.utils.perform_account_address_create_operation(self, new_account, label + str(i),
+                                                                self.__database_api_identifier)
 
-        # todo: change to 'get_account_addresses'. Bug: "ECHO-843"
-        lcc.set_step("Get objects 'impl_account_address_object_type' and store addresses")
-        for i in range(len(account_address_object)):
-            param = [[account_address_object[i]]]
-            response_id = self.send_request(self.get_request("get_objects", param), self.__database_api_identifier)
-            account_addresses.append(self.get_response(response_id)["result"][0]["address"])
+        lcc.set_step("Get addresses of created account in the network and store addresses")
+        _from, limit = 0, 100
+        params = [new_account, _from, limit]
+        response_id = self.send_request(self.get_request("get_account_addresses", params),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)["result"]
+        for i in range(len(response)):
+            account_addresses.append(response[i]["address"])
+        lcc.log_info("Call method 'get_account_addresses' of new account")
 
         lcc.set_step("Transfer assets via first account_address")
         self.utils.perform_transfer_to_address_operations(self, self.echo_acc0, account_addresses[0],

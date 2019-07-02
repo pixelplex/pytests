@@ -15,6 +15,7 @@ services:
       - --db
       - /ganache_data
       - --defaultBalanceEther
+      - --verbose
       - '10000000'
     ports:
       - '56452:8545'
@@ -23,7 +24,7 @@ services:
 
 
   migrate:
-    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:latest
+    image: registry-gitlab.pixelplex.by/631_echo/ethereum-smartcontracts:v0.8.1
     container_name: '631.echo.contracts.${ENV}'
     command: /bin/sh -c "sleep 5; npm run migrate -- --network docker;"
     depends_on:
@@ -36,8 +37,8 @@ services:
     environment:
       - BASE_URL=ws://echo:6311/ws
       - GANACHE_URL=http://ganache:8545
-      - NATHAN=9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw
-      - init0=3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy
+      - NATHAN_PK=9HtM5zchx6KSgoVtGFAykAYz4iwzyWey43387rzbDMNw
+      - INIT0_PK=3VUjJUVmYx9rsvSqjP8z6uiJeNViY2Qm322Y72udGFxy
     build: .
     command: ["python3", "test_runner.py"]
     container_name: '631.echo.pytests.${ENV}'
@@ -46,10 +47,10 @@ services:
 
 
   echo:
-    image: 856512532471.dkr.ecr.eu-central-1.amazonaws.com/echo-devnet:latest
+    image: registry-gitlab.pixelplex.by/631_echo/echo:235cef00f54743bbba93f51e5044ba4677b30ce3
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
-    command: '--echorand --data-dir=/echo/datadir/
+    command: '--data-dir=/echo/datadir/
       --genesis-json=/echo/genesis.json
       --rpc-endpoint=0.0.0.0:6311
       --start-echorand

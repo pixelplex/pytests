@@ -3,10 +3,10 @@ import json
 import os
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, is_not_none, check_that, has_length, is_
+from lemoncheesecake.matching import this_dict, is_not_none, check_that, has_length, is_, is_list, check_that_entry
 
 from common.base_test import BaseTest
-from project import init0, EXECUTION_STATUS_PATH
+from project import EXECUTION_STATUS_PATH, INIT0_PK
 
 SUITE = {
     "description": "Method 'get_balance_objects'"
@@ -59,7 +59,7 @@ class GetBalanceObjects(BaseTest):
                                             self.__database_api_identifier)
             result = self.get_response(response_id)["result"][0]
             with this_dict(result):
-                if check_that("balance_object", result, has_length(4)):
+                if check_that("balance_object", result, has_length(5)):
                     if not self.validator.is_balance_id(result["id"]):
                         lcc.log_error("Wrong format of 'balance_id', got: {}".format(result["id"]))
                     else:
@@ -74,6 +74,7 @@ class GetBalanceObjects(BaseTest):
                             lcc.log_error("Wrong format of 'asset_id', got: {}".format(result["balance"]["asset_id"]))
                         else:
                             lcc.log_info("'asset_id' has correct format: asset_object_type")
+                    check_that_entry("extensions", is_list(), quiet=True)
         else:
             lcc.log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
 
@@ -182,7 +183,7 @@ class PositiveTesting(BaseTest):
             operation = self.echo_ops.get_balance_claim_operation(echo=self.echo, deposit_to_account=account_id,
                                                                   balance_owner_public_key=public_key,
                                                                   value_amount=balance_amount,
-                                                                  balance_owner_private_key=init0,
+                                                                  balance_owner_private_key=INIT0_PK,
                                                                   balance_to_claim=balance_id)
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)

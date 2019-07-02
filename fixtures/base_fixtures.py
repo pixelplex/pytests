@@ -33,6 +33,13 @@ def get_random_integer_up_to_fifty():
 
 
 @lcc.fixture(scope="test")
+def get_random_integer_up_to_ten():
+    random_int = random.randrange(2, 10)
+    lcc.log_info("Generated random integer up to a ten: {}".format(random_int))
+    return random_int
+
+
+@lcc.fixture(scope="test")
 def get_random_float():
     random_float = random.uniform(NUM_RANGE_1, NUM_RANGE_2)
     lcc.log_info("Generated random float: {}".format(random_float))
