@@ -66,7 +66,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_block_header](https://echo-dev.io/developers/apis/database-api/#get_block_headerblock_num)
 - [x] [get_block](https://echo-dev.io/developers/apis/database-api/#get_blockblock_num)
 - [x] [get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)
-- [ ] [get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)
+- [x] [get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)
 - [x] [get_chain_properties](https://echo-dev.io/developers/apis/database-api/#get_chain_properties)
 - [x] [get_config](https://echo-dev.io/developers/apis/database-api/#get_config)
 - [x] [get_chain_id](https://echo-dev.io/developers/apis/database-api/#get_chain_id)
@@ -77,7 +77,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_account_by_name](https://echo-dev.io/developers/apis/database-api/#get_account_by_namename)
 - [ ] [get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)
 - [x] [lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)
-- [ ] [lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)
+- [x] [lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)
 - [x] [get_account_count](https://echo-dev.io/developers/apis/database-api/#get_account_count)
 - [x] [get_account_balances](https://echo-dev.io/developers/apis/database-api/#get_account_balancesid-assets)
 - [x] get_account_addresses

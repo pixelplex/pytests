@@ -35,15 +35,17 @@ class EchoOperations(object):
     def get_operation_json(variable_name, example=False):
         # Return needed operation template from json file
         if example:
-            return ECHO_OPERATIONS[variable_name]
-        return ECHO_OPERATIONS[variable_name][1]
+            return deepcopy(ECHO_OPERATIONS[variable_name])
+        return deepcopy(ECHO_OPERATIONS[variable_name][1])
 
     def get_transfer_operation(self, echo, from_account_id, to_account_id, amount=1, fee_amount=0, fee_asset_id="1.3.0",
-                               amount_asset_id="1.3.0", signer=None, debug_mode=False):
+                               amount_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.TRANSFER
-        transfer_props = deepcopy(self.get_operation_json("transfer_operation"))
+        transfer_props = self.get_operation_json("transfer_operation")
         transfer_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        transfer_props.update({"from": from_account_id, "to": to_account_id})
+        transfer_props.update({"from": from_account_id, "to": to_account_id, "extensions": extensions})
         transfer_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
         if debug_mode:
             lcc.log_debug("Transfer operation: \n{}".format(json.dumps(transfer_props, indent=4)))
@@ -55,8 +57,8 @@ class EchoOperations(object):
                                      fee_asset_id="1.3.0", registrar="1.2.12", referrer="1.2.12", referrer_percent=7500,
                                      active_weight_threshold=1, active_account_auths=None,
                                      options_voting_account="1.2.5", options_delegating_account="1.2.12",
-                                     options_num_committee=0, options_votes=None, options_extensions=None, signer=None,
-                                     debug_mode=False):
+                                     options_num_committee=0, options_votes=None, options_extensions=None,
+                                     extensions=None, signer=None, debug_mode=False):
         if isinstance(active_key_auths, str):
             active_key_auths = [[active_key_auths, 1]]
         if active_account_auths is None:
@@ -65,12 +67,14 @@ class EchoOperations(object):
             options_votes = []
         if options_extensions is None:
             options_extensions = []
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.ACCOUNT_CREATE
-        account_create_props = deepcopy(self.get_operation_json("account_create_operation"))
+        account_create_props = self.get_operation_json("account_create_operation")
         account_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         account_create_props.update(
             {"registrar": registrar, "referrer": referrer, "referrer_percent": referrer_percent, "name": name,
-             "echorand_key": echorand_key})
+             "echorand_key": echorand_key, "extensions": extensions})
         account_create_props["active"].update(
             {"weight_threshold": active_weight_threshold, "account_auths": active_account_auths,
              "key_auths": active_key_auths})
@@ -85,12 +89,14 @@ class EchoOperations(object):
 
     def get_account_update_operation(self, echo, account, weight_threshold=None, account_auths=None, key_auths=None,
                                      echorand_key=None, voting_account=None, delegating_account=None,
-                                     num_committee=None, votes=None, fee_amount=0, fee_asset_id="1.3.0", signer=None,
-                                     debug_mode=False):
+                                     num_committee=None, votes=None, fee_amount=0, fee_asset_id="1.3.0",
+                                     extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.ACCOUNT_UPDATE
-        account_update_props = deepcopy(self.get_operation_json("account_update_operation"))
+        account_update_props = self.get_operation_json("account_update_operation")
         account_update_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        account_update_props.update({"account": account})
+        account_update_props.update({"account": account, "extensions": extensions})
         if weight_threshold is not None:
             account_update_props["active"].update(
                 {"weight_threshold": weight_threshold, "account_auths": account_auths, "key_auths": key_auths})
@@ -113,12 +119,15 @@ class EchoOperations(object):
         return [operation_id, account_update_props, signer]
 
     def get_account_upgrade_operation(self, echo, account_to_upgrade, upgrade_to_lifetime_member=False, fee_amount=0,
-                                      fee_asset_id="1.3.0", signer=None, debug_mode=False):
+                                      fee_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.ACCOUNT_UPGRADE
-        account_upgrade_props = deepcopy(self.get_operation_json("account_upgrade_operation"))
+        account_upgrade_props = self.get_operation_json("account_upgrade_operation")
         account_upgrade_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         account_upgrade_props.update(
-            {"account_to_upgrade": account_to_upgrade, "upgrade_to_lifetime_member": upgrade_to_lifetime_member})
+            {"account_to_upgrade": account_to_upgrade, "upgrade_to_lifetime_member": upgrade_to_lifetime_member,
+             "extensions": extensions})
         if debug_mode:
             lcc.log_debug("Upgrade account operation: \n{}".format(json.dumps(account_upgrade_props, indent=4)))
         if signer is None:
@@ -131,7 +140,8 @@ class EchoOperations(object):
                                    issuer_permissions=79, flags=0, base_amount=1, base_asset_id="1.3.0",
                                    quote_amount=1, quote_asset_id="1.3.1", whitelist_authorities=None,
                                    blacklist_authorities=None, whitelist_markets=None, blacklist_markets=None,
-                                   description="", is_prediction_market=False, signer=None, debug_mode=False):
+                                   description="", is_prediction_market=False, extensions=None, signer=None,
+                                   debug_mode=False):
         if whitelist_authorities is None:
             whitelist_authorities = []
         if blacklist_authorities is None:
@@ -140,10 +150,13 @@ class EchoOperations(object):
             whitelist_markets = []
         if blacklist_markets is None:
             blacklist_markets = []
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.ASSET_CREATE
-        asset_create_props = deepcopy(self.get_operation_json("asset_create_operation"))
+        asset_create_props = self.get_operation_json("asset_create_operation")
         asset_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        asset_create_props.update({"issuer": issuer, "symbol": symbol, "precision": precision})
+        asset_create_props.update(
+            {"issuer": issuer, "symbol": symbol, "precision": precision, "extensions": extensions})
         asset_create_props["common_options"].update({"max_supply": max_supply, "market_fee_percent": market_fee_percent,
                                                      "max_market_fee": max_market_fee,
                                                      "issuer_permissions": issuer_permissions, "flags": flags})
@@ -163,11 +176,13 @@ class EchoOperations(object):
         return [operation_id, asset_create_props, signer]
 
     def get_asset_issue_operation(self, echo, issuer, value_amount, value_asset_id, issue_to_account, fee_amount=0,
-                                  fee_asset_id="1.3.0", signer=None, debug_mode=False):
+                                  fee_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.ASSET_ISSUE
-        asset_issue_props = deepcopy(self.get_operation_json("asset_issue_operation"))
+        asset_issue_props = self.get_operation_json("asset_issue_operation")
         asset_issue_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        asset_issue_props.update({"issuer": issuer, "issue_to_account": issue_to_account})
+        asset_issue_props.update({"issuer": issuer, "issue_to_account": issue_to_account, "extensions": extensions})
         asset_issue_props["asset_to_issue"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug("Asset issue operation: \n{}".format(json.dumps([operation_id, asset_issue_props], indent=4)))
@@ -177,12 +192,14 @@ class EchoOperations(object):
 
     def get_vesting_balance_create_operation(self, echo, creator, owner, fee_amount=0, fee_asset_id="1.3.0", amount=1,
                                              amount_asset_id="1.3.0", begin_timestamp="1970-01-01T00:00:00",
-                                             vesting_cliff_seconds=0, vesting_duration_seconds=0, signer=None,
-                                             debug_mode=False):
+                                             vesting_cliff_seconds=0, vesting_duration_seconds=0, extensions=None,
+                                             signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.VESTING_BALANCE_CREATE
         vesting_balance_create_props = deepcopy(self.get_operation_json("vesting_balance_create_operation"))
         vesting_balance_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        vesting_balance_create_props.update({"creator": creator, "owner": owner})
+        vesting_balance_create_props.update({"creator": creator, "owner": owner, "extensions": extensions})
         vesting_balance_create_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
         vesting_balance_create_props["policy"][1].update(
             {"begin_timestamp": begin_timestamp, "vesting_cliff_seconds": vesting_cliff_seconds,
@@ -195,11 +212,15 @@ class EchoOperations(object):
         return [operation_id, vesting_balance_create_props, signer]
 
     def get_vesting_balance_withdraw_operation(self, echo, vesting_balance, owner, fee_amount=0, fee_asset_id="1.3.0",
-                                               amount=1, amount_asset_id="1.3.0", signer=None, debug_mode=False):
+                                               amount=1, amount_asset_id="1.3.0", extensions=None, signer=None,
+                                               debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.VESTING_BALANCE_WITHDRAW
         vesting_balance_withdraw_props = deepcopy(self.get_operation_json("vesting_balance_withdraw_operation"))
         vesting_balance_withdraw_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        vesting_balance_withdraw_props.update({"vesting_balance": vesting_balance, "owner": owner})
+        vesting_balance_withdraw_props.update(
+            {"vesting_balance": vesting_balance, "owner": owner, "extensions": extensions})
         vesting_balance_withdraw_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
         if debug_mode:
             lcc.log_debug("Vesting balance withdraw operation: \n{}".format(
@@ -208,15 +229,36 @@ class EchoOperations(object):
             return [operation_id, vesting_balance_withdraw_props, owner]
         return [operation_id, vesting_balance_withdraw_props, signer]
 
+    def get_committee_member_create_operation(self, echo, committee_member_account, eth_address, fee_amount=0,
+                                              fee_asset_id="1.3.0", url="", extensions=None, signer=None,
+                                              debug_mode=False):
+        if extensions is None:
+            extensions = []
+        operation_id = echo.config.operation_ids.COMMITTEE_MEMBER_CREATE
+        committee_member_create_props = self.get_operation_json("committee_member_create_operation")
+        committee_member_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        committee_member_create_props.update(
+            {"committee_member_account": committee_member_account, "url": url, "eth_address": eth_address,
+             "extensions": extensions})
+        if debug_mode:
+            lcc.log_debug("Committee member create operation: \n{}".format(
+                json.dumps([operation_id, committee_member_create_props], indent=4)))
+        if signer is None:
+            return [operation_id, committee_member_create_props, committee_member_account]
+        return [operation_id, committee_member_create_props, signer]
+
     def get_balance_claim_operation(self, echo, deposit_to_account, balance_owner_public_key, value_amount,
                                     balance_owner_private_key=None, fee_amount=0, fee_asset_id="1.3.0",
-                                    balance_to_claim="1.13.0", value_asset_id="1.3.0", signer=None, debug_mode=False):
+                                    balance_to_claim="1.13.0", value_asset_id="1.3.0", extensions=None, signer=None,
+                                    debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.BALANCE_CLAIM
-        balance_claim_operation_props = deepcopy(self.get_operation_json("balance_claim_operation"))
+        balance_claim_operation_props = self.get_operation_json("balance_claim_operation")
         balance_claim_operation_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         balance_claim_operation_props.update(
             {"deposit_to_account": deposit_to_account, "balance_to_claim": balance_to_claim,
-             "balance_owner_key": balance_owner_public_key})
+             "balance_owner_key": balance_owner_public_key, "extensions": extensions})
         balance_claim_operation_props["total_claimed"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug("Balance claim operation: \n{}".format(
@@ -227,19 +269,21 @@ class EchoOperations(object):
 
     def get_create_contract_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
                                       value_amount=0, value_asset_id="1.3.0", supported_asset_id=None,
-                                      eth_accuracy=False, signer=None, debug_mode=False):
+                                      eth_accuracy=False, extensions=None, signer=None, debug_mode=False):
 
-        def check(param, create_contract_props, key):
-            if param:
-                create_contract_props.update({key: param})
-
-            return create_contract_props
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.CREATE_CONTRACT
-        create_contract_props = deepcopy(self.get_operation_json("create_contract_operation"))
+        create_contract_props = self.get_operation_json("create_contract_operation")
         create_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         create_contract_props.update(
-            {"registrar": registrar, "code": bytecode, "eth_accuracy": eth_accuracy})
-        create_contract_props = check(supported_asset_id, create_contract_props, "supported_asset_id")
+            {"registrar": registrar, "code": bytecode, "supported_asset_id": supported_asset_id,
+             "eth_accuracy": eth_accuracy, "extensions": extensions})
+        if supported_asset_id is not None:
+            create_contract_props.update(
+                {"supported_asset_id": supported_asset_id})
+        else:
+            del create_contract_props["supported_asset_id"]
         create_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug(
@@ -249,11 +293,15 @@ class EchoOperations(object):
         return [operation_id, create_contract_props, signer]
 
     def get_call_contract_operation(self, echo, registrar, bytecode, callee, fee_amount=0, fee_asset_id="1.3.0",
-                                    value_amount=0, value_asset_id="1.3.0", signer=None, debug_mode=False):
+                                    value_amount=0, value_asset_id="1.3.0", extensions=None, signer=None,
+                                    debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.CALL_CONTRACT
-        call_contract_props = deepcopy(self.get_operation_json("call_contract_operation"))
+        call_contract_props = self.get_operation_json("call_contract_operation")
         call_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        call_contract_props.update({"registrar": registrar, "code": bytecode, "callee": callee})
+        call_contract_props.update(
+            {"registrar": registrar, "code": bytecode, "callee": callee, "extensions": extensions})
         call_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug("Call contract operation: \n{}".format(json.dumps(call_contract_props, indent=4)))
@@ -262,11 +310,13 @@ class EchoOperations(object):
         return [operation_id, call_contract_props, signer]
 
     def get_account_address_create_operation(self, echo, owner, label, fee_amount=0, fee_asset_id="1.3.0",
-                                             signer=None, debug_mode=False):
+                                             extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.ACCOUNT_ADDRESS_CREATE
-        account_address_create_props = deepcopy(self.get_operation_json("account_address_create_operation"))
+        account_address_create_props = self.get_operation_json("account_address_create_operation")
         account_address_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        account_address_create_props.update({"owner": owner, "label": label})
+        account_address_create_props.update({"owner": owner, "label": label, "extensions": extensions})
         if debug_mode:
             lcc.log_debug(
                 "Account address create operation: \n{}".format(json.dumps(account_address_create_props, indent=4)))
@@ -275,11 +325,14 @@ class EchoOperations(object):
         return [operation_id, account_address_create_props, signer]
 
     def get_transfer_to_address_operation(self, echo, from_account_id, to_address, fee_amount=0, fee_asset_id="1.3.0",
-                                          amount=1, amount_asset_id="1.3.0", signer=None, debug_mode=False):
+                                          amount=1, amount_asset_id="1.3.0", extensions=None, signer=None,
+                                          debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.TRANSFER_TO_ADDRESS
-        transfer_to_address_props = deepcopy(self.get_operation_json("transfer_to_address_operation"))
+        transfer_to_address_props = self.get_operation_json("transfer_to_address_operation")
         transfer_to_address_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        transfer_to_address_props.update({"from": from_account_id, "to": to_address})
+        transfer_to_address_props.update({"from": from_account_id, "to": to_address, "extensions": extensions})
         transfer_to_address_props["amount"].update({"amount": amount, "asset_id": amount_asset_id})
         if debug_mode:
             lcc.log_debug("Transfer to address operation: \n{}".format(json.dumps(transfer_to_address_props, indent=4)))
@@ -287,12 +340,14 @@ class EchoOperations(object):
             return [operation_id, transfer_to_address_props, from_account_id]
         return [operation_id, transfer_to_address_props, signer]
 
-    def get_generate_eth_address_operation(self, echo, account, fee_amount=0, fee_asset_id="1.3.0", signer=None,
-                                           debug_mode=False):
+    def get_generate_eth_address_operation(self, echo, account, fee_amount=0, fee_asset_id="1.3.0", extensions=None,
+                                           signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.GENERATE_ETH_ADDRESS
-        generate_eth_address_props = deepcopy(self.get_operation_json("generate_eth_address_operation"))
+        generate_eth_address_props = self.get_operation_json("generate_eth_address_operation")
         generate_eth_address_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        generate_eth_address_props.update({"account": account})
+        generate_eth_address_props.update({"account": account, "extensions": extensions})
         if debug_mode:
             lcc.log_debug(
                 "Generate ethereum address operation: \n{}".format(json.dumps(generate_eth_address_props, indent=4)))
@@ -301,16 +356,33 @@ class EchoOperations(object):
         return [operation_id, generate_eth_address_props, signer]
 
     def get_withdraw_eth_operation(self, echo, account, eth_addr, value, fee_amount=0, fee_asset_id="1.3.0",
-                                   signer=None, debug_mode=False):
+                                   extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
         operation_id = echo.config.operation_ids.WITHDRAW_ETH
-        withdraw_eth_props = deepcopy(self.get_operation_json("withdraw_eth_operation"))
+        withdraw_eth_props = self.get_operation_json("withdraw_eth_operation")
         withdraw_eth_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        withdraw_eth_props.update({"account": account, "eth_addr": eth_addr, "value": value})
+        withdraw_eth_props.update({"account": account, "eth_addr": eth_addr, "value": value, "extensions": extensions})
         if debug_mode:
             lcc.log_debug("Withdraw ethereum operation: \n{}".format(json.dumps(withdraw_eth_props, indent=4)))
         if signer is None:
             return [operation_id, withdraw_eth_props, account]
         return [operation_id, withdraw_eth_props, signer]
+
+    def get_contract_fund_pool_operation(self, echo, sender, callee, fee_amount=0, fee_asset_id="1.3.0", value_amount=1,
+                                         value_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
+        operation_id = echo.config.operation_ids.CONTRACT_FUND_POOL
+        contract_fund_pool_props = self.get_operation_json("contract_fund_pool_operation")
+        contract_fund_pool_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        contract_fund_pool_props.update({"sender": sender, "callee": callee, "extensions": extensions})
+        contract_fund_pool_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
+        if debug_mode:
+            lcc.log_debug("Contract fund pool operation: \n{}".format(json.dumps(contract_fund_pool_props, indent=4)))
+        if signer is None:
+            return [operation_id, contract_fund_pool_props, sender]
+        return [operation_id, contract_fund_pool_props, signer]
 
     def broadcast(self, echo, list_operations, no_broadcast=False, get_signed_tx=False, log_broadcast=True,
                   debug_mode=False):

@@ -81,6 +81,7 @@ class ListAssets(BaseTest):
                 self.check_uint64_numbers(options, "max_supply", quiet=True)
                 check_that_entry("whitelist_authorities", is_list(), quiet=True)
                 check_that_entry("whitelist_markets", is_list(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
             check_that_entry("precision", is_integer(), quiet=True)
             if not self.validator.is_asset_name(asset["symbol"]):
@@ -108,7 +109,7 @@ class ListAssets(BaseTest):
 
         require_that(
             "'length of default chain asset'",
-            asset, has_length(6)
+            asset, has_length(7)
         )
         self.check_asset_structure(asset)
 

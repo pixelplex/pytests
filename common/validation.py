@@ -24,6 +24,8 @@ class Validator(object):
     contract_result_id_regex = re.compile(r"^1\.15\.(0|[1-9]\d*)$")
     block_id_regex = re.compile(r"^1\.16\.(0|[1-9]\d*)$")
     eth_address_id_regex = re.compile(r"^1\.17\.(0|[1-9]\d*)$")
+    deposit_eth_id_regex = re.compile(r"^1\.18\.(0|[1-9]\d*)$")
+    withdraw_eth_id_regex = re.compile(r"^1\.19\.(0|[1-9]\d*)$")
     global_object_id_regex = re.compile(r"^2.0.0$")
     dynamic_global_object_id_regex = re.compile(r"^2.1.0$")
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
@@ -155,6 +157,14 @@ class Validator(object):
     def is_eth_address_id(self, value):
         if self.is_string(value):
             return bool(self.eth_address_id_regex.match(value))
+
+    def is_deposit_eth_id(self, value):
+        if self.is_string(value):
+            return bool(self.deposit_eth_id_regex.match(value))
+
+    def is_withdraw_eth_id(self, value):
+        if self.is_string(value):
+            return bool(self.withdraw_eth_id_regex.match(value))
 
     def is_global_object_id(self, value):
         if self.is_string(value):
@@ -291,6 +301,9 @@ class Validator(object):
             return bool(self.iso8601_regex.match(value))
 
     def is_eth_address(self, value):
-        if not self.is_hex(value) or len(value) != 44 or value[:2] != "0x" and len(value) != 42:
+        if not self.is_hex(value):
             return False
-        return True
+        if value[:2] == "0x":
+            return len(value) == 42
+        else:
+            return len(value) == 40

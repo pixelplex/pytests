@@ -171,9 +171,7 @@ class PositiveTesting(BaseTest):
                                                                 value_amount=asset_value - i, value_asset_id=asset_id,
                                                                 issue_to_account=accounts_ids[i])
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            lcc.log_warn(str(collected_operation))
             list_operations.append(collected_operation)
-            lcc.log_warn(str(list_operations))
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations)
         if not self.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception("New asset holders did not added to '{}' asset_id".format(asset_id))
