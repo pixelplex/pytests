@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, require_that_entry, \
+    equal_to
 
 from common.base_test import BaseTest
 
@@ -42,15 +43,15 @@ class GetContractFeePoolBalances(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_contract_fee_pool_balances'")
     def method_main_check(self, get_random_integer):
-        value_to_poll = get_random_integer
+        value_to_pool = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get its contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
         lcc.set_step("Add fee pool to new contract")
-        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_poll,
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
                                                         self.__database_api_identifier)
-        lcc.log_info("Fee pull added to '{}' contract successfully".format(contract_id))
+        lcc.log_info("Fee pool added to '{}' contract successfully".format(contract_id))
 
         lcc.set_step("Get a contract's fee pool balance")
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
@@ -61,7 +62,127 @@ class GetContractFeePoolBalances(BaseTest):
         lcc.set_step("Check simple work of method 'get_contract'")
         with this_dict(result):
             if check_that("contract pool balance", result, has_length(2)):
-                check_that_entry("amount", is_(value_to_poll))
+                check_that_entry("amount", is_(value_to_pool))
                 check_that_entry("asset_id", is_(self.echo_asset))
 
 
+@lcc.prop("testing", "positive")
+@lcc.tags("database_api", "get_contract_fee_pool_balances")
+@lcc.suite("Positive testing of method 'get_contract_fee_pool_balances'", rank=2)
+class PositiveTesting(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+        self.contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+
+    def setup_suite(self):
+        super().setup_suite()
+        self._connect_to_echopy_lib()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
+
+    @lcc.prop("type", "method")
+    @lcc.test("Add fee pool and call contract using new account with empty balance")
+    @lcc.depends_on("DatabaseApi.GetContractFeePoolBalances.GetContractFeePoolBalances.method_main_check")
+    def add_fee_pool_to_call_contract(self, get_random_valid_account_name, get_random_integer_up_to_ten):
+        new_account = get_random_valid_account_name
+        contract_balance = get_random_integer_up_to_ten
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier,
+                                                 value_amount=contract_balance)
+
+        lcc.set_step("Create and get new account")
+        new_account = self.get_account_id(new_account, self.__database_api_identifier,
+                                          self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
+
+        lcc.set_step("Get balances of new account and check that it empty")
+        params = [new_account, [self.echo_asset]]
+        response_id = self.send_request(self.get_request("get_account_balances", params),
+                                        self.__database_api_identifier)
+        account_balance = self.get_response(response_id)["result"][0]
+        with this_dict(account_balance):
+            require_that_entry("amount", equal_to(0))
+            require_that_entry("asset_id", equal_to(self.echo_asset))
+
+        lcc.set_step("First: add fee pull to perform the call contract 'greet' method")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=new_account,
+                                                              bytecode=self.greet, callee=contract_id)
+        needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, needed_fee,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Added '{}' assets value to '{}' contract fee pool successfully".format(needed_fee, contract_id))
+
+        lcc.set_step("Get a contract's fee pool balance")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
+                                        self.__database_api_identifier)
+        fee_pool_balance = self.get_response(response_id)["result"]["amount"]
+        lcc.log_info(
+            "Call method 'get_contract_pool_balance' with param: '{}'. "
+            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+
+        lcc.set_step("Call 'greet' method using new account, that don't have any balance")
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        lcc.set_step("Get a contract's fee pool balance after contract call")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
+                                        self.__database_api_identifier)
+        updated_fee_pool_balance = self.get_response(response_id)["result"]["amount"]
+
+        lcc.set_step("Check that contract pool balance became empty")
+        check_that("'contract pool balance'", updated_fee_pool_balance, is_(fee_pool_balance - needed_fee))
+
+        lcc.set_step("Get balances of new account and check that it empty")
+        params = [new_account, [self.echo_asset]]
+        response_id = self.send_request(self.get_request("get_account_balances", params),
+                                        self.__database_api_identifier)
+        account_balance = self.get_response(response_id)["result"][0]
+        with this_dict(account_balance):
+            require_that_entry("amount", equal_to(0))
+            require_that_entry("asset_id", equal_to(self.echo_asset))
+
+        lcc.set_step("Second: add fee pull to perform the call contract 'get_pennie' method")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=new_account,
+                                                              bytecode=self.get_pennie, callee=contract_id)
+        needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, needed_fee,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Added '{}' assets value to '{}' contract fee pool successfully".format(needed_fee, contract_id))
+
+        lcc.set_step("Get a contract's fee pool balance")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
+                                        self.__database_api_identifier)
+        fee_pool_balance = self.get_response(response_id)["result"]["amount"]
+        lcc.log_info(
+            "Call method 'get_contract_pool_balance' with param: '{}'. "
+            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+
+        lcc.set_step("Call 'get_pennie' method using new account, that don't have any balance")
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        lcc.set_step("Get a contract's fee pool balance after contract call")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
+                                        self.__database_api_identifier)
+        updated_fee_pool_balance = self.get_response(response_id)["result"]["amount"]
+
+        lcc.set_step("Check that contract pool balance became empty")
+        check_that("'contract pool balance'", updated_fee_pool_balance, is_(fee_pool_balance - needed_fee))
