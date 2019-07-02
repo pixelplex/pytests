@@ -189,7 +189,7 @@ class PositiveTesting(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Add fee pool and destroy contract")
     @lcc.disabled()
-    @lcc.tags("Bug: 'ECHO-680'")
+    @lcc.tags("Bug: 'ECHO-1011'")
     @lcc.depends_on("DatabaseApi.GetContractFeePoolBalances.GetContractFeePoolBalances.method_main_check")
     def add_fee_pool_and_destroy_contract(self, get_random_integer):
         value_to_pool = get_random_integer
@@ -237,3 +237,5 @@ class PositiveTesting(BaseTest):
         updated_account_balance = self.get_response(response_id)["result"][0]["amount"]
         check_that("'account balance'", updated_account_balance,
                    equal_to(account_balance + fee_pool_balance - needed_fee))
+
+    # todo: add checks not echo asset, not enough pool for call contract
