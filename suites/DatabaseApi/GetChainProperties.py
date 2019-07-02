@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_dict, is_integer, has_entry
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_dict, is_integer, \
+    has_entry, is_list
 
 from common.base_test import BaseTest
 
@@ -36,7 +37,7 @@ class GetChainProperties(BaseTest):
 
         lcc.set_step("Check main fields")
         with this_dict(response["result"]):
-            if check_that("chain_properties", response["result"], has_length(3)):
+            if check_that("chain_properties", response["result"], has_length(4)):
                 if not self.validator.is_chain_property_object_id(response["result"]["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(response["result"]["id"]))
                 else:
@@ -46,6 +47,7 @@ class GetChainProperties(BaseTest):
                 else:
                     lcc.log_info("'chain_id' has correct format: hex")
                 check_that_entry("immutable_parameters", is_dict(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
         lcc.set_step("Check 'immutable_parameters'")
         immutable_parameters = response["result"]["immutable_parameters"]

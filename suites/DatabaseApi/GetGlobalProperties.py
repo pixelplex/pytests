@@ -85,7 +85,7 @@ class GetGlobalProperties(BaseTest):
 
     def check_sidechain_config(self, sidechain_config, eth_params, eth_methods):
         with this_dict(sidechain_config):
-            if check_that("sidechain_config", sidechain_config, has_length(9)):
+            if check_that("sidechain_config", sidechain_config, has_length(15)):
                 for i in range(len(eth_params)):
                     if not self.validator.is_hex(sidechain_config[eth_params[i]]):
                         lcc.log_error(
@@ -93,7 +93,7 @@ class GetGlobalProperties(BaseTest):
                     else:
                         lcc.log_info("'{}' has correct format: hex".format(eth_params[i]))
                 for i in range(len(eth_methods)):
-                    if check_that_entry([eth_methods[i]], is_dict(), quiet=True):
+                    if check_that_entry([eth_methods[i]], has_length(2)):
                         with this_dict(sidechain_config[eth_methods[i]]):
                             if not self.validator.is_hex(sidechain_config[eth_methods[i]]["method"]):
                                 lcc.log_error(
@@ -106,6 +106,32 @@ class GetGlobalProperties(BaseTest):
                     lcc.log_error("Wrong format of 'ETH_asset_id', got: {}".format(sidechain_config["ETH_asset_id"]))
                 else:
                     lcc.log_info("'ETH_asset_id' has correct format: eth_asset_id")
+                check_that_entry("erc20_deposit_topic", is_(""), quiet=True)
+                with this_dict(sidechain_config["fines"]):
+                    if check_that("fines", sidechain_config["fines"], has_length(1)):
+                        check_that_entry("generate_eth_address", is_(-10), quiet=True)
+                check_that_entry("waiting_blocks", is_integer(), quiet=True)
+
+    def check_erc20_config(self, erc20_config, erc20_methods):
+        with this_dict(erc20_config):
+            if check_that("erc20_config", erc20_config, has_length(6)):
+                if not self.validator.is_hex(erc20_config["contract_code"]):
+                    lcc.log_error(
+                        "Wrong format of 'contract_code', got: {}".format(erc20_config["contract_code"]))
+                else:
+                    lcc.log_info("'contract_code' has correct format: hex")
+                check_that_entry("create_token_fee", is_integer(), quiet=True)
+                check_that_entry("transfer_topic", is_(""), quiet=True)
+                for i in range(len(erc20_methods)):
+                    if check_that_entry([erc20_methods[i]], has_length(2)):
+                        with this_dict(erc20_config[erc20_methods[i]]):
+                            if not self.validator.is_hex(erc20_config[erc20_methods[i]]["method"]):
+                                lcc.log_error(
+                                    "Wrong format of '{}', got: {}".format(erc20_methods[i],
+                                                                           erc20_config[erc20_methods[i]]))
+                            else:
+                                lcc.log_info("'{}' has correct format: hex".format(erc20_methods[i]))
+                            check_that_entry("gas", is_integer(), quiet=True)
 
     def setup_suite(self):
         super().setup_suite()
@@ -135,11 +161,11 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check global parameters: 'current_fees' field")
         parameters = response["result"]["parameters"]
         with this_dict(parameters):
-            if check_that("parameters", parameters, has_length(29)):
+            if check_that("parameters", parameters, has_length(30)):
                 check_that_entry("current_fees", is_dict(), quiet=True)
                 check_that_entry("block_interval", is_integer(), quiet=True)
                 check_that_entry("maintenance_interval", is_integer(), quiet=True)
-                check_that_entry("maintenance_skip_slots", is_integer(), quiet=True)
+                check_that_entry("maintenance_duration_seconds", is_integer(), quiet=True)
                 check_that_entry("committee_proposal_review_period", is_integer(), quiet=True)
                 check_that_entry("maximum_transaction_size", is_integer(), quiet=True)
                 check_that_entry("maximum_block_size", is_integer(), quiet=True)
@@ -163,6 +189,7 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("max_authority_depth", is_integer(), quiet=True)
                 check_that_entry("echorand_config", is_dict(), quiet=True)
                 check_that_entry("sidechain_config", is_dict(), quiet=True)
+                check_that_entry("erc20_config", is_dict(), quiet=True)
                 check_that_entry("gas_price", is_dict(), quiet=True)
                 check_that_entry("extensions", is_list(), quiet=True)
 
@@ -176,18 +203,17 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check the count of fees for operations")
         require_that(
             "count of fees for operations",
-            # todo: Delete '-7' when all 55 operations will be added
-            len(current_fees["parameters"]), is_(len(self.all_operations) - 7)
+            len(current_fees["parameters"]), is_(len(self.all_operations))
         )
 
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
-        # todo: move to 'only_fee' ["transfer", "withdraw_permission_claim", "override_transfer"]. Bug ECHO-922
-        operations = ["transfer", "account_update", "asset_update", "proposal_create", "proposal_update",
-                      "withdraw_permission_claim", "custom", "override_transfer", "account_address_create"]
+        operations = ["account_update", "asset_update", "proposal_create", "proposal_update", "custom",
+                      "account_address_create"]
         self.check_default_fee_for_operation(current_fees["parameters"], operations, self.fee_with_price_per_kbyte)
 
         lcc.set_step("Check 'only_fee' for operations")
-        operations = ["limit_order_create", "limit_order_cancel", "call_order_update", "account_whitelist",
+        operations = ["transfer", "withdraw_permission_claim", "override_transfer", "limit_order_create",
+                      "limit_order_cancel", "call_order_update", "account_whitelist",
                       "account_transfer", "asset_update_bitasset", "asset_issue", "asset_update_feed_producers",
                       "asset_reserve", "asset_fund_fee_pool", "asset_settle", "asset_global_settle",
                       "asset_publish_feed", "witness_create", "witness_update", "proposal_delete",
@@ -235,9 +261,14 @@ class GetGlobalProperties(BaseTest):
         sidechain_config = parameters["sidechain_config"]
         eth_params = ["eth_contract_address", "eth_committee_updated_topic", "eth_gen_address_topic",
                       "eth_deposit_topic", "eth_withdraw_topic"]
-        # todo: add 'eth_update_addr_method'. Bug ECHO-917
-        eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method"]
+        eth_methods = ["eth_committee_update_method", "eth_gen_address_method", "eth_withdraw_method",
+                       "eth_update_addr_method", "eth_withdraw_token_method", "eth_collect_tokens_method"]
         self.check_sidechain_config(sidechain_config, eth_params, eth_methods)
+
+        lcc.set_step("Check global parameters: 'erc20_config' field")
+        erc20_config = parameters["erc20_config"]
+        erc20_methods = ["check_balance_method", "burn_method", "issue_method"]
+        self.check_erc20_config(erc20_config, erc20_methods)
 
         lcc.set_step("Check global parameters: 'gas_price' field")
         gas_price = parameters["gas_price"]

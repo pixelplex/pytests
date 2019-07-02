@@ -2,7 +2,7 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_, is_integer, is_list
 
 from common.base_test import BaseTest
 
@@ -62,13 +62,14 @@ class GetVestingBalances(BaseTest):
 
         lcc.set_step("Check simple work of method 'get_vesting_balances'")
         with this_dict(result):
-            if check_that("balance_object", result, has_length(4)):
+            if check_that("balance_object", result, has_length(5)):
                 if not self.validator.is_vesting_balance_id(result["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
                     lcc.log_info("'id' has correct format: vesting_balance_object_type")
                 check_that_entry("id", is_(vesting_balance_id), quiet=True)
                 check_that_entry("owner", is_(self.echo_acc0), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
                 balance = result["balance"]
                 with this_dict(balance):
                     if check_that("balance", balance, has_length(2)):

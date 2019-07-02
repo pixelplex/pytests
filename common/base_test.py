@@ -17,7 +17,7 @@ from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
-    EXECUTION_STATUS_PATH
+    EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL
 
 
 class BaseTest(object):
@@ -68,15 +68,20 @@ class BaseTest(object):
             check_that_entry(key, is_integer(), quiet=quiet)
 
     @staticmethod
-    def get_time():
+    def get_time(global_time=False):
+        if global_time:
+            return time.strftime("%H:%M:%S", time.gmtime())
         return time.strftime("%H:%M:%S", time.localtime())
 
     def set_timeout_wait(self, seconds, print_log=True):
         if print_log:
-            lcc.log_info("Start a '{}' second sleep... local_time:'{}'".format(seconds, self.get_time()))
+            lcc.log_info("Start a '{}' second(s) sleep..."
+                         "\nglobal_time:'{}'"
+                         "\nlocal_time:'{}'".format(seconds, self.get_time(global_time=True), self.get_time()))
         time.sleep(seconds)
         if print_log:
-            lcc.log_info("Sleep is over, local_time:'{}'".format(self.get_time()))
+            lcc.log_info("Sleep is over.\nglobal_time:'{}'\nlocal_time:'{}'".format(self.get_time(global_time=True),
+                                                                                    self.get_time()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):
@@ -466,6 +471,33 @@ class BaseTest(object):
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result]),
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
+
+    def get_next_maintenance_time(self, database_api_identifier):
+        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), database_api_identifier)
+        next_maintenance_time = self.get_response(response_id)["result"]["next_maintenance_time"].split('T')[1]
+        lcc.log_info("Next maintenance time: '{}' in global time".format(next_maintenance_time))
+        return next_maintenance_time
+
+    @staticmethod
+    def convert_time_in_seconds(time_format, separator=":"):
+        time_format = time_format.split(separator)
+        time_in_seconds = (int(time_format[0]) * 3600 + int(time_format[1]) * 60 + int(time_format[2]))
+        return time_in_seconds
+
+    @staticmethod
+    def get_waiting_time_till_maintenance(next_maintenance_time_in_sec, time_now_in_sec):
+        if next_maintenance_time_in_sec > time_now_in_sec:
+            return next_maintenance_time_in_sec - time_now_in_sec
+        return BLOCK_RELEASE_INTERVAL
+
+    def wait_for_next_maintenance(self, database_api_identifier, print_log=True):
+        next_maintenance_time_in_sec = self.convert_time_in_seconds(
+            self.get_next_maintenance_time(database_api_identifier))
+        time_now_in_sec = self.convert_time_in_seconds(self.get_time(global_time=True))
+        waiting_time = self.get_waiting_time_till_maintenance(next_maintenance_time_in_sec, time_now_in_sec)
+        lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
+        self.set_timeout_wait(waiting_time, print_log=print_log)
+        lcc.log_info("Maintenance finished")
 
     @staticmethod
     def _login_status(response):

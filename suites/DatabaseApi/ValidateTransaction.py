@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, check_that, is_true, equal_to, has_length
+from lemoncheesecake.matching import require_that, check_that, equal_to, has_length
 
 from common.base_test import BaseTest
 
