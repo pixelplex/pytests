@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import datetime
+import time
+
 import math
 
 from fixtures.base_fixtures import get_random_valid_asset_name
@@ -17,7 +20,8 @@ class Utils(object):
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
                                    lifetime=None, eth_address=None, update_account=None, eth_addr=None,
-                                   vesting_balance=None, fee_pool=None, only_in_history=False, log_broadcast=False):
+                                   vesting_balance=None, fee_pool=None, create_vesting_balance=None,
+                                   only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -68,6 +72,9 @@ class Utils(object):
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if fee_pool is not None:
             operation = base_test.echo_ops.get_operation_json("contract_fund_pool_operation", example=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if create_vesting_balance is not None:
+            operation = base_test.echo_ops.get_operation_json("vesting_balance_create_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
@@ -443,8 +450,32 @@ class Utils(object):
         if currency == "ether":
             return value / 10 ** 6
 
+    def perform_vesting_balance_create_operation(self, base_test, creator, owner, amount, database_api_id,
+                                                 amount_asset_id="1.3.0", begin_timestamp="1970-01-01T00:00:00",
+                                                 cliff_seconds=0, duration_seconds=0, create_vesting_balance=True,
+                                                 log_broadcast=False):
+        if owner != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, owner, database_api_id,
+                                                               create_vesting_balance=create_vesting_balance)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_vesting_balance_create_operation(echo=base_test.echo, creator=creator,
+                                                                            owner=owner, amount=amount,
+                                                                            amount_asset_id=amount_asset_id,
+                                                                            begin_timestamp=begin_timestamp,
+                                                                            vesting_cliff_seconds=cliff_seconds,
+                                                                            vesting_duration_seconds=duration_seconds)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception(
+                "Error: vesting balance of '{}' account is not withdrawn, response:\n{}".format(owner,
+                                                                                                broadcast_result))
+        return broadcast_result
+
     def perform_vesting_balance_withdraw_operation(self, base_test, vesting_balance, owner, amount, database_api_id,
-                                                   log_broadcast=False):
+                                                   amount_asset_id="1.3.0", log_broadcast=False):
         if owner != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, owner, database_api_id,
                                                                vesting_balance=vesting_balance)
@@ -452,7 +483,8 @@ class Utils(object):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_vesting_balance_withdraw_operation(echo=base_test.echo,
                                                                               vesting_balance=vesting_balance,
-                                                                              owner=owner, amount=amount)
+                                                                              owner=owner, amount=amount,
+                                                                              amount_asset_id=amount_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
@@ -461,6 +493,13 @@ class Utils(object):
                 "Error: vesting balance of '{}' account is not withdrawn, response:\n{}".format(owner,
                                                                                                 broadcast_result))
         return broadcast_result
+
+    @staticmethod
+    def set_datetime_variable(dt, year=0, month=0, day=0, hours=0, minutes=0, seconds=0):
+        ts = time.mktime(datetime.datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S").timetuple())
+        ts = ts + seconds + minutes * 60 + hours * 3600 + day * 86400 + month * 2592000 + year * 31104000
+        ts = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%dT%H:%M:%S")
+        return ts
 
     def get_account_history_operations(self, base_test, account_id, operation_id, history_api_id, limit, start="1.10.0",
                                        stop="1.10.0", temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
