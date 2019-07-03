@@ -477,14 +477,15 @@ class Utils(object):
             "Waiting time result='{}'".format(operation_id, account_id, self.waiting_time_result))
 
     @staticmethod
-    def perform_contract_fund_pool_operation(base_test, sender, callee, value_amount, database_api_id,
-                                             log_broadcast=False):
+    def perform_contract_fund_pool_operation(base_test, sender, contract, value_amount, database_api_id,
+                                             value_asset_id="1.3.0", log_broadcast=False):
         operation = base_test.echo_ops.get_contract_fund_pool_operation(echo=base_test.echo, sender=sender,
-                                                                        callee=callee, value_amount=value_amount)
+                                                                        contract=contract, value_amount=value_amount,
+                                                                        value_asset_id=value_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
-        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
             raise Exception(
                 "Error: fund pool from '{}' account is not performed, response:\n{}".format(sender, broadcast_result))
         return broadcast_result
