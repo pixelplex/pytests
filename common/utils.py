@@ -19,7 +19,7 @@ class Utils(object):
                                    method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
                                    lifetime=None, eth_address=None, update_account=None, eth_addr=None,
-                                   vesting_balance=None, only_in_history=False, log_broadcast=False):
+                                   vesting_balance=None, fee_pool=None, only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -67,6 +67,9 @@ class Utils(object):
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if eth_addr is not None:
             operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if fee_pool is not None:
+            operation = base_test.echo_ops.get_operation_json("contract_fund_pool_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
@@ -133,7 +136,8 @@ class Utils(object):
         return result_lower_bound_name, result_limit
 
     def get_contract_id(self, base_test, registrar, contract_bytecode, database_api_id, value_amount=0,
-                        operation_count=1, need_broadcast_result=False, log_broadcast=False):
+                        value_asset_id="1.3.0", supported_asset_id=None, operation_count=1, need_broadcast_result=False,
+                        log_broadcast=False):
         if registrar != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id,
                                                                contract_bytecode=contract_bytecode,
@@ -143,7 +147,9 @@ class Utils(object):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=registrar,
                                                                      bytecode=contract_bytecode,
-                                                                     value_amount=value_amount)
+                                                                     value_amount=value_amount,
+                                                                     value_asset_id=value_asset_id,
+                                                                     supported_asset_id=supported_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
@@ -486,15 +492,20 @@ class Utils(object):
             "No needed operation (id='{}') in '{}' account history. "
             "Waiting time result='{}'".format(operation_id, account_id, self.waiting_time_result))
 
-    @staticmethod
-    def perform_contract_fund_pool_operation(base_test, sender, callee, value_amount, database_api_id,
-                                             log_broadcast=False):
+    def perform_contract_fund_pool_operation(self, base_test, sender, contract, value_amount, database_api_id,
+                                             value_asset_id="1.3.0", fee_pool=True, log_broadcast=False):
+        if sender != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, sender, database_api_id,
+                                                               fee_pool=fee_pool)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_contract_fund_pool_operation(echo=base_test.echo, sender=sender,
-                                                                        callee=callee, value_amount=value_amount)
+                                                                        contract=contract, value_amount=value_amount,
+                                                                        value_asset_id=value_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
-        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
             raise Exception(
                 "Error: fund pool from '{}' account is not performed, response:\n{}".format(sender, broadcast_result))
         return broadcast_result
