@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
+from echopy.echoapi.ws.exceptions import RPCError
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, require_that_entry, equal_to
 
 from common.base_test import BaseTest
@@ -191,14 +192,16 @@ class PositiveTesting(BaseTest):
     @lcc.disabled()
     @lcc.tags("Bug: 'ECHO-1011'")
     @lcc.depends_on("DatabaseApi.GetContractFeePoolBalances.GetContractFeePoolBalances.method_main_check")
-    def add_fee_pool_and_destroy_contract(self, get_random_integer):
-        value_to_pool = get_random_integer
-
+    def add_fee_pool_and_destroy_contract(self, get_random_integer_up_to_ten):
         lcc.set_step("Create contract in the Echo network and get its contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
         lcc.set_step("Add fee pool to new contract")
-        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.break_piggy, callee=contract_id)
+        needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id,
+                                                        needed_fee + get_random_integer_up_to_ten,
                                                         self.__database_api_identifier)
         lcc.log_info("Fee pool added to '{}' contract successfully".format(contract_id))
 
@@ -218,9 +221,6 @@ class PositiveTesting(BaseTest):
             "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.break_piggy, callee=contract_id)
-        needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
@@ -238,4 +238,61 @@ class PositiveTesting(BaseTest):
         check_that("'account balance'", updated_account_balance,
                    equal_to(account_balance + fee_pool_balance - needed_fee))
 
-    # todo: add checks not echo asset, not enough pool for call contract
+
+@lcc.prop("testing", "negative")
+@lcc.tags("asset_api", "get_contract_fee_pool_balances")
+@lcc.suite("Negative testing of method 'get_contract_fee_pool_balances'", rank=3)
+class NegativeTesting(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+        self.contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet")
+
+    def setup_suite(self):
+        super().setup_suite()
+        self._connect_to_echopy_lib()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
+
+    @lcc.prop("type", "method")
+    @lcc.test("Add to contract fee pool not echo asset")
+    @lcc.depends_on("DatabaseApi.GetContractFeePoolBalances.GetContractFeePoolBalances.method_main_check")
+    def add_fee_pool_in_not_echo_asset(self, get_random_valid_asset_name, get_random_integer,
+                                       get_random_integer_up_to_ten):
+        new_asset_name = get_random_valid_asset_name
+        asset_value = get_random_integer
+        value_to_pool = get_random_integer_up_to_ten
+
+        lcc.set_step("Create a new asset and get id new asset")
+        new_asset_id = self.utils.get_asset_id(self, new_asset_name, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset_id))
+
+        lcc.set_step("Add new asset to account")
+        self.utils.add_assets_to_account(self, asset_value, new_asset_id, self.echo_acc0,
+                                         self.__database_api_identifier)
+        lcc.log_info("'{}' account became new asset holder of '{}' asset_id".format(self.echo_acc0, new_asset_id))
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+
+        lcc.set_step("Add fee pool to new contract")
+        try:
+            self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
+                                                            self.__database_api_identifier, value_asset_id=new_asset_id)
+            lcc.log_error("Error: broadcast transaction complete with not echo asset - '{}'.".format(new_asset_id))
+        except RPCError as e:
+            lcc.log_info(str(e))

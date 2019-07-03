@@ -478,9 +478,10 @@ class Utils(object):
 
     @staticmethod
     def perform_contract_fund_pool_operation(base_test, sender, contract, value_amount, database_api_id,
-                                             log_broadcast=False):
+                                             value_asset_id="1.3.0", log_broadcast=False):
         operation = base_test.echo_ops.get_contract_fund_pool_operation(echo=base_test.echo, sender=sender,
-                                                                        contract=contract, value_amount=value_amount)
+                                                                        contract=contract, value_amount=value_amount,
+                                                                        value_asset_id=value_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)

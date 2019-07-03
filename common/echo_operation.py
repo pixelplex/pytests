@@ -363,8 +363,9 @@ class EchoOperations(object):
             return [operation_id, withdraw_eth_props, account]
         return [operation_id, withdraw_eth_props, signer]
 
-    def get_contract_fund_pool_operation(self, echo, sender, contract, fee_amount=0, fee_asset_id="1.3.0", value_amount=1,
-                                         value_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+    def get_contract_fund_pool_operation(self, echo, sender, contract, fee_amount=0, fee_asset_id="1.3.0",
+                                         value_amount=1, value_asset_id="1.3.0", extensions=None, signer=None,
+                                         debug_mode=False):
         if extensions is None:
             extensions = []
         operation_id = echo.config.operation_ids.CONTRACT_FUND_POOL
