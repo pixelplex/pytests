@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import lemoncheesecake.api as lcc
+import random
 
+import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that_entry, equal_to
 
 from common.base_test import BaseTest
-import random
 
 SUITE = {
     "description": "Method 'get_contract_balances'"
@@ -33,6 +33,8 @@ class GetContractBalances(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -42,21 +44,18 @@ class GetContractBalances(BaseTest):
     @lcc.test("Simple work of method 'get_contract_balances'")
     def method_main_check(self, get_random_integer):
         value_amount = get_random_integer
-        echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
-                                        self.__registration_api_identifier)
-        lcc.set_step("Create contract in the Echo network and get its contract id")
 
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=echo_acc0,
-                                                                value_amount=value_amount, bytecode=self.contract)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        contract_id = self.get_contract_id(contract_result)
+        lcc.set_step("Create contract in the Echo network and get it's contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier,
+                                                 value_amount=value_amount)
+
+        lcc.set_step("Get contract balances")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"][0]
+        lcc.log_info("Call method 'get_contract_balances' with param: '{}'".format(contract_id))
 
+        lcc.set_step("Check main fields")
         with this_dict(response):
             check_that_entry("amount", equal_to(value_amount))
             check_that_entry("asset_id", equal_to(self.echo_asset))
@@ -71,8 +70,8 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
-        self.contract = self.get_byte_code("piggy", "code")
-        self.contract_getPennie = self.get_byte_code("piggy", "getPennie")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie")
         self.storage_contract = self.get_byte_code("storage", "code")
         self.storage_setGreeting = self.get_byte_code("storage", "setGreeting")
 
@@ -98,110 +97,91 @@ class PositiveTesting(BaseTest):
         return ['{}{}'.format(asset_name_base, 'A' * num) for num in range(total_asset_count)]
 
     @staticmethod
-    def proliferate_value_amount(total_rand_int_count):
-        return [random.randrange(100, 1000) for num in range(total_rand_int_count)]
+    def proliferate_value_amount(_to, total_rand_int_count, _from=1):
+        return [random.randrange(_from, _to + num) for num in range(total_rand_int_count)]
 
     @lcc.prop("type", "method")
-    @lcc.test("Work of method 'get_contract_balances' with getPennie method and asset")
+    @lcc.test("Get contract balance in new asset")
     @lcc.depends_on("DatabaseApi.GetContractBalances.GetContractBalances.method_main_check")
-    def check_method_with_new_asset(self, get_random_integer, get_random_valid_asset_name):
+    def check_contract_balance_in_new_asset(self, get_random_integer, get_random_valid_asset_name):
         value_amount = get_random_integer
-
         asset_name = get_random_valid_asset_name
+
         lcc.set_step("Create asset and get new asset id")
-        asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
-        lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
+        new_asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
+        lcc.log_info("New asset created, asset_id is '{}'".format(new_asset_id))
+
         lcc.set_step("Add asset to account")
-        self.utils.add_assets_to_account(self, value_amount, asset_id, self.echo_acc0,
+        self.utils.add_assets_to_account(self, value_amount, new_asset_id, self.echo_acc0,
                                          self.__database_api_identifier)
+        lcc.log_info("'{}' account became new asset holder of '{}' asset_id".format(self.echo_acc0, new_asset_id))
 
-        lcc.set_step("Create contract with new asset id")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                                value_amount=value_amount, bytecode=self.contract,
-                                                                value_asset_id=asset_id, supported_asset_id=asset_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
+        lcc.set_step(
+            "Create contract in the Echo network and get it's contract id. Value and supported asset is new asset")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
+                                                 self.__database_api_identifier, value_amount=value_amount,
+                                                 value_asset_id=new_asset_id, supported_asset_id=new_asset_id)
 
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        contract_id = self.get_contract_id(contract_result)
-
+        lcc.set_step("Get contract balances and check balance in new asset")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)["result"][0]
-        with this_dict(response):
+        result = self.get_response(response_id)["result"][0]
+        with this_dict(result):
             check_that_entry("amount", equal_to(value_amount))
-            check_that_entry("asset_id", equal_to(asset_id))
+            check_that_entry("asset_id", equal_to(new_asset_id))
 
-        lcc.set_step("Call 'getPennie' method")
+        lcc.set_step("Call 'getPennie' method to contract balance change check")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.contract_getPennie, callee=contract_id,
-                                                              value_asset_id=asset_id)
+                                                              bytecode=self.get_pennie, callee=contract_id,
+                                                              value_asset_id=new_asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+
+        lcc.set_step("Get contract balances and check updated contract balance")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)["result"][0]
-
-        with this_dict(response):
+        result = self.get_response(response_id)["result"][0]
+        with this_dict(result):
             check_that_entry("amount", equal_to(value_amount - 1))
-            check_that_entry("asset_id", equal_to(asset_id))
+            check_that_entry("asset_id", equal_to(new_asset_id))
 
     @lcc.prop("type", "method")
-    @lcc.test("Work of contract method 'setGreeting' with 2 assets")
+    @lcc.test("Get contract balance in several assets")
     @lcc.depends_on("DatabaseApi.GetContractBalances.GetContractBalances.method_main_check")
-    def check_method_with_new_contract(self, get_random_string, get_random_valid_asset_name):
-        lcc.set_step("Create contract")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                                bytecode=self.storage_contract,
-                                                                supported_asset_id=None)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        contract_id = self.get_contract_id(contract_result)
-        lcc.set_step("Generate assets")
-        asset_name_base = get_random_valid_asset_name
-        total_proliferate_count = 2
-        generated_assets = self.proliferate_asset_names(asset_name_base, total_proliferate_count)
-        lcc.log_info('Generated asset names: {}'.format(generated_assets))
-
+    def check_contract_with_balance_in_several_assets(self, get_random_valid_asset_name, get_random_integer_up_to_fifty,
+                                                      get_random_string):
+        count = 2
+        new_asset_ids = []
         list_operations = []
-        random_string = get_random_string
-        byte_code = self.get_byte_code_param(random_string, str)
-        value_amount = self.proliferate_value_amount(total_proliferate_count)
-        asset_ids = []
 
-        lcc.set_step("Add assets to account")
-        for i, asset_name in enumerate(generated_assets):
-            asset_ids.append(self.utils.get_asset_id(self, asset_name, self.__database_api_identifier))
-            operation = self.echo_ops.get_asset_issue_operation(echo=self.echo, issuer=self.echo_acc0,
-                                                                value_amount=value_amount[i],
-                                                                value_asset_id=asset_ids[-1],
-                                                                issue_to_account=self.echo_acc0)
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            list_operations.append(collected_operation)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations,
-                                                   log_broadcast=False)
+        lcc.set_step("Create contract in the Echo network and get it's contract id. Supported asset is None")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.storage_contract,
+                                                 self.__database_api_identifier)
 
-        lcc.set_step("Call 'setGreeting' method")
-        for i, asset_id in enumerate(asset_ids):
+        lcc.set_step("Create assets and add them to account")
+        generated_asset_names = self.proliferate_asset_names(get_random_valid_asset_name, count)
+        value_amounts = self.proliferate_value_amount(get_random_integer_up_to_fifty, count)
+        for i, asset_name in enumerate(generated_asset_names):
+            new_asset_ids.append(self.utils.get_asset_id(self, asset_name, self.__database_api_identifier))
+            self.utils.add_assets_to_account(self, value_amounts[i], new_asset_ids[i], self.echo_acc0,
+                                             self.__database_api_identifier)
+
+        lcc.set_step("Call 'setGreeting' method to add several assets to contract balance")
+        argument = self.get_byte_code_param(get_random_string, str)
+        for i, asset_id in enumerate(new_asset_ids):
             operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                                  bytecode=self.storage_setGreeting + byte_code,
-                                                                  callee=contract_id, value_amount=value_amount[i],
+                                                                  bytecode=self.storage_setGreeting + argument,
+                                                                  callee=contract_id, value_amount=value_amounts[i],
                                                                   value_asset_id=asset_id)
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
             list_operations.append(collected_operation)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations,
-                                                   log_broadcast=False)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations)
 
+        lcc.set_step("Get contract balances and check contract balance in several asset")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)["result"]
-
-        for i, result in enumerate(response):
+        response = self.get_response(response_id)
+        for i, result in enumerate(response["result"]):
             with this_dict(result):
-                check_that_entry("amount", equal_to(value_amount[i]))
-                check_that_entry("asset_id", equal_to(asset_ids[i]))
+                check_that_entry("amount", equal_to(value_amounts[i]))
+                check_that_entry("asset_id", equal_to(new_asset_ids[i]))

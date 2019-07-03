@@ -277,11 +277,9 @@ class EchoOperations(object):
         create_contract_props = self.get_operation_json("create_contract_operation")
         create_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         create_contract_props.update(
-            {"registrar": registrar, "code": bytecode, "supported_asset_id": supported_asset_id,
-             "eth_accuracy": eth_accuracy, "extensions": extensions})
+            {"registrar": registrar, "code": bytecode, "eth_accuracy": eth_accuracy, "extensions": extensions})
         if supported_asset_id is not None:
-            create_contract_props.update(
-                {"supported_asset_id": supported_asset_id})
+            create_contract_props.update({"supported_asset_id": supported_asset_id})
         else:
             del create_contract_props["supported_asset_id"]
         create_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
