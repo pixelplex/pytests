@@ -134,7 +134,8 @@ class Utils(object):
         return result_lower_bound_name, result_limit
 
     def get_contract_id(self, base_test, registrar, contract_bytecode, database_api_id, value_amount=0,
-                        operation_count=1, need_broadcast_result=False, log_broadcast=False):
+                        value_asset_id="1.3.0", supported_asset_id=None, operation_count=1, need_broadcast_result=False,
+                        log_broadcast=False):
         if registrar != base_test.echo_acc0:
             broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id,
                                                                contract_bytecode=contract_bytecode,
@@ -144,7 +145,9 @@ class Utils(object):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=registrar,
                                                                      bytecode=contract_bytecode,
-                                                                     value_amount=value_amount)
+                                                                     value_amount=value_amount,
+                                                                     value_asset_id=value_asset_id,
+                                                                     supported_asset_id=supported_asset_id)
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
