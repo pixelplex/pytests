@@ -165,11 +165,15 @@ class PositiveTesting(BaseTest):
             require_that_entry("amount", equal_to(0))
             require_that_entry("asset_id", equal_to(self.echo_asset))
 
-        lcc.set_step("Second: add fee pull to perform the call contract 'get_pennie' method")
+        lcc.set_step("Add echo assets for new_account")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=new_account,
                                                               bytecode=self.get_pennie, callee=contract_id)
         needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
-        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, needed_fee,
+        self.utils.perform_transfer_operations(self, self.echo_acc0, new_account, self.__database_api_identifier,
+                                               transfer_amount=needed_fee)
+
+        lcc.set_step("Second: add fee pull using not contract owner to perform the call contract 'get_pennie' method")
+        self.utils.perform_contract_fund_pool_operation(self, new_account, contract_id, needed_fee,
                                                         self.__database_api_identifier)
         lcc.log_info("Added '{}' assets value to '{}' contract fee pool successfully".format(needed_fee, contract_id))
 
