@@ -83,7 +83,7 @@ class ListAssets(BaseTest):
                 check_that_entry("whitelist_markets", is_list(), quiet=True)
                 check_that_entry("extensions", is_list(), quiet=True)
 
-            check_that_entry("precision", is_integer(), quiet=True)
+            check_that_entry("precision", is_integer(8))
             if not self.validator.is_asset_name(asset["symbol"]):
                 lcc.log_error("Wrong format of 'symbol', got: {}".format(asset["symbol"]))
             else:
