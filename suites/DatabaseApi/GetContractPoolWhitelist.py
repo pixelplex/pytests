@@ -274,7 +274,7 @@ class PositiveTesting(BaseTest):
                         account))
             except RPCError as e:
                 lcc.log_info(str(e))
-        lcc.log_info("'{}' fee pool sender call '{}' contract successfully".format(self.echo_acc0, contract_id))
+        lcc.log_info("'{}' accounts in blacklist can not use '{}' contract fee pool".format(blacklist, contract_id))
 
         lcc.set_step("Get a contract's fee pool balance after first call contract by fee pool sender")
         updated_fee_pool_balance = self.get_contract_pool_balance(contract_id)
@@ -375,3 +375,123 @@ class NegativeTesting(BaseTest):
 
         lcc.set_step("Check simple work of method 'get_contract_pool_whitelist'")
         check_that("'get_contract_pool_whitelist' return error message", response, has_entry("error"), quiet=True)
+
+    @lcc.prop("type", "method")
+    @lcc.test("Add account in whitelist and blacklist at the same time")
+    @lcc.depends_on("DatabaseApi.GetContractPoolWhitelist.GetContractPoolWhitelist.method_main_check")
+    def account_in_two_lists(self, get_random_integer):
+        value_to_pool = get_random_integer
+        whitelist, blacklist = [self.echo_acc0], [self.echo_acc0]
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+
+        lcc.set_step("Add fee pool to new contract")
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Fee pool added to '{}' contract successfully".format(contract_id))
+
+        lcc.set_step("Add one account to whitelist and blacklist at the same time")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier, add_to_whitelist=whitelist,
+                                                            add_to_blacklist=blacklist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can add account to whitelist and blacklist at the same time")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not add account to whitelist and blacklist at the same time")
+
+    @lcc.prop("type", "method")
+    @lcc.test("Add account in whitelist/blacklist and remove from whitelist/blacklist at the same time")
+    @lcc.depends_on("DatabaseApi.GetContractPoolWhitelist.GetContractPoolWhitelist.method_main_check")
+    def add_account_and_remove_in_the_same_time(self, get_random_integer):
+        value_to_pool = get_random_integer
+        whitelist, blacklist = [self.echo_acc0], [self.echo_acc0]
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+
+        lcc.set_step("Add fee pool to new contract")
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Fee pool added to '{}' contract successfully".format(contract_id))
+
+        lcc.set_step("Add one account to whitelist and remove at the same time")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier, add_to_whitelist=whitelist,
+                                                            remove_from_whitelist=whitelist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can add account to whitelist and remove at the same time")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not add account to whitelist and remove at the same time")
+
+        lcc.set_step("Add one account to blacklist and remove at the same time")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier, add_to_blacklist=blacklist,
+                                                            remove_from_blacklist=blacklist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can add account to blacklist and remove at the same time")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not add account to blacklist and remove at the same time")
+
+    @lcc.prop("type", "method")
+    @lcc.test("Add account in whitelist/blacklist and remove from whitelist/blacklist twice")
+    @lcc.depends_on("DatabaseApi.GetContractPoolWhitelist.GetContractPoolWhitelist.method_main_check")
+    def add_account_and_remove_in_the_same_time(self, get_random_integer):
+        value_to_pool = get_random_integer
+        whitelist, blacklist = [self.echo_acc0, self.echo_acc0], [self.echo_acc0, self.echo_acc0]
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+
+        lcc.set_step("Add fee pool to new contract")
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, value_to_pool,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Fee pool added to '{}' contract successfully".format(contract_id))
+
+        lcc.set_step("Add one account to whitelist twice")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier, add_to_whitelist=whitelist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can add account to whitelist twice")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not add account to whitelist twice")
+
+        lcc.set_step("Remove one account from whitelist twice")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier,
+                                                            remove_from_whitelist=whitelist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can remove account from whitelist twice")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not remove account from whitelist twice")
+
+        lcc.set_step("Add one account to blacklist twice")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier, add_to_blacklist=blacklist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can add account to blacklist twice")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not add account to blacklist twice")
+
+        lcc.set_step("Remove one account from blacklist twice")
+        try:
+            self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                            self.__database_api_identifier,
+                                                            remove_from_blacklist=blacklist)
+            lcc.log_error(
+                "Error: broadcast transaction complete. Can remove account from blacklist twice")
+        except RPCError as e:
+            lcc.log_info(str(e))
+        lcc.log_info("Can not remove account from blacklist twice")
