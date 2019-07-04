@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
+from echopy.echoapi.ws.exceptions import RPCError
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_list, has_entry, \
     equal_to, require_that
 
@@ -34,7 +35,9 @@ class GetContractPoolWhitelist(BaseTest):
                                                                            self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}''".format(self.echo_acc0, self.echo_acc1))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -64,6 +67,24 @@ class GetContractPoolWhitelist(BaseTest):
             if check_that("contract pool whitelist", result, has_length(2)):
                 check_that_entry("whitelist", is_list([]))
                 check_that_entry("blacklist", is_list([]))
+
+        lcc.set_step("Add one account to whitelist and one account to blacklist")
+        whitelist, blacklist = [self.echo_acc0], [self.echo_acc1]
+        self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                        self.__database_api_identifier, add_to_whitelist=whitelist,
+                                                        add_to_blacklist=blacklist, log_broadcast=True)
+
+        lcc.set_step("Get updated a contract's fee pool whitelist")
+        response_id = self.send_request(self.get_request("get_contract_pool_whitelist", [contract_id]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'".format(contract_id))
+
+        lcc.set_step("Check added accounts to contract lists")
+        with this_dict(result):
+            if check_that("contract pool whitelist", result, has_length(2)):
+                check_that_entry("whitelist", is_list(whitelist))
+                check_that_entry("blacklist", is_list(blacklist))
 
 
 @lcc.prop("testing", "positive")
@@ -148,9 +169,14 @@ class PositiveTesting(BaseTest):
         require_that("'contract_pool_whitelist'", contract_pool_whitelist["whitelist"], is_list(full_whitelist))
 
         lcc.set_step("First: call 'greet' method using fee pool sender")
+        account_balance = self.utils.get_account_balances(self, self.echo_acc0, self.__database_api_identifier)[
+            "amount"]
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
         lcc.log_info("'{}' fee pool sender call '{}' contract successfully".format(self.echo_acc0, contract_id))
+        account_balance_after_call = self.utils.get_account_balances(self, self.echo_acc0,
+                                                                     self.__database_api_identifier)["amount"]
+        check_that("'account balance'", int(account_balance_after_call), equal_to(int(account_balance) - needed_fee))
 
         lcc.set_step("Get a contract's fee pool balance after first call contract by fee pool sender")
         updated_fee_pool_balance = self.get_contract_pool_balance(contract_id)
@@ -182,13 +208,118 @@ class PositiveTesting(BaseTest):
         self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
                                                         self.__database_api_identifier,
                                                         remove_from_whitelist=full_whitelist)
-        lcc.log_info("All accounts successfully removed from whitelist".format(self.echo_acc0, contract_id))
+        lcc.log_info("All accounts successfully removed from whitelist")
 
         lcc.set_step("Get a contract's fee pool whitelist and check that whitelist is empty")
         contract_pool_whitelist = self.get_contract_pool_whitelist(contract_id)
         require_that("'contract_pool_whitelist'", contract_pool_whitelist["whitelist"], is_list([]))
 
         lcc.set_step("Third: call 'greet' method using account that removed from whitelist (not fee pool sender)")
+        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+                                                                     bytecode=self.greet, callee=contract_id)
+        collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        lcc.log_info("'{}' account call '{}' contract successfully".format(self.echo_acc1, contract_id))
+
+        lcc.set_step(
+            "Get a contract's fee pool balance after third call contract by account that removed from whitelist")
+        updated_fee_pool_balance = self.get_contract_pool_balance(contract_id)
+        check_that("'updated_fee_pool_balance'", updated_fee_pool_balance, equal_to(0))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check work of add and remove accounts to/from blacklist")
+    @lcc.depends_on("DatabaseApi.GetContractPoolWhitelist.GetContractPoolWhitelist.method_main_check")
+    def add_remove_accounts_to_from_blacklist(self):
+        full_blacklist = []
+
+        lcc.set_step("Create contract in the Echo network and get its contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+
+        lcc.set_step("Add fee pool to perform two calls contract 'greet' method")
+        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                                     bytecode=self.greet, callee=contract_id)
+        needed_fee = self.get_required_fee(operation_method, self.__database_api_identifier)[0]["amount"]
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, needed_fee,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Added '{}' assets value to '{}' contract fee pool successfully".format(needed_fee, contract_id))
+
+        lcc.set_step("Get a contract's fee pool balance and store")
+        fee_pool_balance = self.get_contract_pool_balance(contract_id)
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'. "
+                     "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+
+        lcc.set_step("Add two accounts to blacklist (not fee pool sender)")
+        blacklist = [self.echo_acc1, self.echo_acc2]
+        for account in blacklist:
+            full_blacklist.append(account)
+            full_blacklist = sorted(full_blacklist, key=self.get_value_for_sorting_func)
+        self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                        self.__database_api_identifier, add_to_blacklist=blacklist,
+                                                        log_broadcast=False)
+        lcc.log_info("Added '{}' accounts to '{}' contract blacklist successfully".format(full_blacklist, contract_id))
+
+        lcc.set_step("Get a contract's fee pool whitelist and check added accounts")
+        contract_pool_whitelist = self.get_contract_pool_whitelist(contract_id)
+        require_that("'contract_pool_blacklist'", contract_pool_whitelist["blacklist"], is_list(full_blacklist))
+
+        lcc.set_step("First: call 'greet' method using accounts in blacklist")
+        for account in blacklist:
+            operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=account,
+                                                                         bytecode=self.greet, callee=contract_id)
+            collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
+            try:
+                self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+                lcc.log_error(
+                    "Error: broadcast transaction complete when '{}' don't have enough founds to pay fee".format(
+                        account))
+            except RPCError as e:
+                lcc.log_info(str(e))
+        lcc.log_info("'{}' fee pool sender call '{}' contract successfully".format(self.echo_acc0, contract_id))
+
+        lcc.set_step("Get a contract's fee pool balance after first call contract by fee pool sender")
+        updated_fee_pool_balance = self.get_contract_pool_balance(contract_id)
+        check_that("'updated_fee_pool_balance'", updated_fee_pool_balance, equal_to(fee_pool_balance))
+
+        lcc.set_step("Add fee pool sender to blacklist")
+        blacklist = [self.echo_acc0]
+        for account in blacklist:
+            full_blacklist.append(account)
+            full_blacklist = sorted(full_blacklist, key=self.get_value_for_sorting_func)
+        self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                        self.__database_api_identifier, add_to_blacklist=blacklist)
+        lcc.log_info("Added '{}' account to '{}' contract blacklist successfully".format(self.echo_acc0, contract_id))
+
+        lcc.set_step("Get a contract's fee pool whitelist and check added account")
+        contract_pool_whitelist = self.get_contract_pool_whitelist(contract_id)
+        require_that("'contract_pool_blacklist'", contract_pool_whitelist["blacklist"], is_list(full_blacklist))
+
+        lcc.set_step("Second: call 'greet' method using fee pool sender")
+        account_balance = self.utils.get_account_balances(self, self.echo_acc0, self.__database_api_identifier)[
+            "amount"]
+        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                                     bytecode=self.greet, callee=contract_id)
+        collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        lcc.log_info("'{}' fee pool sender call '{}' contract successfully".format(self.echo_acc0, contract_id))
+        account_balance_after_call = self.utils.get_account_balances(self, self.echo_acc0,
+                                                                     self.__database_api_identifier)["amount"]
+        check_that("'account balance'", int(account_balance_after_call), equal_to(int(account_balance) - needed_fee))
+
+        lcc.set_step("Get a contract's fee pool balance after second call contract by fee pool sender")
+        updated_fee_pool_balance = self.get_contract_pool_balance(contract_id)
+        check_that("'updated_fee_pool_balance'", updated_fee_pool_balance, equal_to(fee_pool_balance))
+
+        lcc.set_step("Remove all accounts from blacklist")
+        self.utils.perform_contract_whitelist_operation(self, self.echo_acc0, contract_id,
+                                                        self.__database_api_identifier,
+                                                        remove_from_blacklist=full_blacklist)
+        lcc.log_info("All accounts successfully removed from blacklist")
+
+        lcc.set_step("Get a contract's fee pool whitelist and check that blacklist is empty")
+        contract_pool_whitelist = self.get_contract_pool_whitelist(contract_id)
+        require_that("'contract_pool_blacklist'", contract_pool_whitelist["blacklist"], is_list([]))
+
+        lcc.set_step("Third: call 'greet' method using account that removed from blacklist (not fee pool sender)")
         operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
                                                                      bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
