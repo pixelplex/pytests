@@ -11,7 +11,7 @@ SUITE = {
 
 @lcc.prop("testing", "main")
 @lcc.tags("not_valid_contract_code")
-@lcc.suite("Check scenario 'Contract with not vaild contract code'")
+@lcc.suite("Check scenario 'Contract with not valid contract code'")
 class ContractWithNotValidCode(BaseTest):
 
     def __init__(self):
