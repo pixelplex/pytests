@@ -129,6 +129,18 @@ def get_random_hex_string():
 
 
 @lcc.fixture(scope="test")
+def get_random_not_hex_string():
+    not_hex_letters = ""
+    for letter in string.ascii_letters:
+        if ord("F") < ord(letter) <= ord("Z") or ord("f") < ord(letter) <= ord("z"):
+            not_hex_letters = not_hex_letters + letter
+    random_not_hex_string = ''.join(
+        random.SystemRandom().choice(not_hex_letters + string.digits) for _ in range(RANGE_OF_STR_FOR_HEX))
+    lcc.log_info("Generated random not hex string: {}".format(random_not_hex_string))
+    return random_not_hex_string
+
+
+@lcc.fixture(scope="test")
 def get_random_valid_account_name():
     random_string = ''.join(
         random.SystemRandom().choice(string.ascii_lowercase) for _ in range(RANGE_OF_STR))
