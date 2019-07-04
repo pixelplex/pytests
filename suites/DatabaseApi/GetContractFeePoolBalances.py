@@ -264,7 +264,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create contract in the Echo network and get its contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
-        lcc.set_step("Add fee poll to perform the call contract 'greet' method")
+        lcc.set_step("Add fee pool to perform the call contract 'greet' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
