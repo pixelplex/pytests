@@ -86,6 +86,14 @@ class PositiveTesting(BaseTest):
     def get_random_amount(_to, _from=1):
         return round(random.randrange(_from, _to))
 
+    def get_user_to_pay_fee_amount(self, operation):
+        response_id = self.send_request(self.get_request("get_required_fees", [[operation], self.echo_asset]),
+                                        self.__database_api_identifier)
+        response = self.get_response(response_id)
+        if not response.get("result")[0].get("user_to_pay"):
+            raise Exception("Given operation not contract call. Got required fee: {}".format(str(response)))
+        return response.get("result")[0].get("user_to_pay").get("amount")
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -128,7 +136,7 @@ class PositiveTesting(BaseTest):
             require_that_entry("amount", equal_to(0))
             require_that_entry("asset_id", equal_to(self.echo_asset))
 
-        lcc.set_step("First: add fee pull to perform the call contract 'greet' method")
+        lcc.set_step("First: add fee pool to perform the call contract 'greet' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=new_account,
                                                               bytecode=self.greet, callee=contract_id)
         needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
@@ -140,11 +148,12 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
                                         self.__database_api_identifier)
         fee_pool_balance = self.get_response(response_id)["result"]["amount"]
-        lcc.log_info(
-            "Call method 'get_contract_pool_balance' with param: '{}'. "
-            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'. "
+                     "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Call 'greet' method using new account, that don't have any balance")
+        user_to_pay_fee = self.get_user_to_pay_fee_amount(operation)
+        check_that("'user to pay fee amount'", user_to_pay_fee, equal_to(0))
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
@@ -165,14 +174,14 @@ class PositiveTesting(BaseTest):
             require_that_entry("amount", equal_to(0))
             require_that_entry("asset_id", equal_to(self.echo_asset))
 
-        lcc.set_step("Add echo assets for new_account")
+        lcc.set_step("Add echo assets to new_account")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=new_account,
                                                               bytecode=self.get_pennie, callee=contract_id)
         needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
         self.utils.perform_transfer_operations(self, self.echo_acc0, new_account, self.__database_api_identifier,
-                                               transfer_amount=needed_fee)
+                                               transfer_amount=needed_fee, log_broadcast=True)
 
-        lcc.set_step("Second: add fee pull using not contract owner to perform the call contract 'get_pennie' method")
+        lcc.set_step("Second: add fee pool using not contract owner to perform the call contract 'get_pennie' method")
         self.utils.perform_contract_fund_pool_operation(self, new_account, contract_id, needed_fee,
                                                         self.__database_api_identifier)
         lcc.log_info("Added '{}' assets value to '{}' contract fee pool successfully".format(needed_fee, contract_id))
@@ -181,11 +190,12 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
                                         self.__database_api_identifier)
         fee_pool_balance = self.get_response(response_id)["result"]["amount"]
-        lcc.log_info(
-            "Call method 'get_contract_pool_balance' with param: '{}'. "
-            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'. "
+                     "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Call 'get_pennie' method using new account, that don't have any balance")
+        user_to_pay_fee = self.get_user_to_pay_fee_amount(operation)
+        check_that("'user to pay fee amount'", user_to_pay_fee, equal_to(0))
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
@@ -226,9 +236,8 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
                                         self.__database_api_identifier)
         fee_pool_balance = self.get_response(response_id)["result"]["amount"]
-        lcc.log_info(
-            "Call method 'get_contract_pool_balance' with param: '{}'. "
-            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'. "
+                     "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -255,7 +264,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create contract in the Echo network and get its contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
-        lcc.set_step("Add fee pull to perform the call contract 'greet' method")
+        lcc.set_step("Add fee poll to perform the call contract 'greet' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         needed_fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
@@ -276,9 +285,8 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),
                                         self.__database_api_identifier)
         fee_pool_balance = self.get_response(response_id)["result"]["amount"]
-        lcc.log_info(
-            "Call method 'get_contract_pool_balance' with param: '{}'. "
-            "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'. "
+                     "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Call 'greet' method using new account, that don't have any balance")
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)

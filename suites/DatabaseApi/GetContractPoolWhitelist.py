@@ -67,8 +67,8 @@ class GetContractPoolWhitelist(BaseTest):
 
 
 @lcc.prop("testing", "positive")
-@lcc.tags("database_api", "get_contract_fee_pool_balances")
-@lcc.suite("Positive testing of method 'get_contract_fee_pool_balances'", rank=2)
+@lcc.tags("database_api", "get_contract_pool_whitelist")
+@lcc.suite("Positive testing of method 'get_contract_pool_whitelist'", rank=2)
 class PositiveTesting(BaseTest):
 
     def __init__(self):
