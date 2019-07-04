@@ -21,7 +21,7 @@ class Utils(object):
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
                                    lifetime=None, eth_address=None, update_account=None, eth_addr=None,
                                    vesting_balance=None, fee_pool=None, create_vesting_balance=None, whitelist=None,
-                                   only_in_history=False, log_broadcast=False):
+                                   update_contract=None, only_in_history=False, log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -78,6 +78,9 @@ class Utils(object):
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if whitelist is not None:
             operation = base_test.echo_ops.get_operation_json("contract_whitelist_operation", example=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if update_contract is not None:
+            operation = base_test.echo_ops.get_operation_json("contract_update_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
@@ -622,4 +625,21 @@ class Utils(object):
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception(
                 "Error: '{}' account did not update, response:\n{}".format(account_id, broadcast_result))
+        return broadcast_result
+
+    def perform_contract_update_operation(self, base_test, sender, contract, database_api_id, new_owner=None,
+                                          update_contract=True, log_broadcast=False):
+        if sender != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, sender, database_api_id,
+                                                               update_contract=update_contract)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_contract_update_operation(echo=base_test.echo, sender=sender,
+                                                                     contract=contract, new_owner=new_owner)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+            raise Exception(
+                "Error: '{}' contract did not update, response:\n{}".format(contract, broadcast_result))
         return broadcast_result

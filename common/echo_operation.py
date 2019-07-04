@@ -408,6 +408,24 @@ class EchoOperations(object):
             return [operation_id, contract_whitelist_props, sender]
         return [operation_id, contract_whitelist_props, signer]
 
+    def get_contract_update_operation(self, echo, sender, contract, new_owner=None, fee_amount=0, fee_asset_id="1.3.0",
+                                      extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
+        operation_id = echo.config.operation_ids.CONTRACT_UPDATE
+        contract_update_props = self.get_operation_json("contract_update_operation")
+        contract_update_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        contract_update_props.update({"sender": sender, "contract": contract, "extensions": extensions})
+        if new_owner is not None:
+            contract_update_props.update({"new_owner": new_owner})
+        else:
+            del contract_update_props["new_owner"]
+        if debug_mode:
+            lcc.log_debug("Contract update operation: \n{}".format(json.dumps(contract_update_props, indent=4)))
+        if signer is None:
+            return [operation_id, contract_update_props, sender]
+        return [operation_id, contract_update_props, signer]
+
     def broadcast(self, echo, list_operations, no_broadcast=False, get_signed_tx=False, log_broadcast=True,
                   debug_mode=False):
         tx = echo.create_transaction()
