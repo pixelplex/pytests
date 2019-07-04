@@ -382,6 +382,32 @@ class EchoOperations(object):
             return [operation_id, contract_fund_pool_props, sender]
         return [operation_id, contract_fund_pool_props, signer]
 
+    def get_contract_whitelist_operation(self, echo, sender, contract, fee_amount=0, fee_asset_id="1.3.0",
+                                         add_to_whitelist=None, remove_from_whitelist=None, add_to_blacklist=None,
+                                         remove_from_blacklist=None, extensions=None, signer=None, debug_mode=False):
+        if add_to_whitelist is None:
+            add_to_whitelist = []
+        if remove_from_whitelist is None:
+            remove_from_whitelist = []
+        if add_to_blacklist is None:
+            add_to_blacklist = []
+        if remove_from_blacklist is None:
+            remove_from_blacklist = []
+        if extensions is None:
+            extensions = []
+        operation_id = echo.config.operation_ids.CONTRACT_WHITELIST
+        contract_whitelist_props = self.get_operation_json("contract_whitelist_operation")
+        contract_whitelist_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        contract_whitelist_props.update({"sender": sender, "contract": contract, "extensions": extensions})
+        contract_whitelist_props.update(
+            {"add_to_whitelist": add_to_whitelist, "remove_from_whitelist": remove_from_whitelist,
+             "add_to_blacklist": add_to_blacklist, "remove_from_blacklist": remove_from_blacklist})
+        if debug_mode:
+            lcc.log_debug("Contract whitelist operation: \n{}".format(json.dumps(contract_whitelist_props, indent=4)))
+        if signer is None:
+            return [operation_id, contract_whitelist_props, sender]
+        return [operation_id, contract_whitelist_props, signer]
+
     def broadcast(self, echo, list_operations, no_broadcast=False, get_signed_tx=False, log_broadcast=True,
                   debug_mode=False):
         tx = echo.create_transaction()
