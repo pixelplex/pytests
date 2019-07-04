@@ -64,8 +64,6 @@ class CommitteeEthAddressInGenesis(BaseTest):
                 committee_members_eth_addresses_echo[i])))
 
         lcc.set_step("Compare eth_addresses in genesis and ECHO network")
-        # todo: delete replace Bug ECHO-961
         for i in range(len(committee_members_eth_addresses)):
             check_that("'eth_addresses of committee members'", committee_members_eth_addresses[i],
-                       is_(committee_members_eth_addresses_echo[i].replace("0000000000000000000000000000000000000000",
-                                                                           "")))
+                       is_(committee_members_eth_addresses_echo[i]))
