@@ -287,14 +287,15 @@ class Validator(object):
         return self.is_uint8(value) and value < 49
 
     def is_base58(self, value):
-        if self.is_string(value):
-            return bool(self.base58_regex.match(value))
+        return bool(self.base58_regex.match(value))
 
     def is_echo_rand_key(self, value, address_prefix="ECHO"):
-        if not self.is_base58(value) or 44 + len(address_prefix) < len(value) or len(value) < 43 + len(address_prefix):
+        if value[:len(address_prefix)] != address_prefix:
             return False
-        prefix = value[0:len(address_prefix)]
-        return address_prefix == prefix
+        key = value[len(address_prefix):]
+        if not self.is_base58(key) or 44 + len(address_prefix) < len(value) or len(value) < 43 + len(address_prefix):
+            return False
+        return True
 
     def is_private_key(self, value):
         if not self.is_base58(value) or 44 < len(value) or len(value) < 43:
