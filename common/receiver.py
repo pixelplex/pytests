@@ -57,8 +57,8 @@ class Receiver(object):
         for i, notice_obj in enumerate(notice_objs):
             actual_id = notice_obj["id"]
             if len(notice_objs) > 1:
-                if not actual_id.startswith(expected_id) and len(notice_objs) != i:
-                    continue
+                if actual_id.startswith(expected_id):
+                    break
         temp_count += 1
         if not actual_id.startswith(expected_id):
             if temp_count <= self.block_count:
