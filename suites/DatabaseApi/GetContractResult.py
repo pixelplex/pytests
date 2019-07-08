@@ -5,7 +5,6 @@ from lemoncheesecake.matching import this_dict, equal_to, check_that_entry, is_i
 
 from common.base_test import BaseTest
 import re
-import random
 from echopy import Echo
 
 SUITE = {
@@ -50,10 +49,21 @@ class GetContractResult(BaseTest):
         else:
             lcc.log_error("Wrong format of 'bloom' some of values is not '0'")
 
+    @staticmethod
+    def get_contract_from_address(self, contract_identifier_hex):
+        contract_id = "{}{}".format("{}.{}.".format(
+            self.echo.config.reserved_spaces.PROTOCOL_IDS,
+            self.echo.config.object_types.CONTRACT),
+            int(str(contract_identifier_hex)[2:], 16))
+        if not self.validator.is_contract_id(contract_id):
+            lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
+        return contract_id
+
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_contract_result'")
     def method_main_check(self, get_random_valid_asset_name, get_random_integer):
         value_amount = get_random_integer
+        lcc.set_step("Check 'create_contract_operation', with 'piggy' contract")
         operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 value_amount=value_amount,
                                                                 bytecode=self.piggy)
@@ -65,10 +75,7 @@ class GetContractResult(BaseTest):
         contract_result_id = self.get_operation_results_ids(broadcast_result)
         response_id = self.send_request(self.get_request("get_contract_result", [contract_result_id]),
                                         self.__database_api_identifier)
-        result = self.get_response(response_id)
-        result_contract_id = self.get_contract_id(result)
-        check_that("contract_id", contract_id, equal_to(result_contract_id))
-        result = result["result"][1]
+        result = self.get_response(response_id)["result"][1]
         with this_dict(result):
             check_that_entry("exec_res", is_dict(), quiet=True)
             check_that_entry("tr_receipt", is_dict(), quiet=True)
@@ -78,7 +85,9 @@ class GetContractResult(BaseTest):
                         lcc.log_error("Wrong format of 'new_address', got: {}".format(result["exec_res"]["new_address"]))
                     else:
                         lcc.log_info("'new_address' has correct format: hex")
-                        contract_output_in_hex = result["exec_res"]["output"]
+                    contract_id_from_address = self.get_contract_from_address(self, result["exec_res"]["new_address"])
+                    check_that("contract_id", contract_id, equal_to(contract_id_from_address))
+                    contract_output_in_hex = result["exec_res"]["output"]
                     if not self.validator.is_hex(contract_output_in_hex):
                         lcc.log_error("Wrong format of 'output', got: {}".format(contract_output_in_hex))
                     else:
@@ -100,8 +109,8 @@ class GetContractResult(BaseTest):
                 else:
                     lcc.log_info("'bloom' has correct format: hex")
             check_that_entry("log", is_list())
-        lcc.set_step("call operation")
 
+        lcc.set_step("Check 'call_contract_operation', with 'getPennie' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -138,6 +147,8 @@ class GetContractResult(BaseTest):
                     lcc.log_error("Wrong format of 'address', got: {}".format(log_valuse["address"]))
                 else:
                     lcc.log_info("'address' has correct format: hex")
+                contract_id_from_address = self.get_contract_from_address(self, log_valuse["address"])
+                check_that("contract_id", contract_id, equal_to(contract_id_from_address))
                 check_that_entry("log", is_list(), quiet=True)
                 if not self.validator.is_hex(log_valuse["log"][0]):
                     lcc.log_error("Wrong format of 'address', got: {}".format(log_valuse["log"][0]))
@@ -159,6 +170,7 @@ class PositiveTesting(BaseTest):
         self.greet = self.get_byte_code("piggy", "greet")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
         self.echo = Echo()
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -170,7 +182,6 @@ class PositiveTesting(BaseTest):
                                                                            self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
