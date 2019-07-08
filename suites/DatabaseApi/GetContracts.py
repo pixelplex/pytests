@@ -44,7 +44,8 @@ class GetContracts(BaseTest):
     @lcc.test("Simple work of method 'get_contracts'")
     def method_main_check(self):
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier,
+                                                 supported_asset_id=self.echo_asset)
 
         lcc.set_step("Get info about created contract")
         response_id = self.send_request(self.get_request("get_contracts", [[contract_id]]),
