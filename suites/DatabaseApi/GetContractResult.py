@@ -339,3 +339,4 @@ class PositiveTesting(BaseTest):
                         lcc.log_error("Wrong format of 'bloom', got: {}".format(result["tr_receipt"]["bloom"]))
                 else:
                     lcc.log_info("'bloom' has correct format: hex")
+# todo: add bloom check, add test for several logs, add test with not empty data in log.
