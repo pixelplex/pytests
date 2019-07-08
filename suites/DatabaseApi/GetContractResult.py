@@ -206,7 +206,7 @@ class PositiveTesting(BaseTest):
         return contract_id
 
     @lcc.prop("type", "method")
-    @lcc.test("Get contract balance in several assets")
+    @lcc.test("Check contract info using method 'greet'")
     @lcc.depends_on("DatabaseApi.GetContractResult.GetContractResult.method_main_check")
     def check_contract_info_after_calling_greet_contract_method(self, get_random_integer):
         value_amount = get_random_integer
@@ -299,7 +299,7 @@ class PositiveTesting(BaseTest):
                 check_that_entry("data", is_str())
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract info using method 'greet'")
+    @lcc.test("Check create contract info of 'piggy' contract")
     @lcc.depends_on("DatabaseApi.GetContractResult.GetContractResult.method_main_check")
     def check_contract_info_after_create_contract(self, get_random_valid_asset_name, get_random_integer):
         asset_name = get_random_valid_asset_name
