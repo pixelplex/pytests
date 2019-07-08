@@ -53,8 +53,7 @@ class Receiver(object):
     def get_notice_obj(self, response, expected_id, print_log, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         actual_id, notice_obj = None, None
         notice_objs = response.get("params")[1][0]
-        lcc.log_debug("DEBUG NOTICES:\n{}".format(json.dumps(notice_objs, indent=4)))
-        for i, notice_obj in enumerate(notice_objs):
+        for notice_obj in notice_objs:
             actual_id = notice_obj["id"]
             if len(notice_objs) > 1:
                 if actual_id.startswith(expected_id):
@@ -94,10 +93,6 @@ class Receiver(object):
                     "The object with the results of the implementation of transaction:\n{}".format(
                         json.dumps(response, indent=4)))
             return notice_obj
-        # lcc.log_error(
-        #     "Not valid object id, got '{}' but expected '{}', response: {}".format(actual_id, expected_id,
-        #                                                                            json.dumps(response, indent=4)))
-        # raise Exception("Not valid object id")
 
     def get_notice(self, id_response, object_id, print_log):
         response = json.loads(self.web_socket.recv())

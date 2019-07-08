@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_none, is_list, is_, has_entry, check_that_in, not_equal_to, \
-    require_that
+    require_that, equal_to
 
 from common.base_test import BaseTest
 
@@ -166,16 +166,15 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check notices of created contract")
-    @lcc.tags("qa")
-    # @lcc.depends_on("DatabaseApi.SetSubscribeCallback.SetSubscribeCallback.method_main_check")
-    def check_created_contract_notices(self, get_random_integer):
+    @lcc.depends_on("DatabaseApi.SetSubscribeCallback.SetSubscribeCallback.method_main_check")
+    def check_contract_notices(self, get_random_integer):
         lcc.set_step("Set subscribe callback")
         subscription_callback_id = get_random_integer
         self.set_subscribe_callback(subscription_callback_id, notify_remove_create=True)
 
         lcc.set_step("Create 'piggy' contract in ECHO network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
-                                                 self.__database_api_identifier, log_broadcast=True,need_broadcast_result=True)
+                                                 self.__database_api_identifier, need_broadcast_result=True)
 
         lcc.set_step("Get notice about created contract")
         notice_about_created_contract = self.get_notice(subscription_callback_id,
@@ -183,15 +182,25 @@ class PositiveTesting(BaseTest):
                                                             self.echo.config.implementation_object_types.TRANSACTION))
 
         lcc.set_step("Check notice about created contract")
+        del contract_id.get("broadcast_result")["trx"]["operation_results"]
+        check_that("'received notice'", contract_id.get("broadcast_result").get("trx"),
+                   equal_to(notice_about_created_contract.get("trx")), quiet=True)
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy,
                                                               callee=contract_id.get("contract_id"))
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Contract method 'breakPiggy' is called successfully")
 
         lcc.set_step("Get notice about call contract")
         notice_about_call_contract = self.get_notice(subscription_callback_id,
                                                      object_id=self.get_implementation_object_type(
                                                          self.echo.config.implementation_object_types.TRANSACTION))
+
+        lcc.set_step("Check notice about call contract")
+        del broadcast_result.get("trx")["operation_results"]
+        check_that("'received notice'", broadcast_result.get("trx"),
+                   equal_to(notice_about_call_contract.get("trx")), quiet=True)

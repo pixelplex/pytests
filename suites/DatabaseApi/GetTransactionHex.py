@@ -48,8 +48,8 @@ class GetTransaction(BaseTest):
         lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
 
         lcc.set_step("Broadcast transaction that contains simple transfer operation to the ECHO network")
-        self.add_fee_to_operation(transfer_operation, self.__database_api_identifier)
-        broadcast_result, signed_tx = self.echo_ops.broadcast(echo=self.echo, list_operations=transfer_operation,
+        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
+        broadcast_result, signed_tx = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                               log_broadcast=False, get_signed_tx=True)
         require_that(
             "broadcast transaction complete successfully",
