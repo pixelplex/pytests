@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_none, this_dict, has_length, check_that_entry, is_integer, is_, \
-    equal_to, is_list
+    equal_to, is_list, require_that
 
 from common.base_test import BaseTest
 
@@ -169,6 +169,24 @@ class PositiveTesting(BaseTest):
                     notice_operation_history_id, operation_history_id))
                 break
 
+    def check_balance_and_statistic_objs_in_notice(self, notices, contract_id, contract_balance, asset_type):
+        counter = 0
+        expected_objs = [
+            self.get_implementation_object_type(self.echo.config.implementation_object_types.CONTRACT_BALANCE),
+            self.get_implementation_object_type(self.echo.config.implementation_object_types.CONTRACT_STATISTICS)]
+        for i, notice in enumerate(notices):
+            lcc.log_info("Check notice #'{}' with id='{}'".format(str(i), notice["id"]))
+            require_that("'owner'", notice["owner"], equal_to(contract_id))
+            if not notice["id"].startswith(expected_objs[i]):
+                if counter != len(notice):
+                    counter += 1
+                    continue
+                lcc.log_error("No '{}' object in the notice".format(notice["id"]))
+            if notice["id"].startswith(expected_objs[0]):
+                with this_dict(notice):
+                    check_that_entry("asset_type", equal_to(asset_type))
+                    check_that_entry("balance", equal_to(contract_balance))
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -194,13 +212,17 @@ class PositiveTesting(BaseTest):
     @lcc.test("Check notices of contract")
     @lcc.depends_on("DatabaseApi.SubscribeContracts.SubscribeContracts.method_main_check")
     def check_different_types_of_contract_notices(self, get_random_integer):
+        value_amount = 10
+        value_asset_id = self.echo_asset
+
         lcc.set_step("Set subscribe callback")
         subscription_callback_id = get_random_integer
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
-                                                 self.__database_api_identifier, value_amount=10)
+                                                 self.__database_api_identifier, value_amount=value_amount,
+                                                 value_asset_id=value_asset_id)
 
         lcc.set_step("Subscribe created contract")
         response_id = self.send_request(self.get_request("subscribe_contracts", [[contract_id]]),
@@ -230,17 +252,22 @@ class PositiveTesting(BaseTest):
                                                               bytecode=self.get_pennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        expected_contract_balance = value_amount - 1
 
-        # todo: add info balance_obj. Improve: ECHO-815
         lcc.set_step("Get notices about updates of created contract")
-        notice = self.get_notice(subscription_callback_id, notices_list=True)
+        notice_1 = self.get_notice(subscription_callback_id, notices_list=True)
+        notice_2 = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
         limit = 2
         response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        self.check_operations_ids_in_notice(response, notice, contract_id)
+        self.check_operations_ids_in_notice(response, notice_1, contract_id)
+
+        lcc.set_step("Check notice about updated contract balance and statistics")
+        self.check_balance_and_statistic_objs_in_notice(notice_2, contract_id, expected_contract_balance,
+                                                        value_asset_id)
 
         lcc.set_step("Call 'breakPiggy' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
