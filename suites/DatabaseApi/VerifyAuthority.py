@@ -72,6 +72,7 @@ class NegativeTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.signed_transaction_object = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -85,19 +86,6 @@ class NegativeTesting(BaseTest):
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
-        lcc.set_step("Collect 'verify_authority' non-valid operation")
-        signer = self.get_random_private_key()
-        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                  from_account_id=self.echo_acc0,
-                                                                  to_account_id=self.echo_acc1,
-                                                                  signer=signer)
-        lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
-        lcc.set_step("Sign non-valid transaction")
-        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
-        self.signed_transaction_object = self.echo_ops.broadcast(echo=self.echo,
-                                                                 list_operations=collected_operation,
-                                                                 no_broadcast=True)
-        lcc.log_info("Non-valid transaction was signed")
 
     def get_random_private_key(self):
         return self.echo.brain_key().get_private_key_base58()
@@ -110,7 +98,22 @@ class NegativeTesting(BaseTest):
     @lcc.test("Call method with incorrect signed transaction")
     @lcc.depends_on("DatabaseApi.VerifyAuthority.VerifyAuthority.method_main_check")
     def call_method_with_incorrect_signed_transaction(self):
-        lcc.set_step("Verify authority")
+        lcc.set_step("Collect 'verify_authority' non-valid operation")
+        signer = self.get_random_private_key()
+        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
+                                                                  from_account_id=self.echo_acc0,
+                                                                  to_account_id=self.echo_acc1,
+                                                                  signer=signer)
+        lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
+
+        lcc.set_step("Sign non-valid transaction")
+        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
+        self.signed_transaction_object = self.echo_ops.broadcast(echo=self.echo,
+                                                                 list_operations=collected_operation,
+                                                                 no_broadcast=True)
+        lcc.log_info("Non-valid transaction was signed")
+
+        lcc.set_step("Verify authority with incorrect signed transaction")
         response_id = self.send_request(self.get_request("verify_authority",
                                                          [self.signed_transaction_object.json()]),
                                         self.__database_api_identifier)
@@ -124,9 +127,24 @@ class NegativeTesting(BaseTest):
     @lcc.test("Call method with transaction without signature")
     @lcc.depends_on("DatabaseApi.VerifyAuthority.VerifyAuthority.method_main_check")
     def call_method_with_transaction_without_signature(self):
+        lcc.set_step("Collect 'verify_authority' non-valid operation")
+        signer = self.get_random_private_key()
+        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
+                                                                  from_account_id=self.echo_acc0,
+                                                                  to_account_id=self.echo_acc1,
+                                                                  signer=signer)
+        lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
+
+        lcc.set_step("Sign non-valid transaction")
+        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
+        self.signed_transaction_object = self.echo_ops.broadcast(echo=self.echo,
+                                                                 list_operations=collected_operation,
+                                                                 no_broadcast=True)
+        lcc.log_info("Non-valid transaction was signed")
+
+        lcc.set_step("Verify authority of transaction without signature")
         transaction_object = self.signed_transaction_object.copy()
         del transaction_object["signatures"]
-        lcc.set_step("Verify authority")
         response_id = self.send_request(self.get_request("verify_authority", [transaction_object.json()]),
                                         self.__database_api_identifier)
 
