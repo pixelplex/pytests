@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, equal_to, check_that_entry, is_integer, is_list,\
-    is_dict, is_str, ends_with, check_that, require_that, greater_than, has_item, is_none
+    is_dict, is_str, ends_with, check_that, require_that, greater_than
 
 from common.base_test import BaseTest
 import re
@@ -37,6 +37,7 @@ class GetContractResult(BaseTest):
                                                                            self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
+
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
         super().teardown_suite()
