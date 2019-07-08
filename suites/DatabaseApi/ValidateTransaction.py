@@ -63,8 +63,8 @@ class ValidateTransaction(BaseTest):
         lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
 
         lcc.set_step("Sign transaction that contains simple transfer operation")
-        self.add_fee_to_operation(transfer_operation, self.__database_api_identifier)
-        signed_transaction = self.echo_ops.broadcast(echo=self.echo, list_operations=transfer_operation,
+        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
+        signed_transaction = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                      no_broadcast=True).json()
         lcc.log_info("Signed transaction: {}".format(signed_transaction))
 
