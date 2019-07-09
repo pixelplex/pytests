@@ -147,12 +147,17 @@ class PositiveTesting(BaseTest):
         return response
 
     @staticmethod
-    def check_operations_ids_in_notice(response, notice, contract_id):
+    def check_contract_history_objs_in_notice(response, notice, contract_id):
         counter = 0
         for i in range(len(response)):
             operation_history_id = response[i]["id"]
             for j in range(len(response)):
                 notice_id = notice[j]["id"]
+                if not notice[j].get("contract"):
+                    if counter != len(response):
+                        counter += 1
+                        continue
+                    lcc.log_error("No needed operation in the notice, got: '{}'".format(notice))
                 notice_contract_id = notice[j]["contract"]
                 notice_operation_history_id = notice[j]["operation_id"]
                 if notice_operation_history_id != operation_history_id:
@@ -169,12 +174,19 @@ class PositiveTesting(BaseTest):
                     notice_operation_history_id, operation_history_id))
                 break
 
-    def check_balance_and_statistic_objs_in_notice(self, notices, contract_id, contract_balance, asset_type):
+    def check_balance_and_statistic_objs_in_notice(self, notices, contract_id, contract_balance, asset_type,
+                                                   expected_statistic=True):
         counter = 0
         expected_objs = [
             self.get_implementation_object_type(self.echo.config.implementation_object_types.CONTRACT_BALANCE),
             self.get_implementation_object_type(self.echo.config.implementation_object_types.CONTRACT_STATISTICS)]
+        if not expected_statistic:
+            expected_objs = expected_objs[0]
         for i, notice in enumerate(notices):
+            if not notice.get("owner"):
+                if counter != len(notices):
+                    counter += 1
+                    continue
             lcc.log_info("Check notice #'{}' with id='{}'".format(str(i), notice["id"]))
             require_that("'owner'", notice["owner"], equal_to(contract_id))
             if not notice["id"].startswith(expected_objs[i]):
@@ -263,7 +275,7 @@ class PositiveTesting(BaseTest):
         response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        self.check_operations_ids_in_notice(response, notice_1, contract_id)
+        self.check_contract_history_objs_in_notice(response, notice_1, contract_id)
 
         lcc.set_step("Check notice about updated contract balance and statistics")
         self.check_balance_and_statistic_objs_in_notice(notice_2, contract_id, expected_contract_balance,
@@ -283,7 +295,7 @@ class PositiveTesting(BaseTest):
         response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        self.check_operations_ids_in_notice(response, notice, contract_id)
+        self.check_contract_history_objs_in_notice(response, notice, contract_id)
 
     @lcc.prop("type", "method")
     @lcc.test("Check notices of contract created by another contract")
@@ -322,7 +334,7 @@ class PositiveTesting(BaseTest):
             self.echo.config.implementation_object_types.CONTRACT_HISTORY))
 
         lcc.set_step("Get contract history")
-        operation_history_id = self.get_contract_history(created_contract_id, log_response=True)["result"][0]["id"]
+        operation_history_id = self.get_contract_history(created_contract_id)["result"][0]["id"]
 
         lcc.set_step("Check notice about updated contract history created by another contract")
         with this_dict(notice):
@@ -336,7 +348,6 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
-        # todo: add info balance_obj. Improve: ECHO-815
         lcc.set_step("Get notices about updates of contract created by another contract")
         notice = self.get_notice(subscription_callback_id, notices_list=True)
 
@@ -345,7 +356,10 @@ class PositiveTesting(BaseTest):
         response = self.get_contract_history(created_contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history created by another contract")
-        # todo: add info balance_obj, remove 'logs'. Improve: ECHO-815
-        lcc.log_info("Response: '{}'".format(response))
-        lcc.log_info("Notice: '{}'".format(notice))
-        # self.check_operations_ids_in_notice(response, notice, created_contract_id)
+        self.check_contract_history_objs_in_notice(response, notice, created_contract_id)
+
+        lcc.set_step("Check notice about contract balance")
+        expected_contract_balance = 0
+        value_asset_id = self.echo_asset
+        self.check_balance_and_statistic_objs_in_notice(notice, created_contract_id, expected_contract_balance,
+                                                        value_asset_id, expected_statistic=False)
