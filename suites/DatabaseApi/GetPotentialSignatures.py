@@ -125,7 +125,7 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Create assets using asset_create operation and get info about them")
+    @lcc.test("Add additional account_auths to account and get potential signatures for it")
     @lcc.depends_on("DatabaseApi.GetPotentialSignatures.GetPotentialSignatures.method_main_check")
     def get_potential_signatures_of_accounts_with_additional_account_auths(self):
         first_account_active_keys = self.get_account_active_keys(self.echo_acc0)
