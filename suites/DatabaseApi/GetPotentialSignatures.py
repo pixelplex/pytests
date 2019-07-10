@@ -54,7 +54,7 @@ class GetPotentialSignatures(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_potential_signatures'")
     def method_main_check(self):
-        lcc.set_step("Build transaction")
+        lcc.set_step("Build transfer transaction")
         transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
                                                                   from_account_id=self.echo_acc0,
                                                                   to_account_id=self.echo_acc1)
@@ -69,10 +69,13 @@ class GetPotentialSignatures(BaseTest):
         expected_key_len = len(active_keys["key_auths"])
         expected_keys = [active_keys["key_auths"][0][0]]
 
-        lcc.set_step("Call 'get_potential_signatures' method  for builded transaction")
+        lcc.set_step("Get potential signatures for builded transaction")
         response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx.json()]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
+        lcc.log_info("Call 'get_potential_signatures' method for builded transaction")
+
+        lcc.set_step("Check 'get_potential_signatures' method result")
 
         require_that(
             "potential keys",
@@ -163,7 +166,7 @@ class PositiveTesting(BaseTest):
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                        log_broadcast=False)
             require_that(
-                "transfer to created account complete successfully",
+                "update of created account complete successfully",
                 self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
             )
 
@@ -187,7 +190,6 @@ class PositiveTesting(BaseTest):
         del signed_tx["signatures"]
         lcc.log_info("Transaction was built")
 
-        lcc.set_step("Get potential signatures")
         expected_key_len = len(actual_second_account_active_keys["key_auths"]) +\
             len(actual_second_account_active_keys["account_auths"])
         expected_keys = [actual_second_account_active_keys["key_auths"][0][0],
@@ -198,6 +200,8 @@ class PositiveTesting(BaseTest):
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call 'get_potential_signatures' method for builded transaction")
+
+        lcc.set_step("Check 'get_potential_signatures' method result")
         require_that(
             "potential keys",
             response["result"], has_length(expected_key_len), quiet=True
