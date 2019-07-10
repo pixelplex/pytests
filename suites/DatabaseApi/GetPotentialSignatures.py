@@ -106,8 +106,6 @@ class PositiveTesting(BaseTest):
                                              self.__registration_api_identifier)
         self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
     def get_account_active_keys(self, account_id):
