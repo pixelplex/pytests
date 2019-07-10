@@ -139,7 +139,6 @@ class PositiveTesting(BaseTest):
         if self.echo_acc0 not in account_auths:
             new_active_keys = second_account_active_keys.copy()
             new_active_keys["account_auths"].extend([account_auths_new_item])
-            new_active_keys["weight_threshold"] = 2
 
             transfer_operation = self.echo_ops.get_transfer_operation(
                 echo=self.echo,
