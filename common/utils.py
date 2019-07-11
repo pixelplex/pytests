@@ -65,7 +65,7 @@ class Utils(object):
                                                                                  eth_address=eth_address)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if update_account is not None:
-            operation = base_test.echo_ops.get_operation_json("get_account_update_operation", example=True)
+            operation = base_test.echo_ops.get_operation_json("account_update_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if eth_addr is not None:
             operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
@@ -385,8 +385,8 @@ class Utils(object):
 
     def get_eth_address(self, base_test, account_id, database_api_id, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
-        response_id = base_test.send_request(base_test.get_request("get_eth_address", [account_id]), database_api_id)
-        response = base_test.get_response(response_id)
+        response_id = base_test.send_request(base_test.get_request("get_eth_address", [account_id]), database_api_id, debug_mode=True)
+        response = base_test.get_response(response_id, log_response=True)
         if response["result"]:
             return response
         if temp_count <= self.block_count:

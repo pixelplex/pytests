@@ -116,6 +116,8 @@ class BaseTest(object):
             param = hex(int(param.split('.')[2])).split('x')[-1]
             hex_param = hex_param_64[:-len(param)] + param
             return hex_param
+        if self.validator.is_eth_address(param):
+            return hex_param_64[:-len(param)] + param
         lcc.log_error("Param not valid, got: {}".format(param))
         raise Exception("Param not valid")
 

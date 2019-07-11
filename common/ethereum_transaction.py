@@ -77,10 +77,12 @@ class EthereumTransactions(object):
     def get_status_of_committee_member(base_test, committee_member_address):
         if committee_member_address[:2] == "0x":
             committee_member_address = committee_member_address[2:]
+        print("\ncommittee_member_address: " + str(committee_member_address))
         method_call_result = base_test.web3.eth.call(
             {
                 "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
                 "data": COMMITTEE + base_test.get_byte_code_param(committee_member_address)
             }
         )
+        print("\nmethod_call_result: " + str(method_call_result))
         return bool(int(method_call_result.hex(), 16))
