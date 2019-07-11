@@ -158,4 +158,4 @@ class PositiveTesting(BaseTest):
             quiet=True
         )
 
-        # TODO: Add test with 'key_auths' updating
+        # todo: Add test with 'key_auths' updating, BUG ECHO-1031
