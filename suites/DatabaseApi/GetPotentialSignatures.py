@@ -173,7 +173,7 @@ class PositiveTesting(BaseTest):
                 self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
             )
 
-        lcc.log_info("'account_auths' of {} account was updated".format(self.echo_acc1))
+        lcc.log_info("'account_auths' of {} account was updated".format(self.echo_acc11))
 
         actual_second_account_active_keys = self.get_account_active_keys(self.echo_acc11)
         require_that(
