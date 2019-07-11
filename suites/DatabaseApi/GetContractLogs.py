@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that_entry, equal_to, is_list, is_str, check_that, \
-    not_equal_to
+    not_equal_to, has_entry
 
 import random
 
@@ -26,6 +26,7 @@ class GetContractLogs(BaseTest):
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
         self.echo = Echo()
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -61,16 +62,20 @@ class GetContractLogs(BaseTest):
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier,
                                                  value_amount=value_amount)
-        lcc.set_step("Call contracts method getPennie")
+
+        lcc.set_step("Call contracts method getPennie and get its block number")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         block_num = broadcast_result["block_num"]
+
         lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num]),
                                         self.__database_api_identifier)
+
+        lcc.set_step("Check contract logs between blocks")
         result = self.get_response(response_id)["result"][0]
         with this_dict(result):
             check_that("lenght response", len(result), equal_to(3))
@@ -140,20 +145,24 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_of_two_identical_contracts(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=value_amount)
-        lcc.set_step("Call contracts method getPennie")
+
+        lcc.set_step("Call contracts method getPennie and get its block number")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         block_num = broadcast_result["block_num"]
+
         lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num]),
                                         self.__database_api_identifier)
         result1 = self.get_response(response_id)["result"][0]
+
         lcc.set_step("Recall contract to have two identical logs")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
@@ -161,12 +170,15 @@ class PositiveTesting(BaseTest):
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         block_num = broadcast_result["block_num"]
+
         lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num]),
                                         self.__database_api_identifier)
+
+        lcc.set_step("Check if contract logs identical")
         result2 = self.get_response(response_id)["result"][0]
 
-        check_that("responses", result1, equal_to(result2))
+        check_that("contract logs", result1, equal_to(result2))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs of two different contracts")
@@ -174,8 +186,12 @@ class PositiveTesting(BaseTest):
     def check_contract_logs_of_two_different_contracts(self, get_random_integer, get_random_string):
         int_param = get_random_integer
         string_param = get_random_string
+
+        lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
                                                                 self.__database_api_identifier)
+
+        lcc.set_step("Call method 'set_uint'")
         bytecode = self.set_uint + self.get_byte_code_param(int_param, param_type=int)
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=bytecode,
@@ -183,13 +199,14 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
 
-        lcc.set_step("Check that uint field created in contract. Call method 'get_uint'")
+        lcc.set_step("Call method 'get_uint'")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_uint,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
+        lcc.set_step("Call method 'set_string'")
         bytecode = self.set_string + self.get_byte_code_param(string_param, param_type=str)
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=bytecode,
@@ -197,48 +214,58 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
 
-        lcc.set_step("Check that string field created in contract. Call method 'get_string'")
+        lcc.set_step("Call method 'get_string'")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_string,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
+
+        lcc.set_step("Get current block with contract")
         block_num = broadcast_result["block_num"]
+
         lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_dynamic_fields_id, 0, block_num]),
                                         self.__database_api_identifier)
+
+        lcc.set_step("Check if contract logs different")
         result = self.get_response(response_id)["result"]
 
-        check_that("responses", result[0], not_equal_to(result[1]))
+        check_that("contract logs", result[0], not_equal_to(result[1]))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'start' to 'head_block_number'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_start_to_head_block_number(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=value_amount)
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
-        lcc.set_step("Pending the passage of several contracts")
+
+        lcc.set_step("Pending the passage of several block and get head block number")
         self.set_timeout_wait(10)
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"]
         head_block_number = response["head_block_number"]
-        lcc.set_step("Get contract logs from 0 block to head_block '{}'".format(head_block_number))
+        lcc.log_info("head_block number: {}".format(head_block_number))
 
+        lcc.set_step("Get contract logs from 0 block to head_block '{}'".format(head_block_number))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, head_block_number]),
                                         self.__database_api_identifier)
-        result = self.get_response(response_id)["result"][0]
 
+        lcc.set_step("Check if lenght of contract logs is 3")
+        result = self.get_response(response_id)["result"][0]
         with this_dict(result):
-            check_that("lenght response", len(result), equal_to(3))
+            check_that("lenght contract logs", len(result), equal_to(3))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'start' to 'current_block'")
@@ -249,49 +276,59 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=value_amount)
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
+
+        lcc.set_step("Get current block and get contract log from 0 block to current block")
         block_num = broadcast_result["block_num"]
-        lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
+        lcc.log_info("current_block number: {}". format(block_num))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num]),
                                         self.__database_api_identifier)
+
+        lcc.set_step("Check if lenght of contract logs is 3")
         result = self.get_response(response_id)["result"][0]
         with this_dict(result):
-            check_that("lenght response", len(result), equal_to(3))
+            check_that("lenght contract logs", len(result), equal_to(3))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'current_block' to 'head_block_number'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_current_block_to_head_block_number(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=value_amount)
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
+
+        lcc.set_step("Get current block")
         block_num = broadcast_result["block_num"]
-        lcc.log_info("get current_block number: {}".format(block_num))
-        lcc.set_step("Pending the passage of several contracts")
+        lcc.log_info("current_block number: {}".format(block_num))
+
+        lcc.set_step("Pending the passage of several block and get head block number")
         self.set_timeout_wait(10)
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"]
         head_block_number = response["head_block_number"]
-        lcc.set_step("Get contract logs from block with contract '{}'-1, to head block '{}'".format(block_num,
-                                                                                                    head_block_number))
+        lcc.log_info("head_block number: '{}'".format(head_block_number))
         response_id = self.send_request(self.get_request("get_contract_logs",
                                                          [contract_id, block_num - 1, head_block_number]),
                                         self.__database_api_identifier)
-        result = self.get_response(response_id)["result"][0]
 
+        lcc.set_step("Check if lenght of contract logs is 3")
+        result = self.get_response(response_id)["result"][0]
         with this_dict(result):
             check_that("lenght response", len(result), equal_to(3))
 
@@ -300,31 +337,42 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_random_block_to_head_block_number(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=value_amount)
+
+        lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        block_num = broadcast_result["block_num"]
-        lcc.log_info("get random_block number in [0, {}]".format(block_num))
 
+        lcc.set_step("Get current block")
+        block_num = broadcast_result["block_num"]
+        lcc.log_info("current_block number: {}".format(block_num))
+
+        lcc.set_step("Get random_block in [0, current_block]")
         block_num = self.get_random_value(self, 0, block_num)
-        lcc.log_info("random_block: {}".format(block_num))
+        lcc.log_info("random_block number: {}".format(block_num))
+
+        lcc.set_step("Pending the passage of several block and get head block number")
         self.set_timeout_wait(10)
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"]
         head_block_number = response["head_block_number"]
+        lcc.log_info("head_block number: {}".format(head_block_number))
+
         lcc.set_step("Get contract logs from random_block '{}'-1, to head block '{}'".format(block_num,
                                                                                              head_block_number))
         response_id = self.send_request(self.get_request("get_contract_logs",
                                         [contract_id, block_num - 1, head_block_number]),
                                         self.__database_api_identifier)
-        result = self.get_response(response_id)["result"][0]
 
+        lcc.set_step("Check if lenght of contract logs is 3")
+        result = self.get_response(response_id)["result"][0]
         with this_dict(result):
             check_that("lenght response", len(result), equal_to(3))
 
@@ -333,26 +381,35 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_incorrect_block_to_head_block_number(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier,
                                                  value_amount=value_amount)
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
+
+        lcc.set_step("Pending the passage of several block and get head block number")
+        self.set_timeout_wait(10)
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)["result"]
         head_block_number = response["head_block_number"]
+        lcc.log_info("head_block number: {}".format(head_block_number))
+
         lcc.set_step("Get contract logs from block -1, to head block '{}'".format(head_block_number))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, -1, head_block_number]),
                                         self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
 
+        lcc.set_step("Check if lenght of contract logs is 3")
+        result = self.get_response(response_id)["result"]
         with this_dict(result):
+            # todo: change equal_to([]) to equal_to(3). Bug ECHOT-1033.
             check_that("lenght response", result, equal_to([]))
 
     @lcc.prop("type", "method")
@@ -360,10 +417,12 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_outside_the_block(self, get_random_integer):
         value_amount = get_random_integer
+
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier,
                                                  value_amount=value_amount)
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
@@ -371,11 +430,72 @@ class PositiveTesting(BaseTest):
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         block_num = broadcast_result["block_num"]
-        # todo: check pref_block, why block-1 has logs?
-        lcc.set_step("Get contract logs from block 0, to block before the current_block".format(block_num - 2))
+
+        # todo: check previous block, why current_block-1 has logs? Bug: ECHO-1032
+        lcc.set_step("Get contract logs from block 0, to block before block with contract logs: {}".format(block_num - 2))
         response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num - 2]),
                                         self.__database_api_identifier)
+
+        lcc.set_step("Check if contract logs equal to []")
         result = self.get_response(response_id)["result"]
 
         with this_dict(result):
             check_that("lenght response", result, equal_to([]))
+
+
+@lcc.prop("testing", "negative")
+@lcc.tags("database_api", "get_chain_id")
+@lcc.suite("Negative testing of method 'get_chain_id'", rank=2)
+class NegativeTesting(BaseTest):
+
+    def __init__(self):
+        super().__init__()
+        self.__database_api_identifier = None
+        self.__registration_api_identifier = None
+        self.contract_piggy = self.get_byte_code("piggy", "code")
+        self.getPennie = self.get_byte_code("piggy", "getPennie")
+
+    def setup_suite(self):
+        super().setup_suite()
+        self._connect_to_echopy_lib()
+        lcc.set_step("Setup for {}".format(self.__class__.__name__))
+        self.__database_api_identifier = self.get_identifier("database")
+        self.__registration_api_identifier = self.get_identifier("registration")
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def teardown_suite(self):
+        self._disconnect_to_echopy_lib()
+        super().teardown_suite()
+
+    @lcc.prop("type", "method")
+    @lcc.test("Call method with 'to block' equal to -1")
+    @lcc.tags("Bug: 'ECHO-1034'")
+    @lcc.disabled()
+    @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
+    def check_contract_logs_with_negative_block_number(self, get_random_integer):
+        value_amount = get_random_integer
+
+        lcc.set_step("Create contract in the Echo network and get it's contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+                                                 self.__database_api_identifier,
+                                                 value_amount=value_amount)
+        
+        lcc.set_step("Call contracts method getPennie")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.getPennie, callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                log_broadcast=False)
+
+        lcc.set_step("Get contract logs from block 0, to block -1")
+        params = [contract_id, 0, -1]
+        response_id = self.send_request(self.get_request("get_contract_logs", params),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id, negative=True)["result"]
+        check_that("'get_contract_logs' return error message with '{}' params".format(params),
+                   result, has_entry("error"), quiet=True)
