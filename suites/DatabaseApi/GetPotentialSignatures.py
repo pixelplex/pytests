@@ -181,8 +181,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Build transfer transaction")
         transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
                                                                   from_account_id=self.echo_acc1,
-                                                                  to_account_id=self.echo_acc0,
-                                                                  signer=self.echo_acc0)
+                                                                  to_account_id=self.echo_acc0)
         collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
         signed_tx = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                             no_broadcast=True)
