@@ -484,7 +484,7 @@ class NegativeTesting(BaseTest):
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier,
                                                  value_amount=value_amount)
-        
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
