@@ -66,7 +66,6 @@ class GetPotentialSignatures(BaseTest):
         lcc.log_info("Transaction was built")
 
         active_keys = self.get_account_active_keys(self.echo_acc0)
-        expected_key_len = len(active_keys["key_auths"])
         expected_keys = [active_keys["key_auths"][0][0]]
 
         lcc.set_step("Get potential signatures for builded transaction")
@@ -76,12 +75,6 @@ class GetPotentialSignatures(BaseTest):
         lcc.log_info("Call 'get_potential_signatures' method for builded transaction")
 
         lcc.set_step("Check 'get_potential_signatures' method result")
-
-        require_that(
-            "potential keys",
-            response["result"], has_length(expected_key_len), quiet=True
-        )
-
         require_that(
             "potential keys",
             response["result"], equal_to(expected_keys), quiet=True
@@ -192,8 +185,6 @@ class PositiveTesting(BaseTest):
         del signed_tx["signatures"]
         lcc.log_info("Transaction was built")
 
-        expected_key_len = len(actual_second_account_active_keys["key_auths"]) +\
-            len(actual_second_account_active_keys["account_auths"])
         expected_keys = [
             first_account_active_keys["key_auths"][0][0],
             actual_second_account_active_keys["key_auths"][0][0]
@@ -202,14 +193,10 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get potential signatures for builded transaction")
         response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx.json()]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id, log_response=True)
+        response = self.get_response(response_id)
         lcc.log_info("Call 'get_potential_signatures' method for builded transaction")
 
         lcc.set_step("Check 'get_potential_signatures' method result")
-        require_that(
-            "potential keys",
-            response["result"], has_length(expected_key_len), quiet=True
-        )
         require_that(
             "potential keys",
             response["result"], equal_to(expected_keys), quiet=True
