@@ -20,9 +20,11 @@ class ChangeActiveCommitteeMember(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.eth_address = None
+        self.eth_address_2 = None
 
     def get_active_committee_members_ids(self):
-        response_id = self.send_request(self.get_request("get_global_properties"), self.__database_api_identifier, debug_mode=True)
+        response_id = self.send_request(self.get_request("get_global_properties"), self.__database_api_identifier,
+                                        debug_mode=True)
         return self.get_response(response_id, log_response=True)["result"]["active_committee_members"]
 
     def get_active_committee_members_eth_addresses(self, active_committee_members_ids=None, print_log=True):
@@ -63,7 +65,9 @@ class ChangeActiveCommitteeMember(BaseTest):
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.eth_address = self.web3.eth.accounts[0]
-        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
+        self.eth_address_2 = self.web3.eth.accounts[1]
+        lcc.log_info(
+            "Ethereum addresses in the ethereum network: #1='{}', #2='{}'".format(self.eth_address, self.eth_address_2))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -74,6 +78,9 @@ class ChangeActiveCommitteeMember(BaseTest):
     def change_committee_eth_address_scenario(self, get_random_valid_account_name):
         new_account_name = get_random_valid_account_name
         new_account = new_account_name
+
+        # lcc.log_info("Accounts:\n{}".format(self.web3.eth.accounts))
+        # print(str(self.web3.eth.accounts))
 
         lcc.set_step("Get active committee members ids, ethereum addresses and store")
         active_committee_members = self.get_active_committee_members()
@@ -94,29 +101,38 @@ class ChangeActiveCommitteeMember(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Make new account lifetime member")
-        self.utils.perform_account_upgrade_operation(self, new_account, self.__database_api_identifier, log_broadcast=True)
+        self.utils.perform_account_upgrade_operation(self, new_account, self.__database_api_identifier,
+                                                     log_broadcast=True)
         lcc.log_info("New '{}' account became lifetime member".format(new_account))
 
-        lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier, log_broadcast=True)
-        lcc.log_info("Ethereum address for '{}' account generated successfully".format(new_account))
+        # lcc.set_step("Generate ethereum address for new account")
+        # self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier,
+        #                                                   log_broadcast=True)
+        # lcc.log_info("Ethereum address for '{}' account generated successfully".format(new_account))
+        #
+        # lcc.set_step("Get ethereum address of created account in the network")
+        # eth_account_address = self.utils.get_eth_address(self, new_account,
+        #                                                  self.__database_api_identifier)["result"]["eth_addr"]
+        # lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
-        lcc.set_step("Get ethereum address of created account in the network")
-        eth_account_address = self.utils.get_eth_address(self, new_account,
-                                                         self.__database_api_identifier)["result"]["eth_addr"]
-        lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
+        lcc.set_step("Create account in the ethereum network")
+        eth_account_address = self.eth_address_2[2:]
+        lcc.log_info("Accounts:\n{}".format(self.web3.eth.accounts))
+        print(str(self.web3.eth.accounts))
 
         lcc.set_step("Make new account committee member")
         broadcast_result = self.utils.perform_committee_member_create_operation(self, new_account,
                                                                                 eth_account_address,
-                                                                                self.__database_api_identifier, log_broadcast=True)
+                                                                                self.__database_api_identifier,
+                                                                                log_broadcast=True)
         new_committee_member_account_id = self.get_operation_results_ids(broadcast_result)
         lcc.log_info("'{}' account became new committee member, "
                      "his committee member account id: '{}'".format(new_account, new_committee_member_account_id))
 
         lcc.set_step("Get info about object committee member account id")
         param = [new_committee_member_account_id]
-        response_id = self.send_request(self.get_request("get_objects", [param]), self.__database_api_identifier, debug_mode=True)
+        response_id = self.send_request(self.get_request("get_objects", [param]), self.__database_api_identifier,
+                                        debug_mode=True)
         vote_id = self.get_response(response_id, log_response=True)["result"][0]["vote_id"]
         lcc.log_info("Vote id of new committee member: '{}'".format(vote_id))
 
@@ -129,7 +145,8 @@ class ChangeActiveCommitteeMember(BaseTest):
         lcc.set_step("Perform 'account_update_operation' to vote for new committee member")
         account_info = response["result"][0]
         account_info["options"]["votes"].append(vote_id)
-        self.utils.perform_account_update_operation(self, self.echo_acc0, account_info, self.__database_api_identifier, log_broadcast=True)
+        self.utils.perform_account_update_operation(self, self.echo_acc0, account_info, self.__database_api_identifier,
+                                                    log_broadcast=True)
         lcc.log_info("'{}' account vote for new '{}' committee member".format(self.echo_acc0, new_account))
 
         lcc.set_step("Waiting for maintenance and release two blocks")
@@ -154,32 +171,28 @@ class ChangeActiveCommitteeMember(BaseTest):
         new_member_address = self.get_active_committee_members_eth_addresses(new_member_id, print_log=False)
         lcc.log_info("'{}' old committee member address: '{}', '{}' new committee member address: '{}'"
                      "".format(old_member_id, old_member_address, new_member_id, new_member_address))
-        # temp = 0
-        # for i in range(30):
-        #     print("\nnew_member_address: " + str(new_member_address))
-        #     status = self.eth_trx.get_status_of_committee_member(self, new_member_address)
-        #     if not status:
-        #         self.set_timeout_wait(5)
-        #         temp = temp + 5
-        #     else:
-        #         break
-        # lcc.log_debug("Waiting time for ethereum: '{}'".format(temp))
+        temp = 0
+        for i in range(5):
+            print("\nnew_member_address: " + str(new_member_address))
+            status = self.eth_trx.get_status_of_committee_member(self, new_member_address)
+            if not status:
+                self.set_timeout_wait(5)
+                temp = temp + 5
+            else:
+                break
+        lcc.log_debug("Waiting time for ethereum: '{}'".format(temp))
 
         new_committee_member_status = self.eth_trx.get_status_of_committee_member(self, new_member_address)
         # todo: change to is_true(). Bug ECHO-945
-        check_that("'status of new committee member'", new_committee_member_status, is_true())
+        check_that("'status of new committee member '{}''".format(new_member_address), new_committee_member_status,
+                   is_true())
 
         old_committee_member_status = self.eth_trx.get_status_of_committee_member(self, old_member_address)
         # todo: change to is_false(). Bug ECHO-945
-        check_that("'status of old committee member'", old_committee_member_status, is_false())
+        check_that("'status of old committee member '{}''".format(old_member_address), old_committee_member_status,
+                   is_false())
 
         # lcc.set_step("Replenish balance of new active committee member")
         # self.eth_trx.replenish_balance_of_committee_member(self.web3, self.eth_address, eth_account_address)
 
-        # new_committee_member_status = self.eth_trx.get_status_of_committee_member(self, "2A3AEFA8C9aa15D889000B30188290571EfAaecF")
-        # # todo: change to is_true(). Bug ECHO-945
-        # check_that("'status of new committee member'", new_committee_member_status, is_true())
-        #
-        # old_committee_member_status = self.eth_trx.get_status_of_committee_member(self, "4DE1618a5E0f038b78F7044Fa9dD8F778eA6d6ef")
-        # # todo: change to is_false(). Bug ECHO-945
-        # check_that("'status of old committee member'", old_committee_member_status, is_false())
+        # todo: обратно проголосовать за старого
