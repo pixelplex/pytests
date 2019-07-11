@@ -107,9 +107,13 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Registration API identifier is '{}'".format(self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
-                                             self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
+        self.echo_acc10 = self.get_account_id(self.echo_acc10, self.__database_api_identifier,
+                                              self.__registration_api_identifier)
+        self.echo_acc11 = self.get_account_id(self.echo_acc11, self.__database_api_identifier,
+                                              self.__registration_api_identifier)
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0,
+                                                                           self.echo_acc10,
+                                                                           self.echo_acc11))
 
     def get_account_active_keys(self, account_id):
         lcc.set_step("Get active keys info about account: {}".format(account_id))
@@ -131,19 +135,19 @@ class PositiveTesting(BaseTest):
     @lcc.test("Add additional account_auths to account and get potential signatures for it")
     @lcc.depends_on("DatabaseApi.GetPotentialSignatures.GetPotentialSignatures.method_main_check")
     def get_potential_signatures_of_accounts_with_additional_account_auths(self):
-        first_account_active_keys = self.get_account_active_keys(self.echo_acc0)
-        second_account_active_keys = self.get_account_active_keys(self.echo_acc1)
+        first_account_active_keys = self.get_account_active_keys(self.echo_acc10)
+        second_account_active_keys = self.get_account_active_keys(self.echo_acc11)
         account_auths = [account_auth[0] for account_auth in second_account_active_keys["account_auths"]]
-        account_auths_new_item = [self.echo_acc0, 1]
+        account_auths_new_item = [self.echo_acc10, 1]
         lcc.set_step("Update info of {} account (add account_auths)".format(self.echo_acc1))
-        if self.echo_acc0 not in account_auths:
+        if self.echo_acc10 not in account_auths:
             new_active_keys = second_account_active_keys.copy()
             new_active_keys["account_auths"].extend([account_auths_new_item])
 
             transfer_operation = self.echo_ops.get_transfer_operation(
                 echo=self.echo,
                 from_account_id=self.echo_acc0,
-                to_account_id=self.echo_acc1,
+                to_account_id=self.echo_acc11,
                 amount=3000000
             )
             collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
@@ -155,7 +159,7 @@ class PositiveTesting(BaseTest):
             )
 
             operation = self.echo_ops.get_account_update_operation(
-                echo=self.echo, account=self.echo_acc1,
+                echo=self.echo, account=self.echo_acc11,
                 key_auths=new_active_keys["key_auths"],
                 account_auths=new_active_keys["account_auths"],
                 weight_threshold=new_active_keys["weight_threshold"]
@@ -171,7 +175,7 @@ class PositiveTesting(BaseTest):
 
         lcc.log_info("'account_auths' of {} account was updated".format(self.echo_acc1))
 
-        actual_second_account_active_keys = self.get_account_active_keys(self.echo_acc1)
+        actual_second_account_active_keys = self.get_account_active_keys(self.echo_acc11)
         require_that(
             "new keys",
             actual_second_account_active_keys["account_auths"], has_item(account_auths_new_item),
@@ -180,8 +184,8 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Build transfer transaction")
         transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                  from_account_id=self.echo_acc1,
-                                                                  to_account_id=self.echo_acc0)
+                                                                  from_account_id=self.echo_acc11,
+                                                                  to_account_id=self.echo_acc10)
         collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
         signed_tx = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                             no_broadcast=True)
@@ -190,13 +194,15 @@ class PositiveTesting(BaseTest):
 
         expected_key_len = len(actual_second_account_active_keys["key_auths"]) +\
             len(actual_second_account_active_keys["account_auths"])
-        expected_keys = [actual_second_account_active_keys["key_auths"][0][0],
-                         first_account_active_keys["key_auths"][0][0]]
+        expected_keys = [
+            first_account_active_keys["key_auths"][0][0],
+            actual_second_account_active_keys["key_auths"][0][0]
+        ]
 
         lcc.set_step("Get potential signatures for builded transaction")
         response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx.json()]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
+        response = self.get_response(response_id, log_response=True)
         lcc.log_info("Call 'get_potential_signatures' method for builded transaction")
 
         lcc.set_step("Check 'get_potential_signatures' method result")
