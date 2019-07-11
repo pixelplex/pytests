@@ -202,4 +202,4 @@ class PositiveTesting(BaseTest):
             response["result"], equal_to(expected_keys), quiet=True
         )
 
-        # TODO: Add test with 'key_auths' update
+        # todo: Add test with 'key_auths' update, BUG ECHO-1031
