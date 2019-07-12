@@ -13,9 +13,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_vesting_balances")
 @lcc.suite("Check work of method 'get_vesting_balances'", rank=1)
 class GetVestingBalances(BaseTest):
@@ -100,7 +100,7 @@ class GetVestingBalances(BaseTest):
                             check_that_entry("begin_balance", is_(value_amount), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_vesting_balances")
 @lcc.suite("Positive testing of method 'get_vesting_balances'", rank=2)
 class PositiveTesting(BaseTest):

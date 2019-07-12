@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_contract")
 @lcc.suite("Check work of method 'get_contract'", rank=1)
 class GetContract(BaseTest):
@@ -69,7 +69,7 @@ class GetContract(BaseTest):
         check_that("'contract storage var 2'", contract_storage[0][1], is_list(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_contract")
 @lcc.suite("Positive testing of method 'get_contract'", rank=2)
 class PositiveTesting(BaseTest):

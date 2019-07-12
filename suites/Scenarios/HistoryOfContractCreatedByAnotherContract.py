@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("history_of_contract_created_by_another_contract")
 @lcc.suite("Check scenario 'Contract history that was created using another contract'")
 class HistoryOfContractCreatedByAnotherContract(BaseTest):
@@ -46,6 +46,8 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario describes the creation of a contract whose method creates a new contract. "
               "Getting the history of the created contract")
+    @lcc.tags("Bug ECHO-1037")
+    @lcc.disabled()
     def history_of_contract_created_by_another_contract(self):
         operations = []
         # todo: add. Bug ECHO-812

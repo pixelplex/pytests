@@ -13,9 +13,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_balance_objects")
 @lcc.suite("Check work of method 'get_balance_objects'", rank=1)
 class GetBalanceObjects(BaseTest):
@@ -79,7 +79,7 @@ class GetBalanceObjects(BaseTest):
             lcc.log_info("Testing of the 'get_balance_objects' method was successfully completed earlier")
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_balance_objects")
 @lcc.suite("Positive testing of method 'get_balance_objects'", rank=2)
 class PositiveTesting(BaseTest):

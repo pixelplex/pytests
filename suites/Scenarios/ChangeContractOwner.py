@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("change_contract_owner")
 @lcc.suite("Check scenario 'Change contract owner'")
 class ChangeContractOwner(BaseTest):
