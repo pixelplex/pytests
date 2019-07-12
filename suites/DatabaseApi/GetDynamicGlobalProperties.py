@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_dynamic_global_properties")
 @lcc.suite("Check work of method 'get_dynamic_global_properties'", rank=1)
 class GetDynamicGlobalProperties(BaseTest):
@@ -72,55 +72,7 @@ class GetDynamicGlobalProperties(BaseTest):
                 check_that_entry("extensions", is_list(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
-@lcc.tags("database_api", "get_dynamic_global_properties")
-@lcc.suite("Positive testing of method 'get_dynamic_global_properties'", rank=2)
-class PositiveTesting(BaseTest):
-
-    def __init__(self):
-        super().__init__()
-        self.__api_identifier = None
-
-    def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.__api_identifier = self.get_identifier("database")
-        lcc.log_info("Database API identifier is '{}'".format(self.__api_identifier))
-
-    @lcc.prop("type", "method")
-    @lcc.test("Check for dynamic field changes")
-    @lcc.depends_on("DatabaseApi.GetDynamicGlobalProperties.GetDynamicGlobalProperties.method_main_check")
-    def check_dynamic_fields(self):
-        lcc.set_step("Get dynamic global properties")
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), self.__api_identifier)
-        response_1 = self.get_response(response_id)["result"]
-        lcc.log_info("Call method 'get_dynamic_global_properties' first time")
-
-        lcc.set_step("Waiting for maintenance")
-        self.wait_for_next_maintenance(self.__api_identifier)
-
-        lcc.set_step("Get dynamic global properties")
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), self.__api_identifier)
-        response_2 = self.get_response(response_id)["result"]
-        lcc.log_info("Call method 'get_dynamic_global_properties' second time")
-
-        lcc.set_step("Check that the dynamic fields of the first answer do not match the fields of the subsequent")
-        dynamic_properties = ["head_block_number", "head_block_id", "time", "recently_missed_count", "current_aslot",
-                              "recent_slots_filled", "last_irreversible_block_num"]
-        for i in (range(len(dynamic_properties))):
-            check_that("'{}'".format(dynamic_properties[i]),
-                       response_1[dynamic_properties[i]],
-                       not_equal_to(response_2[dynamic_properties[i]]))
-
-        lcc.set_step("Check matching dynamic fields")
-        same_properties = ["id", "committee_budget", "accounts_registered_this_interval"]
-        for i in (range(len(same_properties))):
-            check_that("'{}'".format(same_properties[i]),
-                       response_1[same_properties[i]],
-                       equal_to(response_2[same_properties[i]]))
-
-
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_dynamic_global_properties")
 @lcc.suite("Negative testing of method 'get_dynamic_global_properties'", rank=3)
 class NegativeTesting(BaseTest):

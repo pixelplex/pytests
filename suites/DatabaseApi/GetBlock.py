@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_block")
 @lcc.suite("Check work of method 'get_block'", rank=1)
 class GetBlock(BaseTest):
@@ -84,7 +84,7 @@ class GetBlock(BaseTest):
                     check_that_entry("_bba_sign", is_str(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_block")
 @lcc.suite("Positive testing of method 'get_block'", rank=2)
 class PositiveTesting(BaseTest):

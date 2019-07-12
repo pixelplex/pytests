@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("history_api", "get_relative_account_history")
 @lcc.suite("Check work of method 'get_relative_account_history'", rank=1)
 class GetRelativeAccountHistory(BaseTest):
@@ -70,7 +70,7 @@ class GetRelativeAccountHistory(BaseTest):
                 check_that_entry("virtual_op", is_integer(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("history_api", "get_relative_account_history")
 @lcc.suite("Positive testing of method 'get_relative_account_history'", rank=2)
 class PositiveTesting(BaseTest):

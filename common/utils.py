@@ -510,12 +510,17 @@ class Utils(object):
     def get_account_history_operations(self, base_test, account_id, operation_id, history_api_id, limit, start="1.10.0",
                                        stop="1.10.0", temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
-        # todo: remove timeout_wait. Bug: "ECHO-700"
-        base_test.set_timeout_wait(BLOCK_RELEASE_INTERVAL * 2)
         params = [account_id, operation_id, start, stop, limit]
         response_id = base_test.send_request(base_test.get_request("get_account_history_operations", params),
                                              history_api_id)
-        response = base_test.get_response(response_id)
+        # todo: remove debug_mode and error block. Bug: "ECHO-700"
+        response = base_test.get_response(response_id, debug_mode=True)
+        if "error" in response:
+            if temp_count <= self.block_count:
+                base_test.set_timeout_wait(timeout, print_log=False)
+                self.waiting_time_result = self.waiting_time_result + timeout
+                return self.get_account_history_operations(base_test, account_id, operation_id, history_api_id,
+                                                           start=start, limit=limit, stop=stop, temp_count=temp_count)
         if len(response["result"]) == limit:
             return response
         if temp_count <= self.block_count:
