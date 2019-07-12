@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from time import strptime
+from datetime import datetime, timedelta
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, check_that, has_length, is_true, equal_to, is_none
 
@@ -37,6 +39,17 @@ class GetRecentTransactionById(BaseTest):
                 description = "'{}'".format(key)
             check_that("{}".format(description), first_field, equal_to(second_field), quiet=True)
 
+    @staticmethod
+    def compare_datetimes(first_time, second_time):
+        pattern = "%Y-%m-%dT%H:%M:%S"
+        return strptime(first_time, pattern) > strptime(second_time, pattern)
+
+    def get_expiration_time(self, seconds):
+        pattern = "%Y-%m-%dT%H:%M:%S"
+        now = self.get_datetime(global_datetime=True)
+        expiration = datetime.strptime(now, pattern) + timedelta(seconds=seconds)
+        return expiration.strftime(pattern)
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -66,8 +79,10 @@ class GetRecentTransactionById(BaseTest):
 
         lcc.set_step("Broadcast transaction that contains simple transfer operation to the ECHO network")
         collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
+
+        expiration = self.get_expiration_time(30)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
+                                                   expiration=expiration, log_broadcast=False)
         require_that(
             "broadcast transaction complete successfully",
             self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
@@ -95,6 +110,13 @@ class GetRecentTransactionById(BaseTest):
         self.compare_objects(transaction_from_api_method, transaction_from_broadcast_result)
 
         lcc.set_step("Wait time for transaction expiration")
+        while True:
+            expiration_status = self.compare_datetimes(
+                self.get_datetime(global_datetime=True),
+                transaction_from_broadcast_result["expiration"]
+            )
+            if expiration_status:
+                break
         self.set_timeout_wait(BLOCK_RELEASE_INTERVAL)
 
         lcc.set_step("Get recent transaction by id (after it expire)")
