@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("many_contracts_in_one_trx")
 @lcc.suite("Check scenario 'Create many contracts in a single transaction'")
 class CreateManyContractsInOneTrx(BaseTest):

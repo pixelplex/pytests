@@ -11,7 +11,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("sidechain")
 @lcc.suite("Check scenario 'EthToEcho and EchoToEth'")
 class Sidechain(BaseTest):

@@ -12,7 +12,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("echo_asset_precision")
 @lcc.suite("Check scenario 'Echo asset precision'")
 class EchoAssetPrecision(BaseTest):
