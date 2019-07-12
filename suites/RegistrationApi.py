@@ -13,7 +13,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("registration_api")
 @lcc.suite("Registration API", rank=1)
 class RegistrationApi(object):

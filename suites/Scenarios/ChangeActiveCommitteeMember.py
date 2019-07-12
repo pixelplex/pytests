@@ -10,7 +10,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("change_active_committee_member")
 @lcc.suite("Check scenario 'Change active committee members'")
 @lcc.disabled()

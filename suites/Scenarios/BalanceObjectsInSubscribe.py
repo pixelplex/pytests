@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("balance_obj_in_subscription")
 @lcc.suite("Check scenario 'Balance objects in subscription'")
 class BalanceObjectsInSubscribe(BaseTest):
