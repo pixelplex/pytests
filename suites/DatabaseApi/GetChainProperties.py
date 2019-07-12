@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_chain_properties")
 @lcc.suite("Check work of method 'get_chain_properties'", rank=1)
 class GetChainProperties(BaseTest):
@@ -58,7 +58,7 @@ class GetChainProperties(BaseTest):
                 check_that_entry("num_special_assets", is_integer(), quiet=True)
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_chain_properties")
 @lcc.suite("Negative testing of method 'get_chain_properties'", rank=2)
 class NegativeTesting(BaseTest):

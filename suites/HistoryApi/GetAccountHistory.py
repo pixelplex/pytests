@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("history_api", "get_account_history")
 @lcc.suite("Check work of method 'get_account_history'", rank=1)
 class GetAccountHistory(BaseTest):
@@ -71,7 +71,7 @@ class GetAccountHistory(BaseTest):
                 check_that_entry("virtual_op", is_integer(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("history_api", "get_account_history")
 @lcc.suite("Positive testing of method 'get_account_history'", rank=2)
 class PositiveTesting(BaseTest):
@@ -111,6 +111,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check new account history")
+    @lcc.tags("Bug ECHO-1037")
+    @lcc.disabled()
     @lcc.depends_on("HistoryApi.GetAccountHistory.GetAccountHistory.method_main_check")
     def new_account_history(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
@@ -138,6 +140,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check limit number of operations to retrieve")
+    @lcc.tags("Bug ECHO-1037")
+    @lcc.disabled()
     @lcc.depends_on("HistoryApi.GetAccountHistory.GetAccountHistory.method_main_check")
     def limit_operations_to_retrieve(self, get_random_valid_account_name, get_random_integer_up_to_hundred):
         new_account = get_random_valid_account_name

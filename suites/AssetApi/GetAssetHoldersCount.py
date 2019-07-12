@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_asset_holders_count")
 @lcc.suite("Check work of method 'get_asset_holders_count'", rank=1)
 class GetAssetHoldersCount(BaseTest):
@@ -43,7 +43,7 @@ class GetAssetHoldersCount(BaseTest):
         )
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("asset_api", "get_asset_holders_count")
 @lcc.suite("Positive testing of method 'get_asset_holders_count'", rank=2)
 class PositiveTesting(BaseTest):
@@ -118,7 +118,7 @@ class PositiveTesting(BaseTest):
         )
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_asset_holders_count")
 @lcc.suite("Negative testing of method 'get_asset_holders_count'", rank=3)
 class NegativeTesting(BaseTest):
