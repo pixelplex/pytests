@@ -11,9 +11,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_contract_balances")
 @lcc.suite("Check work of method 'get_contract_balances'", rank=1)
 class GetContractBalances(BaseTest):
@@ -61,7 +61,7 @@ class GetContractBalances(BaseTest):
             check_that_entry("asset_id", equal_to(self.echo_asset))
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_contract_balances")
 @lcc.suite("Positive testing of method 'get_contract_balances'", rank=2)
 class PositiveTesting(BaseTest):

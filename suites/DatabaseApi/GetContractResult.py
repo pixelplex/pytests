@@ -270,8 +270,7 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs of two different contracts")
-    @lcc.tags("asd")
-    #@lcc.depends_on("DatabaseApi.GetContractResult.GetContractResult.method_main_check")
+    @lcc.depends_on("DatabaseApi.GetContractResult.GetContractResult.method_main_check")
     def check_contract_info_of_two_different_contract_logs(self, get_random_integer, get_random_string):
         int_param = get_random_integer
         string_param = get_random_string

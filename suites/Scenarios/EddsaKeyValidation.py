@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("eddsa_key_validation")
 @lcc.suite("Check scenario 'Eddsa key validation'")
 class EddsaKeyValidation(BaseTest):

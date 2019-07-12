@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "verify_authority")
 @lcc.suite("Check work of method 'verify_authority'", rank=1)
 class VerifyAuthority(BaseTest):
@@ -63,7 +63,7 @@ class VerifyAuthority(BaseTest):
         )
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "verify_authority")
 @lcc.suite("Negative testing of method 'verify_authority'", rank=3)
 class NegativeTesting(BaseTest):

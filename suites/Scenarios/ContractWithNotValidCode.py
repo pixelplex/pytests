@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("not_valid_contract_code")
 @lcc.suite("Check scenario 'Contract with not valid contract code'")
 class ContractWithNotValidCode(BaseTest):

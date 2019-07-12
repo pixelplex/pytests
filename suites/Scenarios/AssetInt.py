@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("asset_int")
 @lcc.suite("Check scenario 'Parameter asset is integer type'")
 class AssetInt(BaseTest):

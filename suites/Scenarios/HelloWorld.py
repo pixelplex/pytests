@@ -10,7 +10,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("hello_world")
 @lcc.suite("Check scenario 'Hello World'")
 class HelloWorld(BaseTest):

@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "set_subscribe_callback")
 @lcc.suite("Check work of method 'set_subscribe_callback'", rank=1)
 class SetSubscribeCallback(BaseTest):
@@ -79,7 +79,7 @@ class SetSubscribeCallback(BaseTest):
         )
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "set_subscribe_callback")
 @lcc.suite("Positive testing of method 'set_subscribe_callback'", rank=2)
 class PositiveTesting(BaseTest):
