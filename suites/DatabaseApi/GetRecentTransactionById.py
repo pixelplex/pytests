@@ -3,15 +3,16 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, check_that, has_length, is_true, equal_to, is_none
 
 from common.base_test import BaseTest
+from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Method 'get_recent_transaction_by_id'"
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_recent_transaction_by_id")
 @lcc.suite("Check work of method 'get_recent_transaction_by_id'", rank=1)
 class GetRecentTransactionById(BaseTest):
@@ -72,9 +73,8 @@ class GetRecentTransactionById(BaseTest):
             self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
         )
 
-        params = [broadcast_result["id"]]
-
         lcc.set_step("Get recent transaction by id (before it expire)")
+        params = [broadcast_result["id"]]
         response_id = self.send_request(self.get_request("get_recent_transaction_by_id", params),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
@@ -95,7 +95,7 @@ class GetRecentTransactionById(BaseTest):
         self.compare_objects(transaction_from_api_method, transaction_from_broadcast_result)
 
         lcc.set_step("Wait time for transaction expiration")
-        self.set_timeout_wait(5)
+        self.set_timeout_wait(BLOCK_RELEASE_INTERVAL)
 
         lcc.set_step("Get recent transaction by id (after it expire)")
         response_id = self.send_request(self.get_request("get_recent_transaction_by_id", params),

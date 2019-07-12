@@ -70,7 +70,13 @@ class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy, HasP
             "type", ("method", "operation", "scenario", "other"), required=False
         )
         policy.add_property_rule(
-            "testing", ("main", "positive", "negative"), on_suite=True, required=False
+            "suite_run_option_1", "main", on_suite=True, required=False
+        )
+        policy.add_property_rule(
+            "suite_run_option_2", "positive", on_suite=True, required=False
+        )
+        policy.add_property_rule(
+            "suite_run_option_3", "negative", on_suite=True, required=False
         )
         return policy
 

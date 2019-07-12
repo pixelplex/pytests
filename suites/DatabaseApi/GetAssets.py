@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_assets")
 @lcc.suite("Check work of method 'get_assets'", rank=1)
 class GetAssets(BaseTest):
@@ -111,7 +111,7 @@ class GetAssets(BaseTest):
         self.check_asset_structure(asset)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_assets")
 @lcc.suite("Positive testing of method 'get_assets'", rank=2)
 class PositiveTesting(BaseTest):

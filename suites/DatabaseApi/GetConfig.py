@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_config")
 @lcc.suite("Check work of method 'get_config'", rank=1)
 class GetConfig(BaseTest):
@@ -95,7 +95,7 @@ class GetConfig(BaseTest):
                     lcc.log_info("'ECHO_TEMP_ACCOUNT' has correct format: account_id")
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_config")
 @lcc.suite("Negative testing of method 'get_config'", rank=2)
 class NegativeTesting(BaseTest):
