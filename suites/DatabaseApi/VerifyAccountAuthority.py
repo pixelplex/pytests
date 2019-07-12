@@ -53,7 +53,6 @@ class VerifyAccountAuthority(BaseTest):
     @lcc.test("Simple work of method 'verify_account_authority'")
     def method_main_check(self):
         active_key = self.get_account_active_keys(self.echo_acc0)
-        lcc.log_info("{}".format(active_key))
         public_key = active_key["key_auths"][0][0]
 
         lcc.set_step("Verify authority of '{}' account".format(self.echo_acc0))
