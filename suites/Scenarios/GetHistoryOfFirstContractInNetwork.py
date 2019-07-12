@@ -43,8 +43,10 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("Check contract history of the first contract in the network")
+    @lcc.tags("Bug ECHO-1037")
     def get_history_of_first_contract_scenario(self):
         stop = start = "1.10.0"
+        # todo: change limit to 100. Bug ECHO-1037
         limit = 1
 
         lcc.set_step("Check that '1.14.0' contract in the network or not")
