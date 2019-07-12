@@ -132,7 +132,7 @@ class PositiveTesting(BaseTest):
         second_account_active_keys = self.get_account_active_keys(self.echo_acc11)
         account_auths = [account_auth[0] for account_auth in second_account_active_keys["account_auths"]]
         account_auths_new_item = [self.echo_acc10, 1]
-        lcc.set_step("Update info of {} account (add account_auths)".format(self.echo_acc1))
+        lcc.set_step("Update info of {} account (add account_auths)".format(self.echo_acc11))
         if self.echo_acc10 not in account_auths:
             new_active_keys = second_account_active_keys.copy()
             new_active_keys["account_auths"].extend([account_auths_new_item])
