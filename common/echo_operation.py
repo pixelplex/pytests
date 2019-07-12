@@ -426,8 +426,36 @@ class EchoOperations(object):
             return [operation_id, contract_update_props, sender]
         return [operation_id, contract_update_props, signer]
 
-    def broadcast(self, echo, list_operations, no_broadcast=False, get_signed_tx=False, log_broadcast=True,
-                  debug_mode=False):
+    def get_proposal_create_operation(self, echo, fee_paying_account, expiration_time, proposed_ops,
+                                      review_period_seconds=None, fee_amount=0, fee_asset_id="1.3.0",
+                                      extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
+
+        operation_id = echo.config.operation_ids.PROPOSAL_CREATE
+        proposal_create_props = self.get_operation_json("proposal_create_operation")
+        proposal_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        proposal_create_props.update(
+            {
+                "fee_paying_account": fee_paying_account,
+                "expiration_time": expiration_time,
+                "proposed_ops": proposed_ops,
+                "extensions": extensions
+            }
+        )
+        if review_period_seconds is None:
+            del proposal_create_props["review_period_seconds"]
+        else:
+            proposal_create_props.update({"review_period_seconds": review_period_seconds})
+        if debug_mode:
+            lcc.log_debug("Proposal create operation: \n{}".format(json.dumps(proposal_create_props, indent=4)))
+        if signer is None:
+            return [operation_id, proposal_create_props, fee_paying_account]
+        return [operation_id, proposal_create_props, signer]
+
+
+    def broadcast(self, echo, list_operations, no_broadcast=False, get_signed_tx=False, return_operations=False,
+                  log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))
@@ -437,6 +465,10 @@ class EchoOperations(object):
             list_operations = [item for sublist in list_operations for item in sublist]
         for i in range(len(list_operations)):
             tx.add_operation(name=list_operations[i][0], props=list_operations[i][1])
+
+        if return_operations:
+            return tx._operations
+
         for i in range(len(list_operations)):
             tx.add_signer(self.get_signer(list_operations[i][2]))
         tx.sign()
