@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_chain_id")
 @lcc.suite("Check work of method 'get_chain_id'", rank=1)
 class GetChainId(BaseTest):
@@ -42,7 +42,7 @@ class GetChainId(BaseTest):
                 lcc.log_info("'chain_id' has correct format: hex")
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_chain_id")
 @lcc.suite("Negative testing of method 'get_chain_id'", rank=2)
 class NegativeTesting(BaseTest):

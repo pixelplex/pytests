@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_account_by_name")
 @lcc.suite("Check work of method 'get_account_by_name'", rank=1)
 class GetAccountByName(BaseTest):
@@ -98,7 +98,7 @@ class GetAccountByName(BaseTest):
                         check_that_entry("extensions", is_list(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_account_by_name")
 @lcc.suite("Positive testing of method 'get_account_by_name'", rank=2)
 class PositiveTesting(BaseTest):

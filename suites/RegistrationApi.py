@@ -60,7 +60,7 @@ class RegistrationApi(object):
         base.ws.close()
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("registration_api")
 @lcc.suite("Positive testing of method 'register_account'", rank=2)
 class PositiveTesting(BaseTest):
@@ -109,7 +109,7 @@ class PositiveTesting(BaseTest):
         )
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("registration_api")
 @lcc.suite("Negative testing of method 'register_account'", rank=3)
 class NegativeTesting(BaseTest):

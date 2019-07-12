@@ -12,9 +12,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_account_withdrawals")
 @lcc.suite("Check work of method 'get_account_withdrawals'", rank=1)
 class GetAccountWithdrawals(BaseTest):
