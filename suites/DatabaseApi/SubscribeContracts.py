@@ -22,7 +22,7 @@ class SubscribeContracts(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def set_subscribe_callback(self, callback, notify_remove_create=False):
         params = [callback, notify_remove_create]
@@ -120,14 +120,14 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
         self.piggy_contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie()")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.create_contract = self.get_byte_code("contract_create_contract", "code")
-        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract")
-        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["get_creator"]
+        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract()")
+        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["creator()"]
         self.tr_asset_to_creator = self.get_byte_code("contract_create_contract", "created_contract")[
-            "tr_asset_to_creator"]
+            "tr_asset_to_creator()"]
 
     def set_subscribe_callback(self, callback, notify_remove_create=False):
         params = [callback, notify_remove_create]

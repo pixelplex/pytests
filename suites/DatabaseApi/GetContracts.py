@@ -82,7 +82,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract_1 = self.get_byte_code("piggy", "code")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.contract_2 = self.get_byte_code("asset_int", "code")
 
     @staticmethod

@@ -20,9 +20,9 @@ class HelloWorld(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie()")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.value_amount = 10
 
     def setup_suite(self):

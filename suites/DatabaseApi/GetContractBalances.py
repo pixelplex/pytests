@@ -71,9 +71,9 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.piggy_contract = self.get_byte_code("piggy", "code")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie()")
         self.storage_contract = self.get_byte_code("storage", "code")
-        self.storage_setGreeting = self.get_byte_code("storage", "setGreeting")
+        self.storage_setGreeting = self.get_byte_code("storage", "setGreeting(string)")
 
     def setup_suite(self):
         super().setup_suite()

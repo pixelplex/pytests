@@ -19,7 +19,7 @@ class ChangeContractOwner(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def get_contract_owner(self, contract_id):
         param = [contract_id]

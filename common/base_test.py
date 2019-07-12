@@ -19,6 +19,7 @@ from pre_run_scripts.pre_deploy import pre_deploy_echo
 from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
     EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL
 
+from Crypto.Hash import keccak
 
 class BaseTest(object):
 
@@ -97,7 +98,7 @@ class BaseTest(object):
     def get_byte_code(contract_name, code_or_method_name):
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
 
-    def get_byte_code_param(self, param, param_type=None):
+    def get_byte_code_param(self, param, param_type=None, offset="20"):
         hex_param_64 = "0000000000000000000000000000000000000000000000000000000000000000"
         if param_type == int and self.validator.is_uint256(param):
             param = hex(param).split('x')[-1]
@@ -106,7 +107,7 @@ class BaseTest(object):
         if param_type == str and self.validator.is_string(param):
             param_in_hex = codecs.encode(param).hex()
             len_param_in_hex = hex(len(param)).split('x')[-1]
-            part_1 = hex_param_64[:-2] + "20"
+            part_1 = hex_param_64[:-2] + offset
             part_2 = hex_param_64[:-len(len_param_in_hex)] + len_param_in_hex
             part_3 = None
             if len(param_in_hex) < 64:
@@ -350,6 +351,16 @@ class BaseTest(object):
                                         int(str(contract_output[contract_output.find("1") + 1:]), 16))
             return contract_id
 
+    def get_contract_log_data(self, log, output_type, debug_mode=False):
+        log_data = str(log["data"])
+        if debug_mode:
+            lcc.log_info("Data is '{}'".format(log_data))
+        if output_type == str:
+            log_data = (log_data[128:])[:int(log_data[127]) * 2]
+            return str(codecs.decode(log_data, "hex").decode('utf-8'))
+        if output_type == int:
+            return int(log_data, 16)
+
     @staticmethod
     def get_account_details_template(account_name, private_key, public_key, brain_key):
         return {account_name: {"id": "", "private_key": private_key, "public_key": public_key, "brain_key": brain_key}}
@@ -504,6 +515,14 @@ class BaseTest(object):
         lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
         self.set_timeout_wait(waiting_time, print_log=print_log)
         lcc.log_info("Maintenance finished")
+
+    def keccak_log_value(self, method_name, log_info=False):
+        keccak_hash = keccak.new(digest_bits=256)
+        keccak_hash.update(bytes(method_name, 'utf-8'))
+        if log_info:
+            lcc.log_info("{}".format(str(keccak_hash.hexdigest())))
+        return keccak_hash.hexdigest()
+
 
     @staticmethod
     def _login_status(response):

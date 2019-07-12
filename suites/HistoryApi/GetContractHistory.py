@@ -92,7 +92,7 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie()")
         self.broadcast_result = None
 
     def get_contract_history(self, contract_id, stop, limit, start, negative=False):

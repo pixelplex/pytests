@@ -97,7 +97,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def get_contract_pool_balance(self, contract_id):
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),

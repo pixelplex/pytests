@@ -89,7 +89,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
 
     def set_subscribe_callback(self, callback, notify_remove_create=False):
         params = [callback, notify_remove_create]
