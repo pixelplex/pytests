@@ -245,7 +245,7 @@ class PositiveTesting(BaseTest):
     def check_contract_info_after_create_contract(self, get_random_valid_asset_name, get_random_integer):
         value_amount = get_random_integer
 
-        lcc.set_step("Сreate piggy contract")
+        lcc.set_step("Сreate piggy contract, and get contract_id and contract result")
         operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract_piggy,
                                                                 value_amount=value_amount)
@@ -258,12 +258,12 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_contract_result", [operation_results_ids]),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"][1]
-        lcc.set_step("Get contract code form get_contract method")
+        lcc.set_step("Get contract code form 'get_contract' method")
         response_id = self.send_request(self.get_request("get_contract", [contract_id]),
                                         self.__database_api_identifier)
         contract_code = self.get_response(response_id)["result"][1]["code"]
 
-        lcc.set_step("Check piggy contract result with new asset")
+        lcc.set_step("Check create contract output")
         with this_dict(result):
             check_that("output", self.contract_piggy, ends_with(result["exec_res"]["output"]), quiet=True)
             check_that("output", result["exec_res"]["output"], equal_to(contract_code), quiet=True)
@@ -279,8 +279,7 @@ class PositiveTesting(BaseTest):
         contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
                                                                 self.__database_api_identifier)
 
-        lcc.set_step("Call method 'set_uint'")
-        collected_operation = []
+        lcc.set_step("Call method 'set_all_values' with int: {} and string: {} params".format(int_param, string_param))
         int_param_code = self.get_byte_code_param(int_param, param_type=int)
         string_param_code = self.get_byte_code_param(string_param, param_type=str, offset="40")
         bytecode = self.set_all_values + int_param_code + string_param_code
@@ -292,11 +291,12 @@ class PositiveTesting(BaseTest):
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         operation_results_id = self.get_operation_results_ids(broadcast_result)
+        lcc.set_step("Get contract result")
         response_id = self.send_request(self.get_request("get_contract_result", [operation_results_id]),
                                         self.__database_api_identifier)
 
         result = self.get_response(response_id, log_response=True)["result"][1]["tr_receipt"]["log"]
-
+        lcc.set_step("Check contract logs")
         call_contact_log0 = result[0]
         call_contract_log1 = result[1]
         contract_id_from_address = self.get_contract_from_address(self, call_contact_log0["address"])
@@ -306,10 +306,12 @@ class PositiveTesting(BaseTest):
 
         check_that("log of 'set_uint' method", call_contact_log0["log"], is_list(), quiet=True)
         check_that("log of 'set_string' method", call_contract_log1["log"], is_list(), quiet=True)
+
         keccak_log0 = self.keccak_log_value(self.setUint256_method_name, log_info=True)
         keccak_log1 = self.keccak_log_value(self.setString_method_name, log_info=True)
         check_that("log value", call_contact_log0["log"][0], equal_to(keccak_log0))
         check_that("log value1", call_contract_log1["log"][0], equal_to(keccak_log1))
+
         data0 = self.get_contract_log_data(call_contact_log0, output_type=int)
         data1 = self.get_contract_log_data(call_contract_log1, output_type=str)
         check_that("data", data0, equal_to(int_param))
