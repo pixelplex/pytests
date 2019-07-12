@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("history_of_contract_created_by_another_contract")
 @lcc.suite("Check scenario 'Contract history that was created using another contract'")
 class HistoryOfContractCreatedByAnotherContract(BaseTest):

@@ -10,7 +10,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("login_api")
 @lcc.suite("Login API", rank=1)
 class LoginApi(object):

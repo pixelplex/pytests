@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("transfer_asset_via_account_address")
 @lcc.suite("Check scenario 'Transfer assets via account address'")
 class TransferAssetViaContactAddresses(BaseTest):
