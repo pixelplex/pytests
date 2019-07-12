@@ -31,7 +31,7 @@ class GetAccountReferences(BaseTest):
         lcc.log_info("Registration API identifier is '{}'".format(self.__registration_api_identifier))
         self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}'".format(self.echo_acc0))
+        lcc.log_info("Echo accounts are: #1='{}'".format(self.echo_acc2))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -72,11 +72,11 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Registration API identifier is '{}'".format(self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc12 = self.get_account_id(self.echo_acc12, self.__database_api_identifier,
-                                              self.__registration_api_identifier)
-        self.echo_acc13 = self.get_account_id(self.echo_acc13, self.__database_api_identifier,
-                                              self.__registration_api_identifier)
-        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc12, self.echo_acc13))
+        self.echo_acc3 = self.get_account_id(self.echo_acc3, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        self.echo_acc4 = self.get_account_id(self.echo_acc4, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
+        lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc3, self.echo_acc4))
 
     def get_account_active_keys(self, account_id):
         lcc.set_step("Get active keys info about account: {}".format(account_id))
@@ -98,18 +98,18 @@ class PositiveTesting(BaseTest):
     @lcc.test("Add additional account_auths to account and get references of added account")
     @lcc.depends_on("DatabaseApi.GetAccountReferences.GetAccountReferences.method_main_check")
     def get_references_of_account_that_added_to_another_account_auths(self):
-        second_account_active_keys = self.get_account_active_keys(self.echo_acc13)
+        second_account_active_keys = self.get_account_active_keys(self.echo_acc4)
         account_auths = [account_auth[0] for account_auth in second_account_active_keys["account_auths"]]
-        account_auths_new_item = [self.echo_acc12, 1]
-        lcc.set_step("Update info of {} account (add account_auths)".format(self.echo_acc13))
-        if self.echo_acc12 not in account_auths:
+        account_auths_new_item = [self.echo_acc3, 1]
+        lcc.set_step("Update info of {} account (add account_auths)".format(self.echo_acc4))
+        if self.echo_acc3 not in account_auths:
             new_active_keys = second_account_active_keys.copy()
             new_active_keys["account_auths"].extend([account_auths_new_item])
 
             transfer_operation = self.echo_ops.get_transfer_operation(
                 echo=self.echo,
                 from_account_id=self.echo_acc0,
-                to_account_id=self.echo_acc13,
+                to_account_id=self.echo_acc4,
                 amount=3000000
             )
             collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
@@ -121,7 +121,7 @@ class PositiveTesting(BaseTest):
             )
 
             operation = self.echo_ops.get_account_update_operation(
-                echo=self.echo, account=self.echo_acc13,
+                echo=self.echo, account=self.echo_acc4,
                 key_auths=new_active_keys["key_auths"],
                 account_auths=new_active_keys["account_auths"],
                 weight_threshold=new_active_keys["weight_threshold"]
@@ -135,9 +135,9 @@ class PositiveTesting(BaseTest):
                 self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
             )
 
-        lcc.log_info("'account_auths' of {} account was updated".format(self.echo_acc13))
+        lcc.log_info("'account_auths' of {} account was updated".format(self.echo_acc4))
 
-        actual_second_account_active_keys = self.get_account_active_keys(self.echo_acc13)
+        actual_second_account_active_keys = self.get_account_active_keys(self.echo_acc4)
         require_that(
             "new keys",
             actual_second_account_active_keys["account_auths"], has_item(account_auths_new_item),
@@ -145,16 +145,16 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Get references of '{}' account".format(self.echo_acc0))
-        response_id = self.send_request(self.get_request("get_account_references", [self.echo_acc12]),
+        response_id = self.send_request(self.get_request("get_account_references", [self.echo_acc3]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_account_references' with account_id='{}' parameter".format(self.echo_acc12))
+        lcc.log_info("Call method 'get_account_references' with account_id='{}' parameter".format(self.echo_acc3))
 
         lcc.set_step("Check 'get_account_references' method result")
         require_that(
-            "references of '{}' account".format(self.echo_acc12),
+            "references of '{}' account".format(self.echo_acc3),
             response["result"],
-            is_list([self.echo_acc13]),
+            is_list([self.echo_acc4]),
             quiet=True
         )
 
