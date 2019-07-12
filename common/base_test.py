@@ -17,7 +17,7 @@ from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
-    EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL
+    EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, DEFAULT_ACCOUNTS_COUNT
 
 
 class BaseTest(object):
@@ -35,9 +35,13 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eth_asset = ETH_ASSET_ID
-        self.echo_acc0 = ACCOUNT_PREFIX + "0"
-        self.echo_acc1 = ACCOUNT_PREFIX + "1"
-        self.echo_acc2 = ACCOUNT_PREFIX + "2"
+
+        # Declare all accounts in for cycle
+        base_test_dict = self.__dict__
+        for account_num in range(DEFAULT_ACCOUNTS_COUNT):
+            base_test_dict.update(
+                {"echo_acc{}".format(account_num): "{}{}".format(ACCOUNT_PREFIX, account_num)})
+        self.__dict__ = base_test_dict
 
     @staticmethod
     def create_connection_to_echo():

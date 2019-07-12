@@ -47,7 +47,7 @@ services:
 
 
   echo:
-    image: registry-gitlab.pixelplex.by/631_echo/echo:235cef00f54743bbba93f51e5044ba4677b30ce3
+    image: registry-gitlab.pixelplex.by/631_echo/echo:0.8.1
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
     command: '--data-dir=/echo/datadir/
@@ -69,7 +69,7 @@ services:
       --sidechain-committeeman=[\"1.2.11\",\"a9f4d055d7522ac1b28e84e9c8c4c8cb42924ff72f66f7d3ce00ff99622916eb\"]
       --registrar-account=\"1.2.8\"
       --api-access=/echo/access.json
-      --sidechain-enabled
+      --plugins=sidechain,registration
       --sidechain-eth-node-url=ws://ganache:8545'
     ports:
       - 56451:6311

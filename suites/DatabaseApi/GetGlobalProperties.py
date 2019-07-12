@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_global_properties")
 @lcc.suite("Check work of method 'get_global_properties'", rank=1)
 class GetGlobalProperties(BaseTest):
@@ -102,7 +102,11 @@ class GetGlobalProperties(BaseTest):
                     lcc.log_error("Wrong format of 'ETH_asset_id', got: {}".format(sidechain_config["ETH_asset_id"]))
                 else:
                     lcc.log_info("'ETH_asset_id' has correct format: eth_asset_id")
-                check_that_entry("erc20_deposit_topic", is_(""), quiet=True)
+                if not self.validator.is_hex(sidechain_config["erc20_deposit_topic"]):
+                    lcc.log_error("Wrong format of 'erc20_deposit_topic', got: {}".format(
+                        sidechain_config["erc20_deposit_topic"]))
+                else:
+                    lcc.log_info("'erc20_deposit_topic' has correct format: hex")
                 with this_dict(sidechain_config["fines"]):
                     if check_that("fines", sidechain_config["fines"], has_length(1)):
                         check_that_entry("generate_eth_address", is_(-10), quiet=True)
@@ -117,7 +121,10 @@ class GetGlobalProperties(BaseTest):
                 else:
                     lcc.log_info("'contract_code' has correct format: hex")
                 check_that_entry("create_token_fee", is_integer(), quiet=True)
-                check_that_entry("transfer_topic", is_(""), quiet=True)
+                if not self.validator.is_hex(erc20_config["transfer_topic"]):
+                    lcc.log_error("Wrong format of 'transfer_topic', got: {}".format(erc20_config["transfer_topic"]))
+                else:
+                    lcc.log_info("'transfer_topic' has correct format: hex")
                 for i in range(len(erc20_methods)):
                     if check_that_entry([erc20_methods[i]], has_length(2)):
                         with this_dict(erc20_config[erc20_methods[i]]):
@@ -274,7 +281,7 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("gas_amount", is_integer(), quiet=True)
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_global_properties")
 @lcc.suite("Negative testing of method 'get_global_properties'", rank=2)
 class NegativeTesting(BaseTest):
