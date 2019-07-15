@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_key_references")
 @lcc.suite("Check work of method 'get_key_references'", rank=1)
 class GetKeyReferences(BaseTest):
@@ -53,7 +53,7 @@ class GetKeyReferences(BaseTest):
         check_that("'echorand_key'", result["echorand_key"], equal_to(echorand_key), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_key_references")
 @lcc.suite("Positive testing of method 'get_key_references'", rank=2)
 class PositiveTesting(BaseTest):
@@ -159,7 +159,7 @@ class PositiveTesting(BaseTest):
         check_that("response", response, is_list([[]]), quiet=True)
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_key_references")
 @lcc.suite("Negative testing of method 'get_key_references'", rank=3)
 class NegativeTesting(BaseTest):

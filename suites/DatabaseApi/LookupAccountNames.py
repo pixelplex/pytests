@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "lookup_account_names")
 @lcc.suite("Check work of method 'lookup_account_names'", rank=1)
 class LookupAccountNames(BaseTest):
@@ -116,7 +116,7 @@ class LookupAccountNames(BaseTest):
             self.check_account_structure(account_info)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "lookup_account_names")
 @lcc.suite("Positive testing of method 'lookup_account_names'", rank=2)
 class PositiveTesting(BaseTest):

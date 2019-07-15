@@ -12,9 +12,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_contract_fee_pool_balances")
 @lcc.suite("Check work of method 'get_contract_fee_pool_balances '", rank=1)
 class GetContractFeePoolBalances(BaseTest):
@@ -68,7 +68,7 @@ class GetContractFeePoolBalances(BaseTest):
                 check_that_entry("asset_id", equal_to(self.echo_asset))
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_contract_fee_pool_balances")
 @lcc.suite("Positive testing of method 'get_contract_fee_pool_balances'", rank=2)
 class PositiveTesting(BaseTest):
@@ -309,7 +309,7 @@ class PositiveTesting(BaseTest):
                    equal_to(int(account_balance) - (needed_fee - value_to_pool)))
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_contract_fee_pool_balances")
 @lcc.suite("Negative testing of method 'get_contract_fee_pool_balances'", rank=3)
 class NegativeTesting(BaseTest):
