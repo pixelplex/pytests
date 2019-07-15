@@ -61,15 +61,18 @@ class ERC20(BaseTest):
                                                                       contract_abi=self.erc20_abi,
                                                                       contract_bytecode=self.erc20_contract)
         contract = deployment.get("contract_instance")
-        contract_address = deployment.get("contract_address")
-        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(contract_address))
+        eth_erc20_contract_address = deployment.get("contract_address")
+        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(eth_erc20_contract_address))
 
         lcc.set_step("Get ethereum account ERC20 tokens balance in the Ethereum network")
         ethereum_er20_balance = self.eth_trx.get_balance_of(contract, self.eth_address)
 
         lcc.set_step("Perform register erc20 operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.new_account,
-                                                                      eth_addr=contract_address[2:], name=name,
-                                                                      symbol=symbol, decimals=8,
+                                                                      eth_addr=eth_erc20_contract_address[2:],
+                                                                      name=name, symbol=symbol, decimals=8,
                                                                       database_api_id=self.__database_api_identifier,
                                                                       log_broadcast=True)
+        echo_erc20_contract = self.get_contract_result(bd_result, self.__database_api_identifier)
+
+
