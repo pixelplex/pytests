@@ -408,6 +408,23 @@ class EchoOperations(object):
             return [operation_id, contract_whitelist_props, sender]
         return [operation_id, contract_whitelist_props, signer]
 
+    def get_register_erc20_token_operation(self, echo, account, eth_addr, name, symbol, decimals, fee_amount=0,
+                                           fee_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+        if extensions is None:
+            extensions = []
+        operation_id = echo.config.operation_ids.REGISTER_ERC20_TOKEN
+        register_erc20_token_props = self.get_operation_json("register_erc20_token_operation")
+        register_erc20_token_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        register_erc20_token_props.update(
+            {"account": account, "eth_addr": eth_addr, "name": name, "symbol": symbol, "decimals": decimals,
+             "extensions": extensions})
+        if debug_mode:
+            lcc.log_debug(
+                "Register erc20 token operation: \n{}".format(json.dumps(register_erc20_token_props, indent=4)))
+        if signer is None:
+            return [operation_id, register_erc20_token_props, account]
+        return [operation_id, register_erc20_token_props, signer]
+
     def get_contract_update_operation(self, echo, sender, contract, new_owner=None, fee_amount=0, fee_asset_id="1.3.0",
                                       extensions=None, signer=None, debug_mode=False):
         if extensions is None:
