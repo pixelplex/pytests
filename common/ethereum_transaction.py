@@ -84,3 +84,28 @@ class EthereumTransactions(object):
             }
         )
         return bool(int(method_call_result.hex(), 16))
+
+    @staticmethod
+    def deploy_contract_in_ethereum_network(base_test, eth_account, contract_abi, contract_bytecode):
+        # Set pre-funded account as sender
+        base_test.web3.eth.defaultAccount = eth_account
+        # Instantiate and deploy contract
+        contract = base_test.web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
+        # Submit the transaction that deploys the contract
+        tx_hash = contract.constructor().transact()
+        # Wait for the transaction to be mined, and get the transaction receipt
+        tx_receipt = base_test.web3.eth.waitForTransactionReceipt(tx_hash)
+        contract_address = tx_receipt.contractAddress
+        # Create the contract instance with the newly-deployed address
+        contract = base_test.web3.eth.contract(
+            address=contract_address,
+            abi=contract_abi,
+        )
+        return {"contract_instance": contract, "contract_address": contract_address}
+
+    @staticmethod
+    def get_balance_of(contract_instance, eth_account, log_response=True):
+        balance = contract_instance.functions.balanceOf(eth_account).call()
+        if log_response:
+            lcc.log_info("Method balanceOf with '{}' account return: '{}'".format(eth_account, balance))
+        return balance

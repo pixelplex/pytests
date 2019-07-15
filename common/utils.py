@@ -21,7 +21,8 @@ class Utils(object):
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
                                    lifetime=None, eth_address=None, update_account=None, eth_addr=None,
                                    vesting_balance=None, fee_pool=None, create_vesting_balance=None, whitelist=None,
-                                   update_contract=None, only_in_history=False, log_broadcast=False):
+                                   update_contract=None, only_in_history=False, register_erc20=None,
+                                   log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
             operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
@@ -81,6 +82,13 @@ class Utils(object):
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if update_contract is not None:
             operation = base_test.echo_ops.get_operation_json("contract_update_operation", example=True)
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if register_erc20 is not None:
+            operation = base_test.echo_ops.get_register_erc20_token_operation(echo=base_test.echo, account=account,
+                                                                              eth_addr=register_erc20[0],
+                                                                              name=register_erc20[1],
+                                                                              symbol=register_erc20[2],
+                                                                              decimals=register_erc20[3])
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
@@ -645,6 +653,23 @@ class Utils(object):
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-            raise Exception(
-                "Error: '{}' contract did not update, response:\n{}".format(contract, broadcast_result))
+            raise Exception("Error: '{}' contract did not update, response:\n{}".format(contract, broadcast_result))
+        return broadcast_result
+
+    def perform_register_erc20_token_operation(self, base_test, account, eth_addr, name, symbol, decimals,
+                                               database_api_id, log_broadcast=False):
+        if account != base_test.echo_acc0:
+            params = [eth_addr, name, symbol, decimals]
+            broadcast_result = self.add_balance_for_operations(base_test, account, database_api_id,
+                                                               register_erc20=params)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_register_erc20_token_operation(echo=base_test.echo, account=account,
+                                                                          eth_addr=eth_addr, name=name, symbol=symbol,
+                                                                          decimals=decimals)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception("Error: ERC20 token did not register, response:\n{}".format(broadcast_result))
         return broadcast_result

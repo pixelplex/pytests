@@ -20,6 +20,7 @@ class ERC20(BaseTest):
         self.eth_address = None
         self.erc20_contract = self.get_byte_code("erc20", "code", ethereum_contract=True)
         self.erc20_abi = self.get_abi("erc20")
+        self.new_account = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -42,26 +43,33 @@ class ERC20(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
+    @lcc.tags("Bug ECHO-1043")
     @lcc.test("The scenario checks the main parts before testing the ERC20 sidechain functionality")
-    def erc20_sidechain_pre_run_scenario(self, get_random_string, get_random_valid_asset_name):
+    def erc20_sidechain_pre_run_scenario(self, get_random_valid_account_name, get_random_string,
+                                         get_random_valid_asset_name):
+        self.new_account = get_random_valid_account_name
         name = "erc20" + get_random_string
         symbol = get_random_valid_asset_name
 
-        self.web3.eth.defaultAccount = self.web3.eth.accounts[0]
-        ERC20 = self.web3.eth.contract(abi=self.erc20_abi, bytecode=self.erc20_contract)
-        tx_hash = ERC20.constructor().transact()
-        tx_receipt = self.web3.eth.waitForTransactionReceipt(tx_hash)
+        lcc.set_step("Create and get new account")
+        self.new_account = self.get_account_id(self.new_account, self.__database_api_identifier,
+                                               self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(self.new_account))
 
-        erc20 = self.web3.eth.contract(
-            address=tx_receipt.contractAddress,
-            abi=self.erc20_abi,
-        )
+        lcc.set_step("Deploy ERC20 contract in the Ethereum network")
+        deployment = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_account=self.eth_address,
+                                                                      contract_abi=self.erc20_abi,
+                                                                      contract_bytecode=self.erc20_contract)
+        contract = deployment.get("contract_instance")
+        contract_address = deployment.get("contract_address")
+        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(contract_address))
 
-        print("\nAccount balance: {}".format(erc20.functions.balanceOf(self.web3.eth.accounts[0]).call()))
+        lcc.set_step("Get ethereum account ERC20 tokens balance in the Ethereum network")
+        ethereum_er20_balance = self.eth_trx.get_balance_of(contract, self.eth_address)
 
-        erc20_address = tx_receipt.contractAddress[2:]
-        operation = self.echo_ops.get_register_erc20_token_operation(echo=self.echo, account=self.echo_acc0,
-                                                                     eth_addr=erc20_address, name=name, symbol=symbol,
-                                                                     decimals=8)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, debug_mode=True)
+        lcc.set_step("Perform register erc20 operation")
+        bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.new_account,
+                                                                      eth_addr=contract_address[2:], name=name,
+                                                                      symbol=symbol, decimals=8,
+                                                                      database_api_id=self.__database_api_identifier,
+                                                                      log_broadcast=True)
