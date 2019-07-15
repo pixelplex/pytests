@@ -385,8 +385,8 @@ class Utils(object):
 
     def get_eth_address(self, base_test, account_id, database_api_id, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
-        response_id = base_test.send_request(base_test.get_request("get_eth_address", [account_id]), database_api_id, debug_mode=True)
-        response = base_test.get_response(response_id, log_response=True)
+        response_id = base_test.send_request(base_test.get_request("get_eth_address", [account_id]), database_api_id)
+        response = base_test.get_response(response_id)
         if response["result"]:
             return response
         if temp_count <= self.block_count:
