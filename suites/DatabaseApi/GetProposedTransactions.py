@@ -114,5 +114,4 @@ class PositiveTesting(BaseTest):
             proposed_ops=operations,
             expiration_time=self.get_expiration_time(60)
         )
-        collected_operation = self.collect_operations(proposal_create_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=proposal_create_operation)
