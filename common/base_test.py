@@ -37,11 +37,7 @@ class BaseTest(object):
         self.eth_asset = ETH_ASSET_ID
 
         # Declare all accounts in for cycle
-        base_test_dict = self.__dict__
-        for account_num in range(DEFAULT_ACCOUNTS_COUNT):
-            base_test_dict.update(
-                {"echo_acc{}".format(account_num): "{}{}".format(ACCOUNT_PREFIX, account_num)})
-        self.__dict__ = base_test_dict
+        self.accounts = ["{}{}".format(ACCOUNT_PREFIX, account_num) for account_num in range(DEFAULT_ACCOUNTS_COUNT)]
 
     @staticmethod
     def create_connection_to_echo():
@@ -120,6 +116,8 @@ class BaseTest(object):
             param = hex(int(param.split('.')[2])).split('x')[-1]
             hex_param = hex_param_64[:-len(param)] + param
             return hex_param
+        if self.validator.is_eth_address(param):
+            return hex_param_64[:-len(param)] + param
         lcc.log_error("Param not valid, got: {}".format(param))
         raise Exception("Param not valid")
 
