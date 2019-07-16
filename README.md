@@ -75,7 +75,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_accounts](https://echo-dev.io/developers/apis/database-api/#get_accountsaccount_ids)
 - [x] [get_full_accounts](https://echo-dev.io/developers/apis/database-api/#get_full_accountsnames_or_ids-subscribe)
 - [x] [get_account_by_name](https://echo-dev.io/developers/apis/database-api/#get_account_by_namename)
-- [ ] [get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)
+- [x] [get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)
 - [x] [lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)
 - [x] [lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)
 - [x] [get_account_count](https://echo-dev.io/developers/apis/database-api/#get_account_count)
