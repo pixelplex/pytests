@@ -98,7 +98,7 @@ class ChangeActiveCommitteeMember(BaseTest):
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
         lcc.log_info("Ethereum address for '{}' account generated successfully".format(new_account))
 
-        lcc.set_step("Get ethereum address of created account in the network")
+        lcc.set_step("Get ethereum address of created account in the Echo network")
         eth_account_address = self.utils.get_eth_address(self, new_account,
                                                          self.__database_api_identifier)["result"]["eth_addr"]
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
