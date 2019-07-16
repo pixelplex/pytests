@@ -216,9 +216,9 @@ class PositiveTesting(BaseTest):
 
         notice = self.get_notice(subscription_callback_id)
         notice_second_log_info = notice[0]
-        lcc.set_step("Check that first and second subscribe contracts log are equal")
-        check_that("contract_log", notice_first_log_info, equal_to(notice_second_log_info))
+        lcc.set_step("Check that first and second subscribe contracts log are equal and has lenght 3")
         check_that("lenght of notice contract logs", len(notice_first_log_info), equal_to(3))
+        check_that("contract_log", notice_first_log_info, equal_to(notice_second_log_info))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs of two different contracts")
@@ -381,7 +381,7 @@ class PositiveTesting(BaseTest):
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
 
-        # todo: check notice. Bug: ECHO-1055
+        # todo: check notice (notice must be 0). Bug: ECHO-1055
         notice = self.get_notice(subscription_callback_id)
         notice_log_info = notice[0]
         lcc.set_step("Check if lenght of contract logs is 3")
@@ -420,7 +420,7 @@ class NegativeTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with 'to block' equal to -1")
-    @lcc.tags("Bug: 'ECHO-1055'")
+    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.disabled()
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_with_negative_block_number(self, get_random_integer):

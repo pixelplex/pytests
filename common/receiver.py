@@ -109,12 +109,13 @@ class Receiver(object):
         if (object_id is not None) and (self.validator.is_object_id(response.get("params")[1][0][0]["id"])):
             return self.get_notice_obj(response, object_id, print_log)
         notice_params = response.get("params")[1][0]
+        print("notice_params {}".format(notice_params))
         if (isinstance(notice_params, str)) and (self.validator.is_hex(notice_params)):
             if print_log:
                 lcc.log_info(
                     "Received notice about the hash of a new block:\n{}".format(json.dumps(response, indent=4)))
             return notice_params
-        if (self.validator.is_hex(notice_params[0]["address"])) and (self.validator.is_hex(notice_params[0]["log"][0])):
+        if (notice_params[0]["address"]) and (self.validator.is_hex(notice_params[0]["log"][0])):
             if print_log:
                 lcc.log_info(
                     "Received notice about contract logs:\n{}".format(json.dumps(response, indent=4)))
