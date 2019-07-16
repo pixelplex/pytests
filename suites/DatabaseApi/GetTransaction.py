@@ -20,16 +20,17 @@ class GetTransaction(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
+        self.echo_acc1 = None
 
-    @staticmethod
-    def compare_objects(first_field, second_field, key=None):
+    def compare_objects(self, first_field, second_field, key=None):
         if isinstance(first_field, (list, dict)):
             if isinstance(first_field, list) and len(first_field):
                 for key, elem in enumerate(first_field):
-                    GetTransaction.compare_objects(elem, second_field[key])
+                    self.compare_objects(elem, second_field[key])
             elif isinstance(first_field, dict) and len(first_field):
-                for key in first_field.keys():
-                    GetTransaction.compare_objects(first_field[key], second_field[key], key)
+                for key in list(first_field.keys()):
+                    self.compare_objects(first_field[key], second_field[key], key)
         else:
             description = "list element"
             if key:
@@ -42,10 +43,12 @@ class GetTransaction(BaseTest):
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
         self.__registration_api_identifier = self.get_identifier("registration")
-        lcc.log_info("Database API identifier is '{}'".format(self.__database_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        lcc.log_info(
+            "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
+                                                                           self.__registration_api_identifier))
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
