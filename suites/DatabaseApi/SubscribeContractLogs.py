@@ -45,7 +45,7 @@ class SubscribeContractLogs(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
@@ -152,7 +152,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
@@ -177,12 +177,12 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_of_two_identical_contracts(self, get_random_integer):
         subscription_callback_id = get_random_integer
-
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=10)
+
         lcc.set_step("Get 'head_block_number'")
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
@@ -216,6 +216,7 @@ class PositiveTesting(BaseTest):
 
         notice = self.get_notice(subscription_callback_id)
         notice_second_log_info = notice[0]
+
         lcc.set_step("Check that first and second subscribe contracts log are equal and has lenght 3")
         check_that("lenght of notice contract logs", len(notice_first_log_info), equal_to(3))
         check_that("contract_log", notice_first_log_info, equal_to(notice_second_log_info))
@@ -226,12 +227,12 @@ class PositiveTesting(BaseTest):
     def check_contract_logs_of_two_different_contracts(self, get_random_integer, get_random_string):
         int_param = subscription_callback_id = get_random_integer
         string_param = get_random_string
-
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
                                                                 self.__database_api_identifier)
+
         lcc.set_step("Get 'head_block_number'")
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
@@ -257,6 +258,7 @@ class PositiveTesting(BaseTest):
 
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
+
         lcc.set_step("Get notices about updates of created contract")
         notice_log_info = self.get_notice(subscription_callback_id)
         call_contact_log0 = notice_log_info[0]
@@ -291,6 +293,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=10)
+
         lcc.set_step("Get 'head_block_number'")
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
@@ -312,6 +315,7 @@ class PositiveTesting(BaseTest):
 
         notice = self.get_notice(subscription_callback_id)
         notice_log_info = notice[0]
+
         lcc.set_step("Check if lenght of contract logs is 3")
         with this_dict(notice_log_info):
             check_that("lenght of notice contract logs", len(notice_log_info), equal_to(3))
@@ -325,6 +329,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=10)
+
         lcc.set_step("Get 'head_block_number'")
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
@@ -344,10 +349,10 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
-
-        # todo: check lenght of notice info. Bug: ECHO-1055
         notice = self.get_notice(subscription_callback_id)
         notice_log_info = notice[0]
+
+        # todo: check lenght of notice info. Bug: ECHO-1055
         lcc.set_step("Check if lenght of contract logs is 3")
         with this_dict(notice_log_info):
             check_that("lenght of notice contract logs", len(notice_log_info), equal_to(3))
@@ -361,6 +366,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=10)
+
         lcc.set_step("Get 'head_block_number'")
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
@@ -380,10 +386,10 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
-
-        # todo: check notice (notice must be 0). Bug: ECHO-1055
         notice = self.get_notice(subscription_callback_id)
         notice_log_info = notice[0]
+
+        # todo: check notice (notice must be 0). Bug: ECHO-1055
         lcc.set_step("Check if lenght of contract logs is 3")
         with this_dict(notice_log_info):
             check_that("lenght of notice contract logs", len(notice_log_info), equal_to(3))
@@ -410,7 +416,7 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -436,15 +442,16 @@ class NegativeTesting(BaseTest):
                                                                                      -1]),
                                         self.__database_api_identifier, debug_mode=False)
         self.get_response(response_id, log_response=False)
+
         lcc.set_step("Call contracts method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                 log_broadcast=False)
-
         notice = self.get_notice(subscription_callback_id)
         notice_log_info = notice[0]
+
         lcc.set_step("Check if lenght of contract logs is 3")
         with this_dict(notice_log_info):
             check_that("lenght of notice contract logs", len(notice_log_info), equal_to([]))

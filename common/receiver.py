@@ -116,17 +116,22 @@ class Receiver(object):
             return notice_params
         if isinstance(notice_params, list):
             for notice_param in notice_params:
-                if (notice_param[0]["address"]) and (self.validator.is_hex(notice_param[0]["log"][0])):
+                if (notice_params.get("address")) and (self.validator.is_hex(notice_params.get("log")[0])):
                     if print_log:
                         lcc.log_info(
-                            "Received notice about contract logs:\n{}".format(json.dumps(response, indent=4)))
+                            "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
+                    return notice_params
+                if (notice_params.get("block_num")) and (self.validator.is_hex(notice_params.get("tx_id"))):
+                    if print_log:
+                        lcc.log_info(
+                            "Received notice about successful creation of new account:\n{}".format(
+                                json.dumps(response, indent=4)))
                     return notice_params
         if (notice_params.get("address")) and (self.validator.is_hex(notice_params.get("log")[0])):
             if print_log:
                 lcc.log_info(
                     "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
             return notice_params
-
         if (notice_params.get("block_num")) and (self.validator.is_hex(notice_params.get("tx_id"))):
             if print_log:
                 lcc.log_info(

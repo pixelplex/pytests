@@ -521,7 +521,7 @@ class BaseTest(object):
         keccak_hash = keccak.new(digest_bits=256)
         keccak_hash.update(bytes(method_name, 'utf-8'))
         if log_info:
-            lcc.log_info("{}".format(str(keccak_hash.hexdigest())))
+            lcc.log_info("Keccak method name: {}".format(str(keccak_hash.hexdigest())))
         return keccak_hash.hexdigest()
 
     @staticmethod
