@@ -22,7 +22,7 @@ def make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
 
 
 def add_balance_to_main_test_account(base_test, nathan_id, database_api):
-    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api))
+    to_account_id = get_account_id(get_account(base_test, base_test.accounts[0], database_api))
     operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id,
                                                           BALANCE_TO_ACCOUNT,
                                                           signer=NATHAN_PK)
@@ -33,7 +33,7 @@ def add_balance_to_main_test_account(base_test, nathan_id, database_api):
 
 
 def upgrade_main_test_account_to_lifetime_member(base_test, database_api):
-    to_account_id = get_account_id(get_account(base_test, base_test.echo_acc0, database_api))
+    to_account_id = get_account_id(get_account(base_test, base_test.accounts[0], database_api))
     operation = base_test.echo_ops.get_account_upgrade_operation(base_test.echo, to_account_id,
                                                                  upgrade_to_lifetime_member=True)
     collected_operation = base_test.collect_operations(operation, database_api)
@@ -149,7 +149,7 @@ def pre_deploy_echo(base_test, database_api, lcc):
     lcc.log_info("Default accounts created successfully. Accounts count: '{}'".format(DEFAULT_ACCOUNTS_COUNT))
     if not add_balance_to_main_test_account(base_test, nathan_id, database_api):
         raise Exception("Balance to main test account is not credited")
-    lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.echo_acc0))
+    lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.accounts[0]))
     if not upgrade_main_test_account_to_lifetime_member(base_test, database_api):
         raise Exception("The main test account is not upgraded to the lifetime member")
     lcc.log_info("The main test account upgraded to the lifetime member")

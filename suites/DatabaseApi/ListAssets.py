@@ -123,6 +123,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
 
     @staticmethod
     def proliferate_asset_names(asset_name_base, total_asset_count):
@@ -164,7 +165,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -208,7 +209,7 @@ class PositiveTesting(BaseTest):
                 self.check_created_asset(asset_info, performed_operation)
 
     @lcc.prop("type", "method")
-    @lcc.test("List assets with setted `limit` parameter more than exist in chain")
+    @lcc.test("List assets with set `limit` parameter more than exist in chain")
     @lcc.depends_on("DatabaseApi.ListAssets.ListAssets.method_main_check")
     def list_more_assets_than_exists(self):
         lcc.set_step("Get assets limit, more than exists")
