@@ -35,7 +35,6 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eth_asset = ETH_ASSET_ID
-
         # Declare all accounts in for cycle
         self.accounts = ["{}{}".format(ACCOUNT_PREFIX, account_num) for account_num in range(DEFAULT_ACCOUNTS_COUNT)]
 
