@@ -65,7 +65,7 @@ class Utils(object):
                                                                                  eth_address=eth_address)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if update_account is not None:
-            operation = base_test.echo_ops.get_operation_json("get_account_update_operation", example=True)
+            operation = base_test.echo_ops.get_operation_json("account_update_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         if eth_addr is not None:
             operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)

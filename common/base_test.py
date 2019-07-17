@@ -17,7 +17,7 @@ from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
-    EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL
+    EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, DEFAULT_ACCOUNTS_COUNT
 
 
 class BaseTest(object):
@@ -35,9 +35,8 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eth_asset = ETH_ASSET_ID
-        self.echo_acc0 = ACCOUNT_PREFIX + "0"
-        self.echo_acc1 = ACCOUNT_PREFIX + "1"
-        self.echo_acc2 = ACCOUNT_PREFIX + "2"
+        # Declare all accounts in for cycle
+        self.accounts = ["{}{}".format(ACCOUNT_PREFIX, account_num) for account_num in range(DEFAULT_ACCOUNTS_COUNT)]
 
     @staticmethod
     def create_connection_to_echo():
@@ -116,6 +115,8 @@ class BaseTest(object):
             param = hex(int(param.split('.')[2])).split('x')[-1]
             hex_param = hex_param_64[:-len(param)] + param
             return hex_param
+        if self.validator.is_eth_address(param):
+            return hex_param_64[:-len(param)] + param
         lcc.log_error("Param not valid, got: {}".format(param))
         raise Exception("Param not valid")
 
