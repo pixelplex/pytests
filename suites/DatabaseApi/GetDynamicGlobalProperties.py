@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, has_entry, greater_than_or_equal_to, \
-    not_equal_to, equal_to, check_that_entry, is_list
+    check_that_entry, is_list
 
 from common.base_test import BaseTest
 

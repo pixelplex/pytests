@@ -61,6 +61,7 @@ class GetConfig(BaseTest):
                         "ECHO_DEFAULT_ACCOUNTS_PER_FEE_SCALE", "ECHO_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS",
                         "ECHO_MAX_URL_LENGTH", "ECHO_NEAR_SCHEDULE_CTR_IV", "ECHO_FAR_SCHEDULE_CTR_IV",
                         "ECHO_CORE_ASSET_CYCLE_RATE", "ECHO_CORE_ASSET_CYCLE_RATE_BITS",
+                        # todo: COMMITEE -> COMMITTEE. Bug ECHO-1026
                         "ECHO_DEFAULT_COMMITEE_PAY_VESTING_SECONDS", "ECHO_MAX_INTEREST_APR"]
         with this_dict(response["result"]):
             if check_that("config", response["result"], has_length(70)):
