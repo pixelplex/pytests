@@ -10,6 +10,8 @@ services:
       - /app/ganache-core.docker.cli.js
       - --account
       - ${RPC_ACCOUNT}
+      - --account
+      - ${RPC_ACCOUNT_2}
       - --gasLimit
       - ${RPC_BLOCK_GASLIMIT}
       - --db

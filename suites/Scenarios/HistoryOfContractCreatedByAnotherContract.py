@@ -19,6 +19,7 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("contract_create_contract", "code")
         self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract()")
         self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["creator()"]
@@ -35,7 +36,7 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         lcc.log_info("API identifiers are: database='{}', registration='{}', "
                      "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                            self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 

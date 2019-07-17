@@ -23,6 +23,7 @@ class GetContract(BaseTest):
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
         self.contract_id = None
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -33,7 +34,7 @@ class GetContract(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract,
@@ -78,6 +79,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.greet = self.get_byte_code("piggy", "greet()")
         self.breakPiggy = self.get_byte_code("piggy", "breakPiggy()")
@@ -98,7 +100,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
