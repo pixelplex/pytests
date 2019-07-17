@@ -408,8 +408,9 @@ class EchoOperations(object):
             return [operation_id, contract_whitelist_props, sender]
         return [operation_id, contract_whitelist_props, signer]
 
-    def get_register_erc20_token_operation(self, echo, account, eth_addr, name, symbol, decimals, fee_amount=0,
-                                           fee_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+    def get_register_erc20_token_operation(self, echo, account, eth_addr, name, symbol, fee_amount=0,
+                                           fee_asset_id="1.3.0", decimals=0, extensions=None, signer=None,
+                                           debug_mode=False):
         if extensions is None:
             extensions = []
         operation_id = echo.config.operation_ids.REGISTER_ERC20_TOKEN

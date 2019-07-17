@@ -434,7 +434,7 @@ class Utils(object):
     def cancel_all_subscriptions(base_test, database_api_id):
         response_id = base_test.send_request(base_test.get_request("cancel_all_subscriptions"), database_api_id)
         response = base_test.get_response(response_id)
-        if response["result"] is not None:
+        if "result" not in response or response["result"] is not None:
             raise Exception("Can't cancel all cancel_all_subscriptions, got:\n{}".format(str(response)))
 
     def get_updated_address_balance_in_eth_network(self, base_test, account_address, previous_balance, currency="ether",
@@ -656,8 +656,8 @@ class Utils(object):
             raise Exception("Error: '{}' contract did not update, response:\n{}".format(contract, broadcast_result))
         return broadcast_result
 
-    def perform_register_erc20_token_operation(self, base_test, account, eth_addr, name, symbol, decimals,
-                                               database_api_id, log_broadcast=False):
+    def perform_register_erc20_token_operation(self, base_test, account, eth_addr, name, symbol, database_api_id,
+                                               decimals=0, log_broadcast=False):
         if account != base_test.echo_acc0:
             params = [eth_addr, name, symbol, decimals]
             broadcast_result = self.add_balance_for_operations(base_test, account, database_api_id,
@@ -673,3 +673,19 @@ class Utils(object):
         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
             raise Exception("Error: ERC20 token did not register, response:\n{}".format(broadcast_result))
         return broadcast_result
+
+    def get_erc20_account_deposits(self, base_test, account_id, database_api_id, previous_account_deposits=None,
+                                   temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        response_id = base_test.send_request(base_test.get_request("get_erc20_account_deposits", [account_id]),
+                                             database_api_id)
+        response = base_test.get_response(response_id)
+        if response["result"] and response["result"] != previous_account_deposits:
+            return response
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_erc20_account_deposits(base_test, account_id, database_api_id, temp_count=temp_count)
+        raise Exception(
+            "No needed '{}' account erc20 deposits. Waiting time result='{}'".format(account_id,
+                                                                                     self.waiting_time_result))

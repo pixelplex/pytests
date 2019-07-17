@@ -104,8 +104,19 @@ class EthereumTransactions(object):
         return {"contract_instance": contract, "contract_address": contract_address}
 
     @staticmethod
-    def get_balance_of(contract_instance, eth_account, log_response=True):
-        balance = contract_instance.functions.balanceOf(eth_account).call()
-        if log_response:
-            lcc.log_info("Method balanceOf with '{}' account return: '{}'".format(eth_account, balance))
-        return balance
+    def get_balance_of(contract_instance, eth_account):
+        return contract_instance.functions.balanceOf(eth_account).call()
+
+    @staticmethod
+    def transfer(base_test, contract_instance, account_eth_address, amount, log_transaction=True,
+                 log_transaction_logs=False):
+        if account_eth_address[:2] != "0x":
+            account_eth_address = "0x" + account_eth_address
+        tx_hash = contract_instance.functions.transfer(account_eth_address, amount).transact()
+        # Wait for transaction to be mined...
+        transfer_result = base_test.web3.eth.waitForTransactionReceipt(tx_hash)
+        if log_transaction:
+            lcc.log_info("Transaction:\n{}".format(base_test.web3.eth.getTransaction(tx_hash)))
+        if log_transaction_logs:
+            lcc.log_info("Transaction logs:\n{}".format(base_test.web3.eth.getTransactionReceipt(tx_hash).logs))
+        return transfer_result
