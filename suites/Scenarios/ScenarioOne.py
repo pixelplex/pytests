@@ -29,4 +29,5 @@ class ScenarioOne(BaseTest):
 
     account_name = "Dima"
     public_key = self.generate_keys()[1]
+    #new line
 
