@@ -73,7 +73,7 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.piggy_contract = self.get_byte_code("piggy", "code")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie()")
+        self.get_pennie = self.get_byte_code("piggy", "pennieReturned()")
         self.storage_contract = self.get_byte_code("storage", "code")
         self.storage_setGreeting = self.get_byte_code("storage", "setGreeting(string)")
 

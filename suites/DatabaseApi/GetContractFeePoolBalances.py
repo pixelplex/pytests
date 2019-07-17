@@ -81,7 +81,7 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
         self.greet = self.get_byte_code("piggy", "greet()")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie()")
+        self.get_pennie = self.get_byte_code("piggy", "pennieReturned()")
         self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
 
     @staticmethod
