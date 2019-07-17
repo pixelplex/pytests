@@ -23,6 +23,7 @@ class GetContractLogs(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
         self.echo = Echo()
@@ -36,7 +37,7 @@ class GetContractLogs(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
 
     def teardown_suite(self):
@@ -98,6 +99,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
         self.contract_dynamic_fields = self.get_byte_code("dynamic_fields_with_logs", "code")
@@ -118,7 +120,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -444,14 +446,15 @@ class PositiveTesting(BaseTest):
 
 
 @lcc.prop("testing", "negative")
-@lcc.tags("database_api", "get_chain_id")
-@lcc.suite("Negative testing of method 'get_chain_id'", rank=2)
+@lcc.tags("database_api", "get_contract_logs")
+@lcc.suite("Negative testing of method 'get_contract_logs'", rank=3)
 class NegativeTesting(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
 
@@ -464,7 +467,7 @@ class NegativeTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
