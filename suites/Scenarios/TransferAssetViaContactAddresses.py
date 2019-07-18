@@ -39,13 +39,13 @@ class TransferAssetViaContactAddresses(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario describes the ability to transfer assets via account address recipient")
-    def transfer_asset_via_account_address(self, get_random_valid_account_name, get_random_string,
-                                           get_random_integer_up_to_hundred, get_random_integer_up_to_fifty):
+    def transfer_asset_via_account_address(self, get_random_valid_account_name, get_random_string, get_random_integer,
+                                           get_random_integer_up_to_fifty):
         new_account = get_random_valid_account_name
         label = get_random_string
         addresses_count = 2
         account_addresses = []
-        transfer_amount = get_random_integer_up_to_hundred
+        transfer_amount = get_random_integer
         withdraw_amount = get_random_integer_up_to_fifty
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -106,7 +106,7 @@ class TransferAssetViaContactAddresses(BaseTest):
 
         lcc.set_step("Transfer assets received to account address")
         self.utils.perform_transfer_operations(self, new_account, self.echo_acc0, self.__database_api_identifier,
-                                               transfer_amount=withdraw_amount, log_broadcast=True)
+                                               transfer_amount=withdraw_amount, get_only_fee=True, log_broadcast=True)
         lcc.log_info("From the account of the recipient transferred assets to the account sender")
 
         lcc.set_step("Get account balance after return to sender")
