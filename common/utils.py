@@ -21,7 +21,7 @@ class Utils(object):
                                    transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
                                    lifetime=None, eth_address=None, update_account=None, eth_addr=None,
                                    vesting_balance=None, fee_pool=None, create_vesting_balance=None, whitelist=None,
-                                   update_contract=None, only_in_history=False, register_erc20=None,
+                                   update_contract=None, only_in_history=False, register_erc20=None, erc20_token=None,
                                    log_broadcast=False):
         amount = 0
         if contract_bytecode is not None:
@@ -89,6 +89,9 @@ class Utils(object):
                                                                               name=register_erc20[1],
                                                                               symbol=register_erc20[2],
                                                                               decimals=register_erc20[3])
+            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+        if erc20_token is not None:
+            operation = base_test.echo_ops.get_operation_json("withdraw_erc20_token_operation", example=True)
             amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
                                                               to_account_id=account, amount=amount)
@@ -674,6 +677,22 @@ class Utils(object):
             raise Exception("Error: ERC20 token did not register, response:\n{}".format(broadcast_result))
         return broadcast_result
 
+    def perform_withdraw_erc20_token_operation(self, base_test, account, to, erc20_token, value, database_api_id,
+                                               log_broadcast=False):
+        if account != base_test.echo_acc0:
+            broadcast_result = self.add_balance_for_operations(base_test, account, database_api_id,
+                                                               erc20_token=erc20_token)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        operation = base_test.echo_ops.get_withdraw_erc20_token_operation(echo=base_test.echo, account=account,
+                                                                          to=to, erc20_token=erc20_token, value=value)
+        collected_operation = base_test.collect_operations(operation, database_api_id)
+        broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+                                                        log_broadcast=log_broadcast)
+        if not base_test.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception("Error: ERC20 token did not withdrew, response:\n{}".format(broadcast_result))
+        return broadcast_result
+
     def get_erc20_account_deposits(self, base_test, account_id, database_api_id, previous_account_deposits=None,
                                    temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
@@ -689,3 +708,35 @@ class Utils(object):
         raise Exception(
             "No needed '{}' account erc20 deposits. Waiting time result='{}'".format(account_id,
                                                                                      self.waiting_time_result))
+
+    def get_erc20_account_withdrawals(self, base_test, account_id, database_api_id, previous_account_withdrawals=None,
+                                      temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        response_id = base_test.send_request(base_test.get_request("get_erc20_account_withdrawals", [account_id]),
+                                             database_api_id)
+        response = base_test.get_response(response_id)
+        if response["result"] and response["result"] != previous_account_withdrawals:
+            return response
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_erc20_account_withdrawals(base_test, account_id, database_api_id, temp_count=temp_count)
+        raise Exception(
+            "No needed '{}' account erc20 withdrawals. Waiting time result='{}'".format(account_id,
+                                                                                        self.waiting_time_result))
+
+    def get_updated_account_erc20_balance_in_eth_network(self, base_test, contract_instance, eth_account,
+                                                         previous_balance, temp_count=0,
+                                                         timeout=BLOCK_RELEASE_INTERVAL):
+        temp_count += 1
+        current_balance = base_test.eth_trx.get_balance_of(contract_instance, eth_account)
+        if previous_balance != current_balance:
+            return current_balance
+        if temp_count <= self.block_count:
+            base_test.set_timeout_wait(timeout, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + timeout
+            return self.get_updated_account_erc20_balance_in_eth_network(base_test, contract_instance, eth_account,
+                                                                         previous_balance, temp_count=temp_count)
+        raise Exception(
+            "ERC20 balance of '{}' account not updated. Waiting time result='{}'".format(eth_account,
+                                                                                         self.waiting_time_result))

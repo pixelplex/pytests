@@ -2,7 +2,8 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, equal_to, greater_than, has_length
+from lemoncheesecake.matching import require_that, equal_to, greater_than, has_length, this_dict, require_that_entry, \
+    is_true
 
 from common.base_test import BaseTest
 
@@ -28,8 +29,11 @@ class ERC20(BaseTest):
         self.new_account = None
         self.eth_account_address = None
         self.erc20_contract = None
-        self.ethereum_erc20_balance = None
+        self.in_ethereum_erc20_balance = None
+        self.in_ethereum_start_erc20_balance = None
+        self.in_echo_erc20_balance = None
         self.eth_erc20_contract_address = None
+        self.erc20_token_id = None
         self.erc20_contract_id = None
 
     @staticmethod
@@ -88,8 +92,9 @@ class ERC20(BaseTest):
             "ERC20 contract created in Ethereum network, address: '{}'".format(self.eth_erc20_contract_address))
 
         lcc.set_step("Get ethereum account ERC20 tokens balance in the Ethereum network")
-        self.ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
-        require_that("'in ethereum owner's erc20 balance'", self.ethereum_erc20_balance, greater_than(0))
+        self.in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
+        self.in_ethereum_start_erc20_balance = self.in_ethereum_erc20_balance
+        require_that("'in ethereum owner's erc20 balance'", self.in_ethereum_erc20_balance, greater_than(0))
 
         lcc.set_step("Perform register erc20 operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.new_account,
@@ -104,18 +109,19 @@ class ERC20(BaseTest):
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [self.eth_erc20_contract_address[2:]]),
                                         self.__database_api_identifier)
-        self.erc20_contract_id = self.get_response(response_id)["result"]["contract"]
-        lcc.log_info("ERC20 token contract id is '{}'".format(self.erc20_contract_id))
+        result = self.get_response(response_id)["result"]
+        self.erc20_token_id = result["id"]
+        self.erc20_contract_id = result["contract"]
+        lcc.log_info("ERC20 token has id '{}' and contract_id '{}'".format(self.erc20_token_id, self.erc20_contract_id))
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario entering erc20 tokens to the echo account")
-    @lcc.tags("qa")
     @lcc.depends_on("SideChain.ERC20.ERC20.erc20_sidechain_pre_run_scenario")
     def erc20_in_scenario(self):
         erc20_deposit_amounts = []
 
         lcc.set_step("First transfer erc20 to ethereum address of created account")
-        erc20_deposit_amounts.append(self.get_random_amount(_to=self.ethereum_erc20_balance))
+        erc20_deposit_amounts.append(self.get_random_amount(_to=self.in_ethereum_erc20_balance))
         transfer_result = self.eth_trx.transfer(self, self.erc20_contract, self.eth_account_address,
                                                 erc20_deposit_amounts[0])
         if not transfer_result:
@@ -136,20 +142,22 @@ class ERC20(BaseTest):
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=self.erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Call method 'balanceOf' '{}' contract completed successfully".format(self.erc20_contract_id))
 
         lcc.set_step("Get method 'balanceOf' result")
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        contract_output = self.get_contract_output(contract_result, output_type=int)
-        require_that("'in echo account's erc20 balance'", contract_output, equal_to(erc20_deposit_amounts[0]))
+        in_echo_erc20_balance = self.get_contract_output(contract_result, output_type=int)
+        require_that("'in echo account's erc20 balance'", in_echo_erc20_balance, equal_to(erc20_deposit_amounts[0]))
 
         lcc.set_step("Get updated ethereum account ERC20 tokens balance in the Ethereum network")
-        updated_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
-        require_that("'in ethereum owner's erc20 balance'", updated_ethereum_erc20_balance,
-                     equal_to(self.ethereum_erc20_balance - erc20_deposit_amounts[0]))
+        updated_in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
+        require_that("'in ethereum owner's erc20 balance'", updated_in_ethereum_erc20_balance,
+                     equal_to(self.in_ethereum_erc20_balance - erc20_deposit_amounts[0]))
 
         lcc.set_step("Second transfer erc20 to ethereum address of created account")
-        erc20_deposit_amounts.append(self.get_random_amount(_to=updated_ethereum_erc20_balance))
+        erc20_deposit_amounts.append(self.get_random_amount(_to=updated_in_ethereum_erc20_balance))
         transfer_result = self.eth_trx.transfer(self, self.erc20_contract, self.eth_account_address,
                                                 erc20_deposit_amounts[1])
         if not transfer_result:
@@ -171,16 +179,122 @@ class ERC20(BaseTest):
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=self.erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Call method 'balanceOf' '{}' contract completed successfully".format(self.erc20_contract_id))
 
         lcc.set_step("Get method 'balanceOf' result")
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        contract_output = self.get_contract_output(contract_result, output_type=int)
-        require_that("'in echo account's erc20 balance'", contract_output,
+        in_echo_erc20_balance = self.get_contract_output(contract_result, output_type=int)
+        require_that("'in echo account's erc20 balance'", in_echo_erc20_balance,
                      equal_to(erc20_deposit_amounts[0] + erc20_deposit_amounts[1]))
 
         lcc.set_step("Get final ethereum account ERC20 tokens balance in the Ethereum network")
-        final_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
-        require_that("'in ethereum owner'serc20 balance'", final_ethereum_erc20_balance,
-                     equal_to(updated_ethereum_erc20_balance - erc20_deposit_amounts[1]))
+        final_in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
+        require_that("'in ethereum owner'serc20 balance'", final_in_ethereum_erc20_balance,
+                     equal_to(updated_in_ethereum_erc20_balance - erc20_deposit_amounts[1]))
+        self.in_echo_erc20_balance = in_echo_erc20_balance
+        self.in_ethereum_erc20_balance = final_in_ethereum_erc20_balance
 
+    @lcc.prop("type", "scenario")
+    @lcc.test("The scenario withdrawing erc20 tokens from the echo account")
+    @lcc.depends_on("SideChain.ERC20.ERC20.erc20_sidechain_pre_run_scenario")
+    def erc20_out_scenario(self):
+        erc20_withdraw_amounts = []
+        withdraw_erc20_token_ids = []
+
+        lcc.set_step("Get ERC20 balance in the ECHO network")
+        if self.in_echo_erc20_balance <= 0:
+            raise Exception("No ERC20 balance to withdraw")
+        lcc.log_info("ERC20 balance in ECHO network: '{}'".format(self.in_echo_erc20_balance))
+        lcc.log_info("ERC20 balance in Ethereum network: '{}'".format(self.in_ethereum_erc20_balance))
+
+        lcc.set_step("Perform first withdraw ERC20 token operation")
+        erc20_withdraw_amounts.append(str(self.get_random_amount(_to=self.in_echo_erc20_balance)))
+        bd_result = self.utils.perform_withdraw_erc20_token_operation(self, account=self.new_account,
+                                                                      to=self.eth_address[2:],
+                                                                      erc20_token=self.erc20_token_id,
+                                                                      value=erc20_withdraw_amounts[0],
+                                                                      database_api_id=self.__database_api_identifier)
+        withdraw_erc20_token_ids.append(self.get_operation_results_ids(bd_result))
+        lcc.log_info("Withdraw ERC20 token completed successfully, Withdraw ERC20 token object is '{}'".format(
+            withdraw_erc20_token_ids[0]))
+
+        lcc.set_step("Get ERC20 account withdrawals")
+        response = self.utils.get_erc20_account_withdrawals(self, self.new_account, self.__database_api_identifier)
+        withdrawals = response["result"]
+        require_that("'account withdrawals'", withdrawals, has_length(1))
+        for i, withdraw in enumerate(withdrawals):
+            lcc.log_info("Check account withdraw #'{}'".format(str(i)))
+            with this_dict(withdraw):
+                require_that_entry("id", equal_to(withdraw_erc20_token_ids[i]))
+                require_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
+
+        lcc.set_step("Call method 'balanceOf' with account that withdraw erc20 tokens out of ECHO network")
+        argument = self.get_byte_code_param(self.new_account)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.erc20_balanceOf + argument,
+                                                              callee=self.erc20_contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Call method 'balanceOf' '{}' contract completed successfully".format(self.erc20_contract_id))
+
+        lcc.set_step("Get method 'balanceOf' result")
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        in_echo_erc20_balance = self.get_contract_output(contract_result, output_type=int)
+        require_that("'in echo account's erc20 balance'", in_echo_erc20_balance,
+                     equal_to(self.in_echo_erc20_balance - int(erc20_withdraw_amounts[0])))
+
+        lcc.set_step("Get updated ethereum account ERC20 tokens balance in the Ethereum network")
+        updated_in_ethereum_erc20_balance = \
+            self.utils.get_updated_account_erc20_balance_in_eth_network(self, self.erc20_contract, self.eth_address,
+                                                                        self.in_ethereum_erc20_balance)
+        require_that("'in ethereum owner'serc20 balance'", updated_in_ethereum_erc20_balance,
+                     equal_to(self.in_ethereum_erc20_balance + int(erc20_withdraw_amounts[0])))
+
+        lcc.set_step("Perform second withdraw ERC20 token operation to withdraw all ERC20 balance")
+        erc20_withdraw_amounts.append(str(in_echo_erc20_balance))
+        bd_result = self.utils.perform_withdraw_erc20_token_operation(self, account=self.new_account,
+                                                                      to=self.eth_address[2:],
+                                                                      erc20_token=self.erc20_token_id,
+                                                                      value=erc20_withdraw_amounts[1],
+                                                                      database_api_id=self.__database_api_identifier)
+        withdraw_erc20_token_ids.append(self.get_operation_results_ids(bd_result))
+        lcc.log_info("Withdraw ERC20 token completed successfully, Withdraw ERC20 token object is '{}'".format(
+            withdraw_erc20_token_ids[1]))
+
+        lcc.set_step("Get ERC20 account withdrawals")
+        response = self.utils.get_erc20_account_withdrawals(self, self.new_account, self.__database_api_identifier)
+        withdrawals = response["result"]
+        require_that("'account withdrawals'", withdrawals, has_length(2))
+        for i, withdraw in enumerate(withdrawals):
+            lcc.log_info("Check account withdraw #'{}'".format(str(i)))
+            with this_dict(withdraw):
+                require_that_entry("id", equal_to(withdraw_erc20_token_ids[i]))
+                require_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
+
+        lcc.set_step("Call method 'balanceOf' with account that withdraw all erc20 tokens out of ECHO network")
+        argument = self.get_byte_code_param(self.new_account)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.erc20_balanceOf + argument,
+                                                              callee=self.erc20_contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Call method 'balanceOf' '{}' contract completed successfully".format(self.erc20_contract_id))
+
+        lcc.set_step("Get method 'balanceOf' result")
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        updated_in_echo_erc20_balance = self.get_contract_output(contract_result, output_type=int)
+        require_that("'in echo account's erc20 balance'", updated_in_echo_erc20_balance,
+                     equal_to(in_echo_erc20_balance - int(erc20_withdraw_amounts[1])))
+
+        lcc.set_step("Get final ethereum account ERC20 tokens balance in the Ethereum network")
+        final_in_ethereum_erc20_balance = \
+            self.utils.get_updated_account_erc20_balance_in_eth_network(self, self.erc20_contract, self.eth_address,
+                                                                        self.in_ethereum_erc20_balance)
+        require_that("'in ethereum owner'serc20 balance'", final_in_ethereum_erc20_balance,
+                     equal_to(updated_in_ethereum_erc20_balance + int(erc20_withdraw_amounts[1])))
+        require_that("'final balance equal to start balance'",
+                     final_in_ethereum_erc20_balance == self.in_ethereum_start_erc20_balance, is_true())
