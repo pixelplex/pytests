@@ -23,6 +23,7 @@ class GetContractResult(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.getPennie_method_name = "pennieReturned()"
         self.piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", self.getPennie_method_name)
@@ -174,6 +175,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.getPennie_method_name = "pennieReturned()"
         self.greet_method_name = "greet()"
         self.contract_piggy = self.get_byte_code("piggy", "code")
