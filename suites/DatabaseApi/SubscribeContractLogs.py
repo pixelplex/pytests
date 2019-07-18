@@ -406,6 +406,7 @@ class NegativeTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
 
