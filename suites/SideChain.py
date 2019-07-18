@@ -2,6 +2,6 @@
 import lemoncheesecake.api as lcc
 
 
-@lcc.suite("Sidechain")
-class Sidechain:
+@lcc.suite("SideChain")
+class SideChain:
     pass
