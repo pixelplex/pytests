@@ -23,6 +23,7 @@ class SubscribeContractLogs(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
         self.greet = self.get_byte_code("piggy", "greet")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
@@ -125,6 +126,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
         self.setAllValues_method_name = "setAllValues(uint256,string)"
