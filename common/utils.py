@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 import time
+from copy import deepcopy
 
 import math
 
@@ -16,88 +17,103 @@ class Utils(object):
         self.block_count = 10
 
     @staticmethod
-    def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
-                                   method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
-                                   transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
-                                   lifetime=None, eth_address=None, update_account=None, eth_addr=None,
-                                   vesting_balance=None, fee_pool=None, create_vesting_balance=None, whitelist=None,
-                                   update_contract=None, only_in_history=False, register_erc20=None, erc20_token=None,
-                                   log_broadcast=False):
-        amount = 0
-        if contract_bytecode is not None:
-            operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
-                                                                         bytecode=contract_bytecode)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0][
-                "amount"] + contract_value
-        if method_bytecode is not None:
-            operation = base_test.echo_ops.get_call_contract_operation(echo=base_test.echo, registrar=account,
-                                                                       bytecode=method_bytecode, callee=callee)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if transfer_amount is not None and to_address is None:
-            operation = base_test.echo_ops.get_operation_json("transfer_operation", example=True)
-            operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
-            fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-            if only_in_history:
-                amount = operation_count * transfer_amount
-            amount = amount + (operation_count * fee)
-        if to_address is not None:
-            operation = base_test.echo_ops.get_operation_json("transfer_to_address_operation", example=True)
-            operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
-            fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-            amount = amount + (operation_count * fee)
-        if asset_name is not None:
-            operation = base_test.echo_ops.get_operation_json("asset_create_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if label is not None:
-            operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=account,
-                                                                                label=label)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if vesting_balance is not None:
-            operation = base_test.echo_ops.get_operation_json("vesting_balance_withdraw_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if lifetime is not None:
-            operation = base_test.echo_ops.get_account_upgrade_operation(echo=base_test.echo,
-                                                                         account_to_upgrade=account,
-                                                                         upgrade_to_lifetime_member=lifetime)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if eth_address is not None:
-            operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
-                                                                                 committee_member_account=account,
-                                                                                 eth_address=eth_address)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if update_account is not None:
-            operation = base_test.echo_ops.get_operation_json("account_update_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if eth_addr is not None:
-            operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if fee_pool is not None:
-            operation = base_test.echo_ops.get_operation_json("contract_fund_pool_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if create_vesting_balance is not None:
-            operation = base_test.echo_ops.get_operation_json("vesting_balance_create_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if whitelist is not None:
-            operation = base_test.echo_ops.get_operation_json("contract_whitelist_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if update_contract is not None:
-            operation = base_test.echo_ops.get_operation_json("contract_update_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if register_erc20 is not None:
-            operation = base_test.echo_ops.get_register_erc20_token_operation(echo=base_test.echo, account=account,
-                                                                              eth_addr=register_erc20[0],
-                                                                              name=register_erc20[1],
-                                                                              symbol=register_erc20[2],
-                                                                              decimals=register_erc20[3])
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        if erc20_token is not None:
-            operation = base_test.echo_ops.get_operation_json("withdraw_erc20_token_operation", example=True)
-            amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
-        operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
-                                                              to_account_id=account, amount=amount)
-        collected_operation = base_test.collect_operations(operation, database_api_id)
+    def add_balance_for_operations(base_test, account, operation, database_api_id, operation_count=1, transfer_amount=0,
+                                   transfer_asset_id="1.3.0", only_in_history=False, log_broadcast=False):
+        transfer_amount = transfer_amount
+        if only_in_history:
+            transfer_amount = operation_count * transfer_amount
+        amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"] + transfer_amount
+        transfer_amount_for_pay_fee_op = base_test.echo_ops.get_transfer_operation(echo=base_test.echo,
+                                                                                   from_account_id=base_test.echo_acc0,
+                                                                                   to_account_id=account, amount=amount,
+                                                                                   amount_asset_id=transfer_asset_id)
+        collected_operation = base_test.collect_operations(transfer_amount_for_pay_fee_op, database_api_id)
         return base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                             log_broadcast=log_broadcast)
+
+    # @staticmethod
+    #     # def add_balance_for_operations(base_test, account, database_api_id, contract_bytecode=None, contract_value=0,
+    #     #                                method_bytecode=None, callee="1.14.0", transfer_amount=None, to_address=None,
+    #     #                                transfer_asset_id=None, asset_name=None, operation_count=1, label=None,
+    #     #                                lifetime=None, eth_address=None, update_account=None, eth_addr=None,
+    #     #                                vesting_balance=None, fee_pool=None, create_vesting_balance=None, whitelist=None,
+    #     #                                update_contract=None, only_in_history=False, register_erc20=None, erc20_token=None,
+    #     #                                log_broadcast=False):
+    #     #     amount = 0
+    #     #     if contract_bytecode is not None:
+    #     #         operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=account,
+    #     #                                                                      bytecode=contract_bytecode)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0][
+    #     #             "amount"] + contract_value
+    #     #     if method_bytecode is not None:
+    #     #         operation = base_test.echo_ops.get_call_contract_operation(echo=base_test.echo, registrar=account,
+    #     #                                                                    bytecode=method_bytecode, callee=callee)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if transfer_amount is not None and to_address is None:
+    #     #         operation = base_test.echo_ops.get_operation_json("transfer_operation", example=True)
+    #     #         operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
+    #     #         fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #         if only_in_history:
+    #     #             amount = operation_count * transfer_amount
+    #     #         amount = amount + (operation_count * fee)
+    #     #     if to_address is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("transfer_to_address_operation", example=True)
+    #     #         operation[1]["amount"].update({"amount": transfer_amount, "asset_id": transfer_asset_id})
+    #     #         fee = base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #         amount = amount + (operation_count * fee)
+    #     #     if asset_name is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("asset_create_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if label is not None:
+    #     #         operation = base_test.echo_ops.get_account_address_create_operation(echo=base_test.echo, owner=account,
+    #     #                                                                             label=label)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if vesting_balance is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("vesting_balance_withdraw_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if lifetime is not None:
+    #     #         operation = base_test.echo_ops.get_account_upgrade_operation(echo=base_test.echo,
+    #     #                                                                      account_to_upgrade=account,
+    #     #                                                                      upgrade_to_lifetime_member=lifetime)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if eth_address is not None:
+    #     #         operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
+    #     #                                                                              committee_member_account=account,
+    #     #                                                                              eth_address=eth_address)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if update_account is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("account_update_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"] + 100000
+    #     #     if eth_addr is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("withdraw_eth_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if fee_pool is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("contract_fund_pool_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if create_vesting_balance is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("vesting_balance_create_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if whitelist is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("contract_whitelist_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if update_contract is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("contract_update_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if register_erc20 is not None:
+    #     #         operation = base_test.echo_ops.get_register_erc20_token_operation(echo=base_test.echo, account=account,
+    #     #                                                                           eth_addr=register_erc20[0],
+    #     #                                                                           name=register_erc20[1],
+    #     #                                                                           symbol=register_erc20[2],
+    #     #                                                                           decimals=register_erc20[3])
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     if erc20_token is not None:
+    #     #         operation = base_test.echo_ops.get_operation_json("withdraw_erc20_token_operation", example=True)
+    #     #         amount = operation_count * base_test.get_required_fee(operation, database_api_id)[0]["amount"]
+    #     #     operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=base_test.echo_acc0,
+    #     #                                                           to_account_id=account, amount=amount)
+    #     #     collected_operation = base_test.collect_operations(operation, database_api_id)
+    #     #     return base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
+    #     #                                         log_broadcast=log_broadcast)
 
     def get_nonexistent_asset_id(self, base_test, database_api_id, symbol="", list_asset_ids=None, return_symbol=False):
         if list_asset_ids is None:
@@ -158,21 +174,22 @@ class Utils(object):
         return result_lower_bound_name, result_limit
 
     def get_contract_id(self, base_test, registrar, contract_bytecode, database_api_id, value_amount=0,
-                        value_asset_id="1.3.0", supported_asset_id=None, operation_count=1, need_broadcast_result=False,
+                        value_asset_id="1.3.0", supported_asset_id=None, need_broadcast_result=False,
                         log_broadcast=False):
-        if registrar != base_test.echo_acc0:
-            broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id,
-                                                               contract_bytecode=contract_bytecode,
-                                                               contract_value=value_amount,
-                                                               operation_count=operation_count)
-            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_create_contract_operation(echo=base_test.echo, registrar=registrar,
                                                                      bytecode=contract_bytecode,
                                                                      value_amount=value_amount,
                                                                      value_asset_id=value_asset_id,
                                                                      supported_asset_id=supported_asset_id)
-        collected_operation = base_test.collect_operations(operation, database_api_id)
+        if registrar != base_test.echo_acc0:
+            temp_operation = deepcopy(operation)
+            temp_operation[1]["registrar"] = base_test.echo_acc0
+            broadcast_result = self.add_balance_for_operations(base_test, registrar, temp_operation, database_api_id,
+                                                               transfer_amount=value_amount,
+                                                               log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+        collected_operation = base_test.collect_operations(operation, database_api_id, debug_mode=True)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
         contract_result = base_test.get_operation_results_ids(broadcast_result)
@@ -185,14 +202,15 @@ class Utils(object):
 
     def perform_contract_transfer_operation(self, base_test, registrar, method_bytecode, database_api_id,
                                             contract_id, operation_count=1, log_broadcast=False):
-        if registrar != base_test.echo_acc0:
-            broadcast_result = self.add_balance_for_operations(base_test, registrar, database_api_id,
-                                                               method_bytecode=method_bytecode, callee=contract_id,
-                                                               operation_count=operation_count)
-            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         operation = base_test.echo_ops.get_call_contract_operation(echo=base_test.echo, registrar=registrar,
                                                                    bytecode=method_bytecode, callee=contract_id)
+        if registrar != base_test.echo_acc0:
+            temp_operation = deepcopy(operation)
+            broadcast_result = self.add_balance_for_operations(base_test, registrar, temp_operation, database_api_id,
+                                                               operation_count=operation_count,
+                                                               log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         collected_operation = base_test.collect_operations(operation, database_api_id)
         if operation_count == 1:
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
@@ -209,18 +227,21 @@ class Utils(object):
                                     operation_count=1, only_in_history=False, amount_asset_id="1.3.0",
                                     log_broadcast=False):
         add_balance_operation = 0
-        if account_1 != base_test.echo_acc0:
-            broadcast_result = self.add_balance_for_operations(base_test, account_1, database_api_id,
-                                                               transfer_amount=transfer_amount,
-                                                               transfer_asset_id=amount_asset_id,
-                                                               operation_count=operation_count,
-                                                               only_in_history=only_in_history)
-            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
-            add_balance_operation = 1
         operation = base_test.echo_ops.get_transfer_operation(echo=base_test.echo, from_account_id=account_1,
                                                               to_account_id=account_2, amount=transfer_amount,
                                                               amount_asset_id=amount_asset_id)
+        if account_1 != base_test.echo_acc0:
+            temp_operation = deepcopy(operation)
+            temp_operation[1]["from_account_id"] = base_test.echo_acc0
+            broadcast_result = self.add_balance_for_operations(base_test, account_1, temp_operation, database_api_id,
+                                                               transfer_amount=transfer_amount,
+                                                               transfer_asset_id=amount_asset_id,
+                                                               operation_count=operation_count,
+                                                               only_in_history=only_in_history,
+                                                               log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+            add_balance_operation = 1
         collected_operation = base_test.collect_operations(operation, database_api_id)
         if operation_count == 1:
             broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
@@ -619,12 +640,7 @@ class Utils(object):
         return broadcast_result
 
     def perform_account_update_operation(self, base_test, account_id, account_info, database_api_id,
-                                         update_account=True, log_broadcast=False):
-        if account_id != base_test.echo_acc0:
-            broadcast_result = self.add_balance_for_operations(base_test, account_id, database_api_id,
-                                                               update_account=update_account)
-            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
+                                         log_broadcast=False):
         active, echorand_key, options = account_info["active"], account_info["echorand_key"], account_info["options"]
         operation = base_test.echo_ops.get_account_update_operation(echo=base_test.echo, account=account_id,
                                                                     weight_threshold=active["weight_threshold"],
@@ -635,6 +651,12 @@ class Utils(object):
                                                                     delegating_account=options["delegating_account"],
                                                                     num_committee=options["num_committee"],
                                                                     votes=options["votes"])
+        if account_id != base_test.echo_acc0:
+            temp_operation = deepcopy(operation)
+            broadcast_result = self.add_balance_for_operations(base_test, account_id, temp_operation, database_api_id,
+                                                               log_broadcast=log_broadcast)
+            if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
+                raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)
