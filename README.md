@@ -97,7 +97,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)
 - [ ] [get_required_signatures](https://echo-dev.io/developers/apis/database-api/#get_required_signaturestrx-available_keys)
 - [x] [get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)
-- [ ] [verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)
+- [x] [verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)
 - [ ] [verify_account_authority](https://echo-dev.io/developers/apis/database-api/#verify_account_authorityname_or_id-signers)
 - [x] [validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)
 - [ ] [get_proposed_transactions](https://echo-dev.io/developers/apis/database-api/#get_proposed_transactionsid)
@@ -107,9 +107,16 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)
 - [ ] [call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)
 - [x] [get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)
-- [ ] [get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)
+- [x] [get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)
 - [x] get_eth_address
 - [x] subscribe_contracts
+- [x] get_account_deposits
+- [x] get_account_withdrawals
+- [x] get_contract_fee_pool_balance
+- [x] get_contract_pool_whitelist
+- [ ] get_erc20_token
+- [ ] get_erc20_account_deposits
+- [ ] get_erc20_account_withdrawals
 
 #### [History API](https://echo-dev.io/developers/apis/history-api/#history-api)
 

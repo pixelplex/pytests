@@ -17,7 +17,7 @@ from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
-    EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, DEFAULT_ACCOUNTS_COUNT
+    DEFAULT_ACCOUNTS_COUNT, EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, ETHEREUM_CONTRACTS
 
 
 class BaseTest(object):
@@ -35,7 +35,7 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eth_asset = ETH_ASSET_ID
-        # Declare all accounts in for cycle
+        # Declare all default accounts
         self.accounts = ["{}{}".format(ACCOUNT_PREFIX, account_num) for account_num in range(DEFAULT_ACCOUNTS_COUNT)]
 
     @staticmethod
@@ -93,8 +93,14 @@ class BaseTest(object):
         return int(str_value[str_value.rfind('.') + 1:])
 
     @staticmethod
-    def get_byte_code(contract_name, code_or_method_name):
+    def get_byte_code(contract_name, code_or_method_name, ethereum_contract=False):
+        if ethereum_contract:
+            return ETHEREUM_CONTRACTS[contract_name][code_or_method_name]
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
+
+    @staticmethod
+    def get_abi(contract_name):
+        return ETHEREUM_CONTRACTS[contract_name]["abi"]
 
     def get_byte_code_param(self, param, param_type=None):
         hex_param_64 = "0000000000000000000000000000000000000000000000000000000000000000"
