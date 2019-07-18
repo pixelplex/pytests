@@ -99,8 +99,8 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.echo_acc1 = None
-        self.echo_acc2 = None
+        self.echo_acc5 = None
+        self.echo_acc6 = None
         self.contract = self.get_byte_code("piggy", "code")
         self.greet = self.get_byte_code("piggy", "greet()")
 
@@ -125,12 +125,12 @@ class PositiveTesting(BaseTest):
                                                                            self.__registration_api_identifier))
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
+        self.echo_acc5 = self.get_account_id(self.accounts[5], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.accounts[2], self.__database_api_identifier,
+        self.echo_acc6 = self.get_account_id(self.accounts[6], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info(
-            "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0, self.echo_acc1, self.echo_acc2))
+            "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0, self.echo_acc5, self.echo_acc6))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -161,7 +161,7 @@ class PositiveTesting(BaseTest):
                      "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Add two accounts to whitelist (not fee pool sender)")
-        whitelist = [self.echo_acc1, self.echo_acc2]
+        whitelist = [self.echo_acc5, self.echo_acc6]
         for account in whitelist:
             full_whitelist.append(account)
             full_whitelist = sorted(full_whitelist, key=self.get_value_for_sorting_func)
@@ -220,11 +220,11 @@ class PositiveTesting(BaseTest):
         require_that("'contract_pool_whitelist'", contract_pool_whitelist["whitelist"], is_list([]))
 
         lcc.set_step("Third: call 'greet' method using account that removed from whitelist (not fee pool sender)")
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc5,
                                                                      bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
-        lcc.log_info("'{}' account call '{}' contract successfully".format(self.echo_acc1, contract_id))
+        lcc.log_info("'{}' account call '{}' contract successfully".format(self.echo_acc5, contract_id))
 
         lcc.set_step(
             "Get a contract's fee pool balance after third call contract by account that removed from whitelist")
@@ -254,7 +254,7 @@ class PositiveTesting(BaseTest):
                      "Fee pool balance: '{}' assets".format(contract_id, fee_pool_balance))
 
         lcc.set_step("Add two accounts to blacklist (not fee pool sender)")
-        blacklist = [self.echo_acc1, self.echo_acc2]
+        blacklist = [self.echo_acc5, self.echo_acc6]
         for account in blacklist:
             full_blacklist.append(account)
             full_blacklist = sorted(full_blacklist, key=self.get_value_for_sorting_func)
@@ -325,11 +325,11 @@ class PositiveTesting(BaseTest):
         require_that("'contract_pool_blacklist'", contract_pool_whitelist["blacklist"], is_list([]))
 
         lcc.set_step("Third: call 'greet' method using account that removed from blacklist (not fee pool sender)")
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc1,
+        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc5,
                                                                      bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
-        lcc.log_info("'{}' account call '{}' contract successfully".format(self.echo_acc1, contract_id))
+        lcc.log_info("'{}' account call '{}' contract successfully".format(self.echo_acc5, contract_id))
 
         lcc.set_step(
             "Get a contract's fee pool balance after third call contract by account that removed from whitelist")

@@ -58,6 +58,7 @@ UNPAID_FEE_METHOD = "0x19c4518a"
 COMMITTEE = "0x130f679d"
 
 ETHEREUM_OPERATIONS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_transactions.json")))
+ETHEREUM_CONTRACTS = json.load(open(os.path.join(RESOURCES_DIR, "ethereum_contracts.json")))
 with open(".env") as env_file:
     ETH_PRIVATE_KEY = (env_file.readline().split('RPC_ACCOUNT=')[1]).split(",")[0]
 
