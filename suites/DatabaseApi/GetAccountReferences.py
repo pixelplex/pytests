@@ -109,11 +109,25 @@ class PositiveTesting(BaseTest):
         account_auths = [account_auth[0] for account_auth in second_account_active_keys["account_auths"]]
         account_auths_new_item = [self.echo_acc3, 1]
         if self.echo_acc3 not in account_auths:
+            lcc.log_info("Get required fee for account update operation")
+            new_active_keys = second_account_active_keys.copy()
+            new_active_keys["account_auths"].extend([account_auths_new_item])
+            account_update_operation = self.echo_ops.get_account_update_operation(
+                echo=self.echo, account=self.echo_acc4,
+                key_auths=new_active_keys["key_auths"],
+                account_auths=new_active_keys["account_auths"],
+                weight_threshold=new_active_keys["weight_threshold"]
+            )
+            params = [[account_update_operation], self.eth_asset]
+            response_id = self.send_request(self.get_request("get_required_fees", params),
+                                            self.__database_api_identifier)
+            fee_for_account_update_operation = self.get_response(response_id)["result"][0]["amount"]
+
             transfer_operation = self.echo_ops.get_transfer_operation(
                 echo=self.echo,
                 from_account_id=self.echo_acc0,
                 to_account_id=self.echo_acc4,
-                amount=3000000
+                amount=fee_for_account_update_operation
             )
             collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -123,15 +137,7 @@ class PositiveTesting(BaseTest):
                 self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
             )
 
-            new_active_keys = second_account_active_keys.copy()
-            new_active_keys["account_auths"].extend([account_auths_new_item])
-            operation = self.echo_ops.get_account_update_operation(
-                echo=self.echo, account=self.echo_acc4,
-                key_auths=new_active_keys["key_auths"],
-                account_auths=new_active_keys["account_auths"],
-                weight_threshold=new_active_keys["weight_threshold"]
-            )
-            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            collected_operation = self.collect_operations(account_update_operation, self.__database_api_identifier)
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                        log_broadcast=False)
             require_that(
