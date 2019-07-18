@@ -21,6 +21,13 @@ class GetGlobalProperties(BaseTest):
         super().__init__()
         self.__api_identifier = None
         self.all_operations = self.echo.config.operation_ids.__dict__
+        self.no_fee_count = 0
+        self.only_fee_count = 0
+        self.fee_with_price_per_kbyte_count = 0
+        self.account_create_fee_count = 0
+        self.account_update_fee_count = 0
+        self.asset_create_count = 0
+        self.pool_fee_count = 0
 
     @staticmethod
     def no_fee(actual_fee):
@@ -64,11 +71,11 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("price_per_kbyte", is_integer(), quiet=True)
 
     @staticmethod
-    def fee_with_price_per_output(actual_fee):
+    def pool_fee(actual_fee):
         with this_dict(actual_fee):
             if check_that("fee", actual_fee, has_length(2)):
                 check_that_entry("fee", is_integer(), quiet=True)
-                check_that_entry("price_per_output", is_integer(), quiet=True)
+                check_that_entry("pool_fee", is_integer(), quiet=True)
 
     def check_default_fee_for_operation(self, current_fees, operations, check_kind):
         for i in range(len(operations)):
@@ -145,6 +152,29 @@ class GetGlobalProperties(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Check all fields in global properties")
     def method_main_check(self):
+        all_checking_operations = []
+        fee_with_price_per_kbyte_operations = ["account_update", "asset_update", "proposal_create", "proposal_update",
+                                               "custom", "account_address_create"]
+        only_fee_operations = ["transfer", "limit_order_create", "limit_order_cancel", "call_order_update",
+                               "account_whitelist", "account_transfer", "asset_update_bitasset",
+                               "asset_update_feed_producers", "asset_issue", "asset_reserve", "asset_fund_fee_pool",
+                               "asset_settle", "asset_global_settle", "asset_publish_feed", "proposal_delete",
+                               "withdraw_permission_create", "withdraw_permission_update", "withdraw_permission_claim",
+                               "withdraw_permission_delete", "committee_member_create", "committee_member_update",
+                               "committee_member_update_global_parameters", "vesting_balance_create",
+                               "vesting_balance_withdraw", "assert", "override_transfer", "asset_claim_fees",
+                               "bid_collateral", "create_contract", "call_contract", "contract_transfer",
+                               "change_sidechain_config", "transfer_to_address_operation",
+                               "generate_eth_address_operation", "create_eth_address_operation", "deposit_eth_address",
+                               "withdraw_eth", "approve_widthdraw_eth", "contract_fund_pool", "contract_whitelist",
+                               "sidechain_issue", "sidechain_burn", "deposit_erc20_token", "withdraw_erc20_token",
+                               "approve_erc20_token_withdraw", "contract_update"]
+        no_fee_operations = ["fill_order", "asset_settle_cancel", "balance_claim", "execute_bid"]
+        account_create_fee_operations = ["account_create"]
+        account_update_fee_operations = ["account_upgrade"]
+        asset_create_fee_operations = ["asset_create"]
+        pool_fee_operations = ["register_erc20_token"]
+
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
         response = self.get_response(response_id)
@@ -204,49 +234,83 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("scale", is_integer(), quiet=True)
 
         lcc.set_step("Check the count of fees for operations")
+        fee_parameters = current_fees["parameters"]
         require_that(
             "count of fees for operations",
-            len(current_fees["parameters"]), is_(len(self.all_operations))
+            fee_parameters, has_length(len(self.all_operations))
         )
 
+        lcc.set_step("Check that count of checking fees fields equal to all operations")
+        checking_operations_fee_types = [fee_with_price_per_kbyte_operations, only_fee_operations, no_fee_operations,
+                                         account_create_fee_operations, account_update_fee_operations,
+                                         asset_create_fee_operations, pool_fee_operations]
+        for fee_type in checking_operations_fee_types:
+            all_checking_operations.extend(fee_type)
+        check_that("'length of checking fees fields equal to all operations'", all_checking_operations,
+                   has_length(len(self.all_operations)))
+
+        lcc.set_step("Save the number of types of current_fees")
+        for fee_parameter in fee_parameters:
+            parameter = fee_parameter[1]
+            if len(parameter) == 0:
+                self.no_fee_count += 1
+                continue
+            if len(parameter) == 1 and "fee" in parameter:
+                self.only_fee_count += 1
+                continue
+            if len(parameter) == 2 and ("fee" and "price_per_kbyte") in parameter:
+                self.fee_with_price_per_kbyte_count += 1
+                continue
+            if len(parameter) == 2 and ("membership_annual_fee" and "membership_lifetime_fee") in parameter:
+                self.account_update_fee_count += 1
+                continue
+            if len(parameter) == 2 and ("fee" and "pool_fee") in parameter:
+                self.pool_fee_count += 1
+                continue
+            if len(parameter) == 3 and ("basic_fee" and "premium_fee" and "price_per_kbyte") in parameter:
+                self.account_create_fee_count += 1
+                continue
+            if len(parameter) == 4 and (
+                    "symbol3" and "symbol4" and "long_symbol" and "price_per_kbyte") in parameter:
+                self.asset_create_count += 1
+                continue
+            else:
+                lcc.log_warn("Warn: Added new option for calculating fee for the operation, got: '{}'".format(
+                    fee_parameter))
+
         lcc.set_step("Check 'fee_with_price_per_kbyte' for operations")
-        operations = ["account_update", "asset_update", "proposal_create", "proposal_update", "custom",
-                      "account_address_create"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.fee_with_price_per_kbyte)
+        check_that("'fee_with_price_per_kbyte' operation count", fee_with_price_per_kbyte_operations,
+                   has_length(self.fee_with_price_per_kbyte_count))
+        self.check_default_fee_for_operation(fee_parameters, fee_with_price_per_kbyte_operations,
+                                             self.fee_with_price_per_kbyte)
 
         lcc.set_step("Check 'only_fee' for operations")
-        operations = ["transfer", "withdraw_permission_claim", "override_transfer", "limit_order_create",
-                      "limit_order_cancel", "call_order_update", "account_whitelist",
-                      "account_transfer", "asset_update_bitasset", "asset_issue", "asset_update_feed_producers",
-                      "asset_reserve", "asset_fund_fee_pool", "asset_settle", "asset_global_settle",
-                      "asset_publish_feed", "witness_create", "witness_update", "proposal_delete",
-                      "withdraw_permission_create", "withdraw_permission_update", "withdraw_permission_delete",
-                      "committee_member_create", "committee_member_update", "committee_member_update_global_parameters",
-                      "vesting_balance_create", "vesting_balance_withdraw", "worker_create", "assert",
-                      "transfer_from_blind", "asset_claim_fees", "bid_collateral", "create_contract", "call_contract",
-                      "contract_transfer", "change_sidechain_config", "transfer_to_address_operation",
-                      "generate_eth_address_operation", "create_eth_address_operation"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.only_fee)
+        check_that("'only_fee' operation count", only_fee_operations, has_length(self.only_fee_count))
+        self.check_default_fee_for_operation(fee_parameters, only_fee_operations, self.only_fee)
 
         lcc.set_step("Check 'no_fee' for operations")
-        operations = ["fill_order", "balance_claim", "asset_settle_cancel", "fba_distribute", "execute_bid"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.no_fee)
+        check_that("'no_fee' operation count", no_fee_operations, has_length(self.no_fee_count))
+        self.check_default_fee_for_operation(fee_parameters, no_fee_operations, self.no_fee)
 
         lcc.set_step("Check 'account_create_fee' for operations")
-        operations = ["account_create"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.account_create_fee)
+        check_that("'account_create_fee' operation count", account_create_fee_operations,
+                   has_length(self.account_create_fee_count))
+        self.check_default_fee_for_operation(fee_parameters, account_create_fee_operations, self.account_create_fee)
 
         lcc.set_step("Check 'account_update_fee' for operations")
-        operations = ["account_upgrade"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.account_update_fee)
+        check_that("'account_update_fee' operation count", account_update_fee_operations,
+                   has_length(self.account_update_fee_count))
+        self.check_default_fee_for_operation(fee_parameters, account_update_fee_operations, self.account_update_fee)
 
         lcc.set_step("Check 'asset_create_fee' for operations")
-        operations = ["asset_create"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.asset_create_fee)
+        check_that("'asset_create_fee' operation count", asset_create_fee_operations,
+                   has_length(self.asset_create_count))
+        self.check_default_fee_for_operation(fee_parameters, asset_create_fee_operations, self.asset_create_fee)
 
-        lcc.set_step("Check 'fee_with_price_per_output' for operations")
-        operations = ["transfer_to_blind", "blind_transfer"]
-        self.check_default_fee_for_operation(current_fees["parameters"], operations, self.fee_with_price_per_output)
+        lcc.set_step("Check 'pool_fee' for operations")
+        check_that("'pool_fee' operation count", pool_fee_operations,
+                   has_length(self.pool_fee_count))
+        self.check_default_fee_for_operation(fee_parameters, pool_fee_operations, self.pool_fee)
 
         lcc.set_step("Check global parameters: 'echorand_config' field")
         echorand_config = parameters["echorand_config"]
