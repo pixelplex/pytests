@@ -47,13 +47,15 @@ class ERC20ContractFeePool(BaseTest):
     @lcc.prop("type", "scenario")
     @lcc.tags("Bug ECHO-1043")
     @lcc.test("The scenario checks ERC20 contract fee pool after creation")
-    def erc20_contract_fee_pool_scenario(self, get_random_string, get_random_valid_asset_name):
+    def erc20_contract_fee_pool_scenario(self, get_random_string, get_random_valid_asset_name, get_random_integer):
         name = "erc20" + get_random_string
         symbol = get_random_valid_asset_name
         registration_erc20_token_operation_id = self.echo.config.operation_ids.REGISTER_ERC20_TOKEN
+        register_erc20_token_fee_pool = 0
+        amount = get_random_integer
 
         lcc.set_step("Get fee pool amount in global properties")
-        register_erc20_token_fee_pool = 0
+
         response_id = self.send_request(self.get_request("get_global_properties"), self.__database_api_identifier)
         response = self.get_response(response_id)
         fee_parameters = response["result"]["parameters"]["current_fees"]["parameters"]
@@ -81,7 +83,7 @@ class ERC20ContractFeePool(BaseTest):
         erc20_contract_id = self.get_response(response_id)["result"]["contract"]
         lcc.log_info("ERC20 token has contract_id '{}'".format(erc20_contract_id))
 
-        lcc.set_step("Get a contract's fee pool balance")
+        lcc.set_step("Get ERC20 contract's fee pool balance")
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [erc20_contract_id]),
                                         self.__database_api_identifier)
         fee_pool_amount = self.get_response(response_id)["result"]["amount"]
@@ -90,4 +92,17 @@ class ERC20ContractFeePool(BaseTest):
         lcc.set_step("Check ERC20 contract fee pool after creation")
         check_that("'ERC20 contract fee pool balance'", fee_pool_amount, equal_to(register_erc20_token_fee_pool))
 
+        lcc.set_step("Add assets to existed fee pool")
+        self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, erc20_contract_id, amount,
+                                                        self.__database_api_identifier)
+        lcc.log_info("Added '{}' assets value to '{}' contract fee pool successfully".format(amount, erc20_contract_id))
 
+        lcc.set_step("Get updated ERC20 contract's fee pool balance")
+        response_id = self.send_request(self.get_request("get_contract_pool_balance", [erc20_contract_id]),
+                                        self.__database_api_identifier)
+        updated_fee_pool_amount_2 = self.get_response(response_id)["result"]["amount"]
+        lcc.log_info("Call method 'get_contract_pool_balance' with param: '{}'".format(erc20_contract_id))
+
+        lcc.set_step("Check ERC20 contract fee pool after replenishment")
+        check_that("'updated ERC20 contract fee pool balance'", updated_fee_pool_amount_2,
+                   equal_to(fee_pool_amount + amount))
