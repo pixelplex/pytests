@@ -119,10 +119,10 @@ def get_account(base_test, account_name, database_api):
 
 def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
     operation = base_test.echo_ops.get_balance_claim_operation(base_test.echo, nathan_id, nathan_public_key,
-                                                               ECHO_INITIAL_BALANCE, NATHAN_PK)
-    collected_operation = base_test.collect_operations(operation, database_api)
+                                                               ECHO_INITIAL_BALANCE, NATHAN_PK, debug_mode=True)
+    collected_operation = base_test.collect_operations(operation, database_api, debug_mode=True)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-                                                    log_broadcast=False)
+                                                    log_broadcast=False, debug_mode=True)
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
