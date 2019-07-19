@@ -97,7 +97,6 @@ def distribute_balance_between_committee_addresses(base_test):
                                                                  value=balance_to_transfer)
         broadcast_result = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction,
                                                        log_transaction=False)
-        print("\n!!!HERE!!! -> " + str(broadcast_result))
         if broadcast_result is None:
             return False
     return True
@@ -119,10 +118,10 @@ def get_account(base_test, account_name, database_api):
 
 def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
     operation = base_test.echo_ops.get_balance_claim_operation(base_test.echo, nathan_id, nathan_public_key,
-                                                               ECHO_INITIAL_BALANCE, NATHAN_PK, debug_mode=True)
-    collected_operation = base_test.collect_operations(operation, database_api, debug_mode=True)
+                                                               ECHO_INITIAL_BALANCE, NATHAN_PK)
+    collected_operation = base_test.collect_operations(operation, database_api)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-                                                    log_broadcast=False, debug_mode=True)
+                                                    log_broadcast=False)
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
@@ -136,13 +135,9 @@ def create_eth_asset_id(base_test, nathan_id, database_api):
 
 
 def pre_deploy_echo(base_test, database_api, lcc):
-    print("\nNATHAN_PK: " + NATHAN_PK)
     nathan = get_account(base_test, "nathan", database_api)
-    print("\nnathan: " + str(nathan))
     nathan_id = get_account_id(nathan)
-    print("\nnathan_id: " + str(nathan_id))
     nathan_public_key = get_public_key(nathan)
-    print("\nnathan_public_key: " + str(nathan_public_key))
     if not distribute_balance_between_committee_addresses(base_test):
         raise Exception("Ethereum balance is not distributed")
     lcc.log_info("Ethereum balance distributed between committee addresses successfully")

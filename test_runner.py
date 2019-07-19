@@ -7,7 +7,6 @@ from echopy import Echo
 
 
 def get_head_block_num(echo_connection):
-    print("Block: " + str(echo_connection.api.database.get_dynamic_global_properties()["head_block_number"]))
     return echo_connection.api.database.get_dynamic_global_properties()["head_block_number"]
 
 
@@ -16,7 +15,7 @@ BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_i
 
 
 def run(echo_connection):
-    if get_head_block_num(echo_connection) == 3:
+    if get_head_block_num(echo_connection):
         os.system("lcc run --exit-error-on-failure || lcc report --failed")
     else:
         time.sleep(BLOCK_RELEASE_INTERVAL)
