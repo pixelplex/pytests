@@ -420,7 +420,7 @@ class Utils(object):
                                                                             begin_timestamp=begin_timestamp,
                                                                             vesting_cliff_seconds=cliff_seconds,
                                                                             vesting_duration_seconds=duration_seconds)
-        if owner != base_test.echo_acc0:
+        if creator != base_test.echo_acc0:
             temp_operation = deepcopy(operation)
             broadcast_result = self.add_balance_for_operations(base_test, creator, temp_operation, database_api_id,
                                                                log_broadcast=log_broadcast)
