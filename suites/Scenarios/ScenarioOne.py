@@ -96,9 +96,9 @@ class ScenarioOne(BaseTest):
                                                                   from_account_id=self.echo_acc0,
                                                                   to_account_id=account_id,
                                                                   amount=amount)
-        fee_amount = self.get_required_fee(transfer_operation, self.__database_api_identifier, debug_mode=True)[0]["amount"]
+        fee_amount = self.get_required_fee(transfer_operation, self.__database_api_identifier)[0]["amount"]
         collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         if not self.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception("Account is not created")
         else:
@@ -141,15 +141,15 @@ class ScenarioOne(BaseTest):
         transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
                                                                   from_account_id=account1_id,
                                                                   to_account_id=account2_id,
-                                                                  amount=amount, debug_mode=True, signer=private_keys[0])
+                                                                  amount=amount, signer=private_keys[0])
 
-        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier, debug_mode=True)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, debug_mode=True)
+        collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
         if not self.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception("Account is not created")
         else:
             lcc.log_info("Transfer was done: from {} to {}, amount = {}".format(self.echo_acc0, account_id, amount))
-        fee_amount = self.get_required_fee(transfer_operation, self.__database_api_identifier, debug_mode=True)[0][
+        fee_amount = self.get_required_fee(transfer_operation, self.__database_api_identifier)[0][
             "amount"]
         response_account1_amount_id = self.send_request(
             self.get_request("get_account_balances", [account1_id, [asset_id]]),
@@ -175,12 +175,23 @@ class ScenarioOne(BaseTest):
         create_asset_operation = self.echo_ops.get_asset_create_operation(echo=self.echo,
                                                                           issuer=account2_id,
                                                                           symbol=random_symbol,
-                                                                          signer=private_keys[1], debug_mode=True)
-        collected_operation = self.collect_operations(create_asset_operation, self.__database_api_identifier,
-                                                      debug_mode=True)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, debug_mode=True)
+                                                                          signer=private_keys[1])
+        collected_operation = self.collect_operations(create_asset_operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
         if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
             raise Exception("Asset was not created")
         else:
             lcc.log_info("Asset was done: from {} to {}, amount = {}".format(self.echo_acc0, account_id, amount))
+        asset_id = broadcast_result["trx"]["operation_results"][0][1]
+        response_asset = self.send_request(self.get_request("get_assets", [[asset_id, "1.3.0"]]),
+                                        self.__database_api_identifier)
+        account2_symbol = self.get_response(response_asset)["result"][0]["symbol"]
+        if random_symbol != account2_symbol:
+            lcc.log_error("Asset was created wrong, symbol is incorrect.")
+        else:
+            lcc.log_info("Account2 asset was created right, symbol is '{}'".format(account2_symbol))
+        account_ids.append(account_id)
+
+
 
