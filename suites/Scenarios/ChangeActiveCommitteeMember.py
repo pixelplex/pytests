@@ -69,6 +69,7 @@ class ChangeActiveCommitteeMember(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
+    @lcc.tags("Bug ECHO-1074")
     @lcc.test("The scenario describes the mechanism of updating the list of active addresses of committee members")
     def change_committee_eth_address_scenario(self, get_random_valid_account_name):
         new_account_name = get_random_valid_account_name

@@ -105,7 +105,7 @@ class Ethereum(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario entering eth assets to the echo account")
-    @lcc.depends_on("SideChain.Ethereum.Ethereum.sidechain_ethereum_pre_run_scenario")
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
     def ethereum_in_scenario(self, get_random_float_up_to_ten):
         min_eth_amount = 0.01
         eth_amount = get_random_float_up_to_ten
@@ -150,7 +150,7 @@ class Ethereum(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth between accounts")
-    @lcc.depends_on("SideChain.Ethereum.Ethereum.sidechain_ethereum_pre_run_scenario")
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
     def transfer_eeth_scenario(self, get_random_float_up_to_ten):
         eth_amount = get_random_float_up_to_ten
 
@@ -195,7 +195,7 @@ class Ethereum(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth to account addresses")
-    @lcc.depends_on("SideChain.Ethereum.Ethereum.sidechain_ethereum_pre_run_scenario")
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
     def transfer_eeth_to_account_address_scenario(self, get_random_float_up_to_ten, get_random_string):
         eth_amount = get_random_float_up_to_ten
         label = get_random_string

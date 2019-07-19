@@ -460,8 +460,8 @@ class EchoOperations(object):
             return [operation_id, contract_update_props, sender]
         return [operation_id, contract_update_props, signer]
 
-    def broadcast(self, echo, list_operations, no_broadcast=False, get_signed_tx=False, log_broadcast=True,
-                  debug_mode=False):
+    def broadcast(self, echo, list_operations, expiration=None, no_broadcast=False, get_signed_tx=False,
+                  log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))
@@ -473,6 +473,8 @@ class EchoOperations(object):
             tx.add_operation(name=list_operations[i][0], props=list_operations[i][1])
         for i in range(len(list_operations)):
             tx.add_signer(self.get_signer(list_operations[i][2]))
+        if expiration:
+            tx.expiration = expiration
         tx.sign()
         if no_broadcast:
             return tx.transaction_object

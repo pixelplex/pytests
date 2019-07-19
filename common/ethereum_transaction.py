@@ -47,6 +47,7 @@ class EthereumTransactions(object):
             lcc.log_info("Transaction:\n{}".format(web3.eth.getTransaction(transaction_hash)))
         if log_transaction_logs:
             lcc.log_info("Transaction logs:\n{}".format(web3.eth.getTransactionReceipt(transaction_hash).logs))
+        return transaction_hash
 
     @staticmethod
     def get_address_balance_in_eth_network(web3, account_address, currency="ether"):
