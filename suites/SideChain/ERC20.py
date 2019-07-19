@@ -96,7 +96,7 @@ class ERC20(BaseTest):
         self.in_ethereum_start_erc20_balance = self.in_ethereum_erc20_balance
         require_that("'in ethereum owner's erc20 balance'", self.in_ethereum_erc20_balance, greater_than(0))
 
-        lcc.set_step("Perform register erc20 operation")
+        lcc.set_step("Perform register erc20 token operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.new_account,
                                                                       eth_addr=self.eth_erc20_contract_address[2:],
                                                                       name=name, symbol=symbol,

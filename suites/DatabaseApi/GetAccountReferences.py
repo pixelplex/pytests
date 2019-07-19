@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, has_item, is_true, is_list
+from lemoncheesecake.matching import require_that, has_item, is_list
 
 from common.base_test import BaseTest
 
@@ -66,6 +66,11 @@ class PositiveTesting(BaseTest):
         self.echo_acc3 = None
         self.echo_acc4 = None
 
+    def get_account_info(self, account_id):
+        response_id = self.send_request(self.get_request("get_accounts", [[account_id]]),
+                                        self.__database_api_identifier)
+        return self.get_response(response_id)["result"][0]
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -83,17 +88,6 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0, self.echo_acc3, self.echo_acc4))
 
-    def get_account_active_keys(self, account_id):
-        response_id = self.send_request(self.get_request("get_accounts", [[account_id]]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-
-        account_active_keys = response["result"][0]["active"]
-
-        lcc.log_info("Active keys of account {} were taken".format(account_id))
-
-        return account_active_keys
-
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
         super().teardown_suite()
@@ -103,54 +97,28 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetAccountReferences.GetAccountReferences.method_main_check")
     def get_references_of_account_that_added_to_another_account_auths(self):
         lcc.set_step("Get account active keys")
-        second_account_active_keys = self.get_account_active_keys(self.echo_acc4)
+        account_info = self.get_account_info(self.echo_acc4)
+        account_active_keys = account_info["active"]
+        lcc.log_info("Active keys of account {} were taken".format(self.echo_acc4))
 
-        lcc.set_step("Perform account operation (add account_auths)")
-        account_auths = [account_auth[0] for account_auth in second_account_active_keys["account_auths"]]
+        lcc.set_step("Perform account update operation (add account_auths)")
+        account_auths = [account_auth[0] for account_auth in account_active_keys["account_auths"]]
         account_auths_new_item = [self.echo_acc3, 1]
         if self.echo_acc3 not in account_auths:
             lcc.log_info("Get required fee for account update operation")
-            new_active_keys = second_account_active_keys.copy()
+            new_active_keys = account_active_keys.copy()
             new_active_keys["account_auths"].extend([account_auths_new_item])
-            account_update_operation = self.echo_ops.get_account_update_operation(
-                echo=self.echo, account=self.echo_acc4,
-                key_auths=new_active_keys["key_auths"],
-                account_auths=new_active_keys["account_auths"],
-                weight_threshold=new_active_keys["weight_threshold"]
-            )
-            params = [[account_update_operation], self.eth_asset]
-            response_id = self.send_request(self.get_request("get_required_fees", params),
-                                            self.__database_api_identifier)
-            fee_for_account_update_operation = self.get_response(response_id)["result"][0]["amount"]
-
-            transfer_operation = self.echo_ops.get_transfer_operation(
-                echo=self.echo,
-                from_account_id=self.echo_acc0,
-                to_account_id=self.echo_acc4,
-                amount=fee_for_account_update_operation
-            )
-            collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
-            broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                       log_broadcast=False)
-            require_that(
-                "'transfer to created account for paying fee complete successfully'",
-                self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
-            )
-
-            collected_operation = self.collect_operations(account_update_operation, self.__database_api_identifier)
-            broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                       log_broadcast=False)
-            require_that(
-                "'created account updated successfully'",
-                self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
-            )
+            account_info["active"] = new_active_keys
+            self.utils.perform_account_update_operation(self, self.echo_acc4, account_info,
+                                                        self.__database_api_identifier)
         lcc.log_info("'account_auths' of '{}' account was updated".format(self.echo_acc4))
 
         lcc.set_step("Get updated account active keys")
-        actual_second_account_active_keys = self.get_account_active_keys(self.echo_acc4)
+        account_info = self.get_account_info(self.echo_acc4)
+        actual_account_active_keys = account_info["active"]
         require_that(
             "new keys",
-            actual_second_account_active_keys["account_auths"], has_item(account_auths_new_item),
+            actual_account_active_keys["account_auths"], has_item(account_auths_new_item),
             quiet=True
         )
 
