@@ -3,7 +3,6 @@ import json
 import os
 import time
 
-from web3 import Web3
 from echopy import Echo
 
 
@@ -24,16 +23,11 @@ def run(echo_connection):
 
 
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
-if "GANACHE_URL" not in os.environ:
-    GANACHE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["GANACHE_URL"]
-else:
-    GANACHE_URL = os.environ["GANACHE_URL"]
 if "BASE_URL" not in os.environ:
     BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
 else:
     BASE_URL = os.environ["BASE_URL"]
 
-web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
 echo = Echo()
 echo.connect(BASE_URL)
 run(echo)

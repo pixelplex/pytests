@@ -94,10 +94,10 @@ def distribute_balance_between_committee_addresses(base_test):
     for i in range(len(INITIAL_ACCOUNTS_ETH_ADDRESSES)):
         transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
                                                                  to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],
-                                                                 value=balance_to_transfer, debug_mode=True)
+                                                                 value=balance_to_transfer)
         broadcast_result = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction,
                                                        log_transaction=False)
-        print("!!!HERE!!! -> " + str(broadcast_result))
+        print("\n!!!HERE!!! -> " + str(broadcast_result))
         if broadcast_result is None:
             return False
     return True
@@ -136,9 +136,13 @@ def create_eth_asset_id(base_test, nathan_id, database_api):
 
 
 def pre_deploy_echo(base_test, database_api, lcc):
+    print("\nNATHAN_PK: " + NATHAN_PK)
     nathan = get_account(base_test, "nathan", database_api)
+    print("\nnathan: " + str(nathan))
     nathan_id = get_account_id(nathan)
+    print("\nnathan_id: " + str(nathan_id))
     nathan_public_key = get_public_key(nathan)
+    print("\nnathan_public_key: " + str(nathan_public_key))
     if not distribute_balance_between_committee_addresses(base_test):
         raise Exception("Ethereum balance is not distributed")
     lcc.log_info("Ethereum balance distributed between committee addresses successfully")
