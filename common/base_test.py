@@ -99,6 +99,7 @@ class BaseTest(object):
             return ETHEREUM_CONTRACTS[contract_name][code_or_method_name]
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
 
+
     @staticmethod
     def get_abi(contract_name):
         return ETHEREUM_CONTRACTS[contract_name]["abi"]
@@ -527,9 +528,8 @@ class BaseTest(object):
         keccak_hash = keccak.new(digest_bits=256)
         keccak_hash.update(bytes(method_name, 'utf-8'))
         if log_info:
-            lcc.log_info("{}".format(str(keccak_hash.hexdigest())))
+            lcc.log_info("Hex 'keccak' method name: {}".format(str(keccak_hash.hexdigest())))
         return keccak_hash.hexdigest()
-
 
     @staticmethod
     def _login_status(response):

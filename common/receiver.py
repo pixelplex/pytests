@@ -114,7 +114,15 @@ class Receiver(object):
                 lcc.log_info(
                     "Received notice about the hash of a new block:\n{}".format(json.dumps(response, indent=4)))
             return notice_params
+        if isinstance(notice_params, list):
+            for notice_param in notice_params:
+                if (notice_param["address"]) and (self.validator.is_hex(notice_param["log"][0])):
+                    if print_log:
+                        lcc.log_info(
+                            "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
+                    return notice_params
         if (notice_params.get("address")) and (self.validator.is_hex(notice_params.get("log")[0])):
+            lcc.log_error("Do we use this method?")
             if print_log:
                 lcc.log_info(
                     "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
