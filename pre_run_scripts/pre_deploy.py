@@ -95,9 +95,10 @@ def distribute_balance_between_committee_addresses(base_test):
         transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
                                                                  to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],
                                                                  value=balance_to_transfer, debug_mode=True)
-        a = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction, log_transaction=False)
-        print("!!!HERE!!! -> " + str(a))
-        if a is None:
+        broadcast_result = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction,
+                                                       log_transaction=False)
+        print("!!!HERE!!! -> " + str(broadcast_result))
+        if broadcast_result is None:
             return False
     return True
 
