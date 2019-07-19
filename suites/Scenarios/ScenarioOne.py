@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, equal_to
-from fixtures.base_fixtures import get_random_integer_up_to_hundred, get_random_integer
+from fixtures.base_fixtures import get_random_integer_up_to_hundred, get_random_integer, get_random_valid_asset_name
 from common.base_test import BaseTest
 
 SUITE = {
@@ -52,6 +52,7 @@ class ScenarioOne(BaseTest):
             keys = self.generate_keys()
             public_key = keys[1]
             private_key = keys[0]
+
             lcc.set_step("Create account '{}'".format(account_name))
             create_account_operation = self.echo_ops.get_account_create_operation(self.echo, account_name, public_key,
                                                                                   public_key,
@@ -78,7 +79,7 @@ class ScenarioOne(BaseTest):
             private_keys.append(private_key)
 
         lcc.set_step("Transfer from echo_acc0 to 1st account")
-        amount = get_random_integer()
+        amount = get_random_integer() + 500
         asset_id = "1.3.0"
         account_id = account_ids[0]
         response_account1_amount_id = self.send_request(
@@ -121,7 +122,7 @@ class ScenarioOne(BaseTest):
             lcc.log_info("Transfer is correct. Account1 got amount: {}, fee is '{}' ".format(amount, fee_amount))
         account_ids.append(account_id)
 
-        lcc.set_step("Transfer from 2st account to 2nd account")
+        lcc.set_step("Transfer from 1st account to 2nd account")
         amount = amount-fee_amount-1
 
         account1_id = account_ids[0]
@@ -167,3 +168,19 @@ class ScenarioOne(BaseTest):
         else:
             lcc.log_info("Transfer is correct. Account1 got amount: {}, fee is '{}' ".format(amount, fee_amount))
         account_ids.append(account_id)
+
+        lcc.set_step("Create account2 asset")
+        random_symbol = get_random_valid_asset_name()
+        lcc.log_debug(str(random_symbol))
+        create_asset_operation = self.echo_ops.get_asset_create_operation(echo=self.echo,
+                                                                          issuer=account2_id,
+                                                                          symbol=random_symbol,
+                                                                          signer=private_keys[1], debug_mode=True)
+        collected_operation = self.collect_operations(create_asset_operation, self.__database_api_identifier,
+                                                      debug_mode=True)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, debug_mode=True)
+        if not self.is_operation_completed(broadcast_result, expected_static_variant=1):
+            raise Exception("Asset was not created")
+        else:
+            lcc.log_info("Asset was done: from {} to {}, amount = {}".format(self.echo_acc0, account_id, amount))
+
