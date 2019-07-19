@@ -96,7 +96,8 @@ def distribute_balance_between_committee_addresses(base_test):
                                                                  to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],
                                                                  value=balance_to_transfer)
         try:
-            base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction, log_transaction=True)
+            a = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction, log_transaction=False)
+            print(str(a))
         except ValueError as value_error:
             raise ValueError(value_error)
     return True
