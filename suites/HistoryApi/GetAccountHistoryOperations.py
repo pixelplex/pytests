@@ -159,9 +159,12 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create and get new account. Add balance to pay for asset_create_operation fee")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
-        broadcast_result = self.utils.add_balance_for_operations(self, new_account, self.__database_api_identifier,
-                                                                 asset_name=new_asset_name,
-                                                                 operation_count=operation_count)
+        asset_create_operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=new_account,
+                                                                          symbol=new_asset_name)
+        broadcast_result = self.utils.add_balance_for_operations(self, new_account, asset_create_operation,
+                                                                 self.__database_api_identifier,
+                                                                 operation_count=operation_count,
+                                                                 log_broadcast=True)
         lcc.log_info("New Echo account created, account_id='{}, balance added".format(new_account))
 
         lcc.set_step("Check that transfer operation added to account history")
@@ -173,9 +176,7 @@ class PositiveTesting(BaseTest):
             )
 
         lcc.set_step("Perform asset create operation using a new account")
-        operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=new_account,
-                                                             symbol=new_asset_name)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        collected_operation = self.collect_operations(asset_create_operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
         lcc.set_step("Check that create asset operation added to account history")
