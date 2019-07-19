@@ -1,6 +1,9 @@
 test:
   variables:
     MIGRATION_RESULT: ""
+  before_script:
+    - $(aws ecr get-login --no-include-email --region eu-central-1)
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker-compose down -v
     - docker-compose pull
