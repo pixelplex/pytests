@@ -407,7 +407,7 @@
         "sidechain_config": {
             "eth_contract_address": "c87395b45C1c199F25a6c2Be43515C41d53751Af",
             "eth_committee_update_method": {
-                "method": "7ff203ab",
+                "method": "f1e3eb60",
                 "gas": 1000000
             },
             "eth_gen_address_method": {

@@ -2,8 +2,8 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, this_dict, greater_than_or_equal_to, check_that_entry, is_bool, \
-    is_list, has_length, check_that, equal_to, starts_with
+from lemoncheesecake.matching import require_that, is_, this_dict, greater_than_or_equal_to, check_that_entry, \
+    is_bool, is_list, has_length, check_that, equal_to, starts_with
 
 from common.base_test import BaseTest
 
@@ -25,6 +25,7 @@ class GetAccountWithdrawals(BaseTest):
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
         self.eth_address = None
+        self.echo_acc0 = None
 
     @staticmethod
     def get_random_amount(_to, _from=0.01):
@@ -42,7 +43,7 @@ class GetAccountWithdrawals(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.eth_address = self.web3.eth.accounts[0]

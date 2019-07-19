@@ -22,6 +22,7 @@ class GetAccountHistoryOperations(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -33,7 +34,7 @@ class GetAccountHistoryOperations(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -87,6 +88,8 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
+        self.echo_acc1 = None
 
     def get_account_history_operations(self, account, operation_id, start, stop, limit, negative=False):
         lcc.log_info("Get '{}' account history".format(account))
@@ -106,9 +109,9 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
@@ -156,9 +159,12 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create and get new account. Add balance to pay for asset_create_operation fee")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
-        broadcast_result = self.utils.add_balance_for_operations(self, new_account, self.__database_api_identifier,
-                                                                 asset_name=new_asset_name,
-                                                                 operation_count=operation_count)
+        asset_create_operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=new_account,
+                                                                          symbol=new_asset_name)
+        broadcast_result = self.utils.add_balance_for_operations(self, new_account, asset_create_operation,
+                                                                 self.__database_api_identifier,
+                                                                 operation_count=operation_count,
+                                                                 log_broadcast=True)
         lcc.log_info("New Echo account created, account_id='{}, balance added".format(new_account))
 
         lcc.set_step("Check that transfer operation added to account history")
@@ -170,9 +176,7 @@ class PositiveTesting(BaseTest):
             )
 
         lcc.set_step("Perform asset create operation using a new account")
-        operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=new_account,
-                                                             symbol=new_asset_name)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        collected_operation = self.collect_operations(asset_create_operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
         lcc.set_step("Check that create asset operation added to account history")

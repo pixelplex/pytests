@@ -54,6 +54,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__asset_api_identifier = None
+        self.echo_acc0 = None
         self.new_asset_name = None
         self.new_asset_id = None
         self.position_on_the_list = None
@@ -74,7 +75,7 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                 self.__asset_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 

@@ -12,14 +12,15 @@ SUITE = {
 
 
 @lcc.prop("suite_run_option_1", "main")
-@lcc.tags("sidechain")
+@lcc.tags("sidechain_ethereum")
 @lcc.suite("Check scenario 'EthToEcho and EchoToEth'")
-class Sidechain(BaseTest):
+class Ethereum(BaseTest):
 
     def __init__(self):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.new_account = None
         self.eth_address = None
         self.eth_account_address = None
@@ -63,7 +64,7 @@ class Sidechain(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.eth_address = self.web3.eth.accounts[0]
@@ -74,8 +75,8 @@ class Sidechain(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
-    @lcc.test("The scenario checks the main parts before testing the sidechain functionality")
-    def sidechain_pre_run_scenario(self, get_random_valid_account_name):
+    @lcc.test("The scenario checks the main parts before testing the ethereum sidechain functionality")
+    def ethereum_sidechain_pre_run_scenario(self, get_random_valid_account_name):
         self.new_account = get_random_valid_account_name
 
         lcc.set_step("Create and get new account")
@@ -104,7 +105,7 @@ class Sidechain(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario entering eth assets to the echo account")
-    @lcc.depends_on("Sidechain.Sidechain.Sidechain.sidechain_pre_run_scenario")
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
     def ethereum_in_scenario(self, get_random_float_up_to_ten):
         min_eth_amount = 0.01
         eth_amount = get_random_float_up_to_ten
@@ -149,7 +150,7 @@ class Sidechain(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth between accounts")
-    @lcc.depends_on("Sidechain.Sidechain.Sidechain.sidechain_pre_run_scenario")
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
     def transfer_eeth_scenario(self, get_random_float_up_to_ten):
         eth_amount = get_random_float_up_to_ten
 
@@ -194,7 +195,7 @@ class Sidechain(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth to account addresses")
-    @lcc.depends_on("Sidechain.Sidechain.Sidechain.sidechain_pre_run_scenario")
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
     def transfer_eeth_to_account_address_scenario(self, get_random_float_up_to_ten, get_random_string):
         eth_amount = get_random_float_up_to_ten
         label = get_random_string

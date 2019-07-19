@@ -22,6 +22,7 @@ class GetAccountHistory(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -33,7 +34,7 @@ class GetAccountHistory(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -81,6 +82,8 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
+        self.echo_acc1 = None
 
     def get_account_history(self, account, stop, limit, start, negative=False):
         lcc.log_info("Get '{}' account history".format(account))
@@ -99,9 +102,9 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 
@@ -148,7 +151,7 @@ class PositiveTesting(BaseTest):
         stop = start = "1.10.0"
         min_limit = 1
         max_limit = 100
-        default_account_create_operation = 1
+        default_account_create_operation, default_get_assets_operation = 1, 1
         operation_count = get_random_integer_up_to_hundred
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -163,6 +166,8 @@ class PositiveTesting(BaseTest):
         lcc.set_step(
             "Check that count of new account history with the maximum limit is equal to operation_count")
         response = self.get_account_history(new_account, stop, max_limit, start)
+        if operation_count == 1:
+            operation_count = operation_count + default_get_assets_operation
         check_that(
             "'number of history results'",
             len(response["result"]), is_(operation_count + default_account_create_operation)

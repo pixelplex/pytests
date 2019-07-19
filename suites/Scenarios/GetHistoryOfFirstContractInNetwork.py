@@ -19,6 +19,7 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
         self.contract_id = "1.14.0"
 
@@ -33,7 +34,7 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -43,7 +44,8 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("Check contract history of the first contract in the network")
-    @lcc.tags("Bug ECHO-1037")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1036", "Bug ECHO-1037")
     def get_history_of_first_contract_scenario(self):
         stop = start = "1.10.0"
         # todo: change limit to 100. Bug ECHO-1037
