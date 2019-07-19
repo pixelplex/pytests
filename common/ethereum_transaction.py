@@ -84,3 +84,39 @@ class EthereumTransactions(object):
             }
         )
         return bool(int(method_call_result.hex(), 16))
+
+    @staticmethod
+    def deploy_contract_in_ethereum_network(base_test, eth_account, contract_abi, contract_bytecode):
+        # Set pre-funded account as sender
+        base_test.web3.eth.defaultAccount = eth_account
+        # Instantiate and deploy contract
+        contract = base_test.web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
+        # Submit the transaction that deploys the contract
+        tx_hash = contract.constructor().transact()
+        # Wait for the transaction to be mined, and get the transaction receipt
+        tx_receipt = base_test.web3.eth.waitForTransactionReceipt(tx_hash)
+        contract_address = tx_receipt.contractAddress
+        # Create the contract instance with the newly-deployed address
+        contract = base_test.web3.eth.contract(
+            address=contract_address,
+            abi=contract_abi,
+        )
+        return {"contract_instance": contract, "contract_address": contract_address}
+
+    @staticmethod
+    def get_balance_of(contract_instance, eth_account):
+        return contract_instance.functions.balanceOf(eth_account).call()
+
+    @staticmethod
+    def transfer(base_test, contract_instance, account_eth_address, amount, log_transaction=True,
+                 log_transaction_logs=False):
+        if account_eth_address[:2] != "0x":
+            account_eth_address = "0x" + account_eth_address
+        tx_hash = contract_instance.functions.transfer(account_eth_address, amount).transact()
+        # Wait for transaction to be mined...
+        transfer_result = base_test.web3.eth.waitForTransactionReceipt(tx_hash)
+        if log_transaction:
+            lcc.log_info("Transaction:\n{}".format(base_test.web3.eth.getTransaction(tx_hash)))
+        if log_transaction_logs:
+            lcc.log_info("Transaction logs:\n{}".format(base_test.web3.eth.getTransactionReceipt(tx_hash).logs))
+        return transfer_result
