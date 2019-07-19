@@ -84,10 +84,6 @@ class PositiveTesting(BaseTest):
         self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
         self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
         self.delete_uint = self.get_byte_code("dynamic_fields", "deleteUint256()")
-        self.set_string = self.get_byte_code("dynamic_fields", "onStringChanged(string)")
-        self.get_string = self.get_byte_code("dynamic_fields", "getString()")
-        self.delete_string = self.get_byte_code("dynamic_fields", "deleteString()")
-        self.return_two_string = self.get_byte_code("return_int_value", "return_two_string")
 
     def setup_suite(self):
         super().setup_suite()
@@ -121,10 +117,10 @@ class PositiveTesting(BaseTest):
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         operation_results_ids = self.get_operation_results_ids(broadcast_result)
+        lcc.set_step("Get contract result output")
         response_id = self.send_request(self.get_request("get_contract_result", [operation_results_ids]),
                                         self.__database_api_identifier)
-        lcc.set_step("Get contract result output")
-        contract_result = self.get_response(response_id, log_response=True)
+        contract_result = self.get_response(response_id)
         lcc.set_step("Check get 'Hello World!!!'")
         expected_string = "Hello World!!!"
         contract_output_value = self.get_contract_output(contract_result, output_type=str,
@@ -136,7 +132,7 @@ class PositiveTesting(BaseTest):
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
 
-        lcc.set_step("Check that result output equal to 'call_contract_no_changing_state' result")
+        lcc.set_step("Check that result output equal to 'call_contract_no_changing_state' result and output message is 'Hello World!!!'")
         check_that("return of method 'greet'", contract_output_value, is_("Hello World!!!"),)
         check_that("output", result, equal_to(contract_output))
 
@@ -169,21 +165,22 @@ class PositiveTesting(BaseTest):
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         operation_results_ids = self.get_operation_results_ids(broadcast_result)
+        lcc.set_step("Get contract result output")
         response_id = self.send_request(self.get_request("get_contract_result", [operation_results_ids]),
                                         self.__database_api_identifier)
-        call_contract_output = self.get_response(response_id, log_response=True)["result"][1]["exec_res"]["output"]
+        call_contract_output = self.get_response(response_id)["result"][1]["exec_res"]["output"]
 
+        lcc.set_step("Get response of 'call_contract_no_changing_state'")
         response_id = self.send_request(self.get_request("call_contract_no_changing_state",
                                         [contract_id, self.echo_acc0, asset_id, self.getPennie]),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
-
+        lcc.set_step("Check that result output equal to 'call_contract_no_changing_state' result")
         check_that("output", result, equal_to(call_contract_output))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract output with int value using 'call_contract_no_changing_state'")
-    @lcc.tags("asd")
-    #@lcc.depends_on("DatabaseApi.CallContractNoChangingState.CallContractNoChangingState.method_main_check")
+    @lcc.depends_on("DatabaseApi.CallContractNoChangingState.CallContractNoChangingState.method_main_check")
     def check_contract_with_two_output(self, get_random_integer):
         int_param = get_random_integer
 
@@ -207,22 +204,25 @@ class PositiveTesting(BaseTest):
                                                               bytecode=bytecode,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
 
-        lcc.set_step("Check that uint field created in contract. Call method 'get_uint'")
+        lcc.set_step("Call method 'get_uint'")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_uint,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        lcc.log_info("{}".format(contract_result))
         contract_output = contract_result["result"][1]["exec_res"]["output"]
         contract_output_value = self.get_contract_output(contract_result, output_type=int)
+
+        lcc.set_step("Get response of 'call_contract_no_changing_state'")
         response_id = self.send_request(self.get_request("call_contract_no_changing_state",
                                         [contract_dynamic_fields_id, self.echo_acc0, self.echo_asset, self.get_uint]),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
         lcc.log_info("{}".format(result))
+        lcc.set_step("Check value of contract result and that result output equal to 'call_contract_no_changing_state' result")
         check_that("'uint field in contract'", contract_output_value, equal_to(int_param))
         check_that("contract_output", result, equal_to(contract_output))
