@@ -126,9 +126,9 @@ class NegativeTesting(BaseTest):
             "Registration API identifiers is '{}'".format(self.__registration_api_identifier))
 
     @staticmethod
-    def get_random_character(random_def, not_hyphen=False):
+    def get_random_character(random_def, not_hyphen_or_point=False):
         character = random_def
-        if not_hyphen and character == "-":
+        if not_hyphen_or_point and character == "-" and character == ".":
             return "*"
         return character
 
@@ -212,7 +212,7 @@ class NegativeTesting(BaseTest):
         callback = get_random_integer
         part1 = self.get_account_name(_to=4)
         part2 = self.get_account_name(_to=4)
-        new_account = part1 + self.get_random_character(get_random_character, not_hyphen=True) + part2
+        new_account = part1 + self.get_random_character(get_random_character, not_hyphen_or_point=True) + part2
         response = self._register_account(callback, new_account)
 
         check_that(
