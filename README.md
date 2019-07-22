@@ -89,7 +89,6 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)
 - [x] [list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)
 - [x] [lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)
-- [ ] [get_limit_orders](https://echo-dev.io/developers/apis/database-api/#get_limit_ordersa-b-limit)
 - [ ] [get_committee_members](https://echo-dev.io/developers/apis/database-api/#get_committee_memberscommittee_member_ids)
 - [ ] [get_committee_member_by_account](https://echo-dev.io/developers/apis/database-api/#get_committee_member_by_accountaccount)
 - [ ] [lookup_committee_member_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_committee_member_accountslower_bound_name-limit)
