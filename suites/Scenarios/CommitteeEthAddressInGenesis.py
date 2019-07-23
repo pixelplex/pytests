@@ -13,6 +13,8 @@ SUITE = {
 
 @lcc.prop("suite_run_option_1", "main")
 @lcc.tags("eth_address_in_genesis")
+# only works on the local network (docker)
+@lcc.hidden()
 @lcc.suite("Check scenario 'Committee ethereum addresses in genesis file'")
 class CommitteeEthAddressInGenesis(BaseTest):
 

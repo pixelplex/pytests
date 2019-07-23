@@ -13,6 +13,8 @@ SUITE = {
 @lcc.prop("suite_run_option_2", "positive")
 @lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_vested_balances")
+# only works on the local network (docker)
+@lcc.hidden()
 @lcc.suite("Check work of method 'get_vested_balances'", rank=1)
 class GetVestedBalances(BaseTest):
 
@@ -62,6 +64,8 @@ class GetVestedBalances(BaseTest):
 
 @lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_vested_balances")
+# only works on the local network (docker)
+@lcc.hidden()
 @lcc.suite("Positive testing of method 'get_vested_balances'", rank=2)
 class PositiveTesting(BaseTest):
     def __init__(self):
