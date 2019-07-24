@@ -73,13 +73,15 @@ class GetBalanceObjects(BaseTest):
                         else:
                             lcc.log_info("'balance_id' has correct format: balance_id")
                         if not self.validator.is_iso8601(result["last_claim_date"]):
-                            lcc.log_error("Wrong format of 'last_claim_date', got: {}".format(result["last_claim_date"]))
+                            lcc.log_error(
+                                "Wrong format of 'last_claim_date', got: {}".format(result["last_claim_date"]))
                         else:
                             lcc.log_info("'last_claim_date' has correct format: iso8601")
                         with this_dict(result["balance"]):
                             self.check_uint256_numbers(result["balance"], "amount", quiet=True)
                             if not self.validator.is_asset_id(result["balance"]["asset_id"]):
-                                lcc.log_error("Wrong format of 'asset_id', got: {}".format(result["balance"]["asset_id"]))
+                                lcc.log_error(
+                                    "Wrong format of 'asset_id', got: {}".format(result["balance"]["asset_id"]))
                             else:
                                 lcc.log_info("'asset_id' has correct format: asset_object_type")
                         check_that_entry("extensions", is_list(), quiet=True)
