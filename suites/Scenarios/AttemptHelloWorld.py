@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, equal_to, is_
+from lemoncheesecake.matching import check_that, equal_to, is_, is_true
 
 from common.base_test import BaseTest
 
@@ -20,16 +20,31 @@ class AttemptHelloWorld(BaseTest):
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
         self.echo_acc0 = None
+        self.contract_bytecode = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet")
+        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
 
     def get_account_history(self, account, stop, limit, start, negative=False):
-        lcc.log_info("Get '{}' account history".format(account))
         params = [account, stop, limit, start]
         response_id = self.send_request(self.get_request("get_account_history", params), self.__history_api_identifier)
         return self.get_response(response_id, negative=negative)
 
-    def convert_adress(self, number):
-        contract_part = number[24:]
-        return int(contract_part, 16)
+    def _get_contract_id(self, broadcast_result):
+        get_contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        get_contract_address = get_contract_result["result"][1]["exec_res"]["new_address"]
+        contract_id = "1.14." + str(int(get_contract_address[24:], 16))
+        return contract_id
+
+    def call_contract_method(self, method_bytecode, contract_id):
+        call_contract_operation = self.echo_ops.get_call_contract_operation(self.echo, registrar=self.echo_acc0,
+                                                                            bytecode=method_bytecode,
+                                                                            callee=contract_id)
+        collected_operation = self.collect_operations(call_contract_operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        return contract_result
 
     def setup_suite(self):
         super().setup_suite()
@@ -51,98 +66,79 @@ class AttemptHelloWorld(BaseTest):
 
     @lcc.test("AttemptHelloWorld", "main")
     def attempt_hello_world(self):
-        stop = start = "1.10.0"
         amount = 10000
-        contract_bytecode = self.get_byte_code("piggy", "code")
-        greet = self.get_byte_code("piggy", "greet")
-        get_pennie = self.get_byte_code("piggy", "getPennie")
-        break_piggy = self.get_byte_code("piggy", "breakPiggy")
 
-        lcc.set_step("Create 'piggy' contract.")
+        lcc.set_step("Call 'create contract' operation.")
         create_contract_operation = self.echo_ops.get_create_contract_operation(echo=self.echo,
                                                                                 registrar=self.echo_acc0,
-                                                                                bytecode=contract_bytecode,
-                                                                                value_amount=amount,
-                                                                                )
+                                                                                bytecode=self.contract_bytecode,
+                                                                                value_amount=amount)
         collected_operation = self.collect_operations(create_contract_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        check_that("'Operation is completed'", broadcast_result["trx"]["operation_results"][0][1][:5],
-                   equal_to("1.15."))
+        create_contract_broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                                   log_broadcast=True)
 
-        lcc.set_step("Get account history of registrar")
-        account_history = self.get_account_history(account=self.echo_acc0, stop=stop, limit=100, start=start)
+        lcc.set_step("Check 'create contract' operation.")
+        created_contract_id = create_contract_broadcast_result["trx"]["operation_results"][0][1]
+        if not self.validator.is_contract_result_id(created_contract_id):
+            lcc.log_error("Contract result id is wrong.")
+        else:
+            lcc.log_info("Contract result id is '{}'".format(created_contract_id))
+            lcc.log_info("Called 'create contract' operation.")
 
-        lcc.set_step("Check that registrar account history contains create 'piggy' account operation")
-        check_that("'Account history contains the operation.'", len(account_history["result"][0]["op"][1].keys()),
-                   equal_to(6))
+        lcc.set_step("Call 'get account history' operation")
+        account_history_last_element = \
+            self.get_account_history(account=self.echo_acc0, stop="1.10.0", limit=100, start="1.10.0")["result"][0][
+                "op"][1]
+        lcc.log_info("Account history last element: {}".format(account_history_last_element))
 
-        lcc.set_step("Get 'piggy' contract id")
-        get_contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        get_contract_code = get_contract_result["result"][1]["exec_res"]["output"]
-        lcc.log_debug(str(get_contract_code))
-        lcc.log_debug(str(contract_bytecode))
-        get_contract_adress = get_contract_result["result"][1]["exec_res"]["new_address"]
-        contract_id = "1.14." + str(self.convert_adress(get_contract_adress))
-        lcc.log_info("'Piggy' contract id: '{}'".format(contract_id))
+        lcc.set_step("Check that account history contains create account operation")
+        last_operation = create_contract_broadcast_result["trx"]["operations"][0][1]
+        check_that("'Account history contains 'create account' operation.'", account_history_last_element,
+                   is_(last_operation), quiet=True)
 
-        lcc.set_step("Check 'piggy' contract id")
-        # if check_that("Code of 'piggy' contract", str(get_contract_code), equal_to(str(contract_bytecode))):
-        #     lcc.log_info("'Piggy' contract id: {}".format(contract_id))
-        # else:
-        #     lcc.log_error("Get wrong contract.")
+        lcc.set_step("Get contract id")
+        created_contract_id = self._get_contract_id(create_contract_broadcast_result)
+        lcc.log_info("Contract id: '{}'".format(created_contract_id))
 
-        lcc.set_step("Get 'piggy' contract balance")
-        response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
-                                        self.__database_api_identifier, debug_mode=False)
-        response = self.get_response(response_id, log_response=False)["result"][0]["amount"]
-        lcc.log_info("'piggy' contract balance is '{}'".format(response))
+        lcc.set_step("Call 'get_contract_balances'")
+        response_id = self.send_request(self.get_request("get_contract_balances", [created_contract_id]),
+                                        self.__database_api_identifier)
+        created_contract_balance_amount = self.get_response(response_id)["result"][0]["amount"]
+        check_that("'Contract has correct balance'",
+                   created_contract_balance_amount, equal_to(amount))
 
-        lcc.set_step("Check 'piggy' contract balance")
-        check_that("'Amount of 'piggy' contract'", response, equal_to(amount))
+        lcc.set_step("Call method 'greet'")
+        contract_method_response = self.call_contract_method(method_bytecode=self.greet,
+                                                             contract_id=created_contract_id)
+        lcc.log_info(str(contract_method_response))
 
-        lcc.set_step("Calling method 'greet'")
-        call_contract_operation = self.echo_ops.get_call_contract_operation(self.echo, registrar=self.echo_acc0,
-                                                                            bytecode=greet, callee=contract_id,
-                                                                            debug_mode=True)
-        collected_operation = self.collect_operations(call_contract_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, debug_mode=False)
-        lcc.log_info("Called method 'greet' ")
-
-        lcc.set_step("Check response of method 'greet'")
+        lcc.set_step("Check result of method 'greet'")
         expected_string = "Hello World!!!"
-        contract_output = self.get_contract_output(contract_result, output_type=str,
-                                                   len_output_string=len(expected_string))
-        check_that("return of method 'greet'", contract_output, is_("Hello World!!!"))
+        contract_method_output = self.get_contract_output(contract_method_response, output_type=str,
+                                                          len_output_string=len(expected_string))
+        check_that("Result of method 'greet'", contract_method_output, is_("Hello World!!!"))
 
-        lcc.set_step("Calling the 'getPennie' method")
-        call_contract_operation = self.echo_ops.get_call_contract_operation(self.echo, registrar=self.echo_acc0,
-                                                                            bytecode=get_pennie, callee=contract_id)
-        collected_operation = self.collect_operations(call_contract_operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        lcc.log_info("Called the 'getPennie' method")
+        lcc.set_step("Call method 'getPennie'")
+        contract_method_response = self.call_contract_method(method_bytecode=self.get_pennie,
+                                                             contract_id=created_contract_id)
+        lcc.log_info(str(contract_method_response))
 
         lcc.set_step("Check implementation of method 'getPennie'")
-        response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
-                                        self.__database_api_identifier, debug_mode=False)
-        response = self.get_response(response_id, log_response=False)["result"][0]["amount"]
-        check_that("'Amount of 'piggy' contract had decreased by 1'", response, equal_to(amount-1))
-
-        lcc.set_step("Calling method 'breakPiggy'")
-        call_contract_operation = self.echo_ops.get_call_contract_operation(self.echo, registrar=self.echo_acc0,
-                                                                            bytecode=break_piggy, callee=contract_id,
-                                                                            debug_mode=True)
-        collected_operation = self.collect_operations(call_contract_operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        lcc.log_info("Called method 'breakPiggy")
+        response_id = self.send_request(self.get_request("get_contract_balances", [created_contract_id]),
+                                        self.__database_api_identifier)
+        created_contract_balance_amount = self.get_response(response_id)["result"][0]["amount"]
+        check_that("'Balance of contract had decreased by 1'", created_contract_balance_amount,
+                   equal_to(amount - 1))
+        contract_method_response = self.call_contract_method(method_bytecode=self.break_piggy,
+                                                             contract_id=created_contract_id)
+        lcc.log_info(str(contract_method_response))
 
         lcc.set_step("Check result of method 'breakPiggy")
-
-
-
-
-
-
+        response_id = self.send_request(self.get_request("get_contract_balances", [created_contract_id]),
+                                        self.__database_api_identifier)
+        created_contract_balance_amount = self.get_response(response_id)["result"][0]["amount"]
+        check_that("'Contract balance has decreased to zero'", created_contract_balance_amount, equal_to(0))
+        response_id = self.send_request(self.get_request("get_objects", [[created_contract_id]]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
+        check_that("'Contract was destroyed'", result[0]["destroyed"], is_true())
