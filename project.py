@@ -49,10 +49,10 @@ INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
 INITIAL_ACCOUNTS_NAMES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
     INITIAL_ACCOUNTS_NAMES.append(INITIAL_ACCOUNTS[i]["name"])
-INITIAL_ACCOUNTS_ETH_ADDRESSES = []
+INITIAL_COMMITTEE_ETH_ADDRESSES = []
 for i, initial_committee_candidate in enumerate(INITIAL_COMMITTEE_CANDIDATES):
     if initial_committee_candidate["owner_name"] == INITIAL_ACCOUNTS_NAMES[i]:
-        INITIAL_ACCOUNTS_ETH_ADDRESSES.append(initial_committee_candidate["eth_address"])
+        INITIAL_COMMITTEE_ETH_ADDRESSES.append(initial_committee_candidate["eth_address"])
 ACCOUNT_PREFIX = "account"
 DEFAULT_ACCOUNTS_COUNT = 1000
 MAIN_TEST_ACCOUNT_COUNT = 1
