@@ -54,7 +54,7 @@ class HelloWorld(BaseTest):
                                                                 value_asset_id=self.echo_asset)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, debug_mode=True)
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'greet' method")
@@ -62,7 +62,7 @@ class HelloWorld(BaseTest):
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier, debug_mode=True)
 
         lcc.set_step("Check get 'Hello World!!!'")
         expected_string = "Hello World!!!"
@@ -100,7 +100,7 @@ class HelloWorld(BaseTest):
                                                               bytecode=self.get_pennie, callee=contract_id)
         fee = self.get_required_fee(operation, self.__database_api_identifier)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, debug_mode=True)
 
         lcc.set_step("Get contract. Amount should be reduced by one.")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
@@ -131,12 +131,12 @@ class HelloWorld(BaseTest):
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, debug_mode=True)
 
         lcc.set_step("Get contract balance, must be 0 (zero)")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
+                                        self.__database_api_identifier, debug_mode=True)
+        response = self.get_response(response_id, log_response=True)
         check_that(
             "'contract balance'",
             response["result"][0]["amount"],
@@ -145,8 +145,8 @@ class HelloWorld(BaseTest):
 
         lcc.set_step("Check that contract to be 'destroyed=True'")
         response_id = self.send_request(self.get_request("get_objects", [[contract_id]]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
+                                        self.__database_api_identifier, debug_mode=True)
+        response = self.get_response(response_id, log_response=True)
         check_that(
             "contract deleted and 'destroyed'",
             response["result"][0]["destroyed"],

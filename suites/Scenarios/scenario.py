@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, equal_to, is_true
+from lemoncheesecake.matching import check_that, equal_to
+
 from common.base_test import BaseTest
 
 SUITE = {
@@ -38,7 +39,7 @@ class CreateTransferAsset(BaseTest):
         super().teardown_suite()
 
     @lcc.test("CreateTransferAsset")
-    def CreateTransferAsset(self, get_random_valid_account_name, get_random_integer, get_random_valid_asset_name):
+    def create_transfer_asset(self, get_random_valid_account_name, get_random_integer, get_random_valid_asset_name):
         account_count, transfer_amount_for_main_account = 2, get_random_integer
         account_names = [get_random_valid_account_name + str(i) for i in range(account_count)]
         created_account_ids, private_keys = [], []
@@ -47,11 +48,13 @@ class CreateTransferAsset(BaseTest):
 
         lcc.set_step("Create two accounts")
         for account_name in account_names:
-            keys = self.generate_keys()
-            private_keys.append(keys[0])
-            account_id = self.utils.get_account_id(self, account_names=account_name, account_keys=keys,
-                                                   database_api_id=self.__database_api_identifier,
-                                                   signer=self.echo_acc0)
+            # keys = self.generate_keys()
+            # private_keys.append(keys[0])
+            # account_id = self.utils.get_account_id(self, account_names=account_name, account_keys=keys,
+            #                                        database_api_id=self.__database_api_identifier,
+            #                                        signer=self.echo_acc0)
+            account_id = self.get_account_id(account_name, self.__database_api_identifier,
+                                             self.__registration_api_identifier)
             created_account_ids.append(account_id)
         lcc.log_info("Two accounts created, ids: #1: '{}', #2: '{}'".format(created_account_ids[0],
                                                                             created_account_ids[1]))
@@ -113,11 +116,11 @@ class CreateTransferAsset(BaseTest):
                                                                                  self.__database_api_identifier)
         lcc.log_info(
             "Account '{}' balance = '{}'".format(created_account_ids[1],
-                                                 main_account_balance_before_transfer["amount"]))
+                                                 second_account_balance_before_transfer["amount"]))
 
         lcc.set_step("Transfer from first account to second account")
-        transfer_amount_for_first_account = int(first_account_balance__after_transfer["amount"]) - \
-                                            perform_transfer_operation_fee
+        transfer_amount_for_first_account = int(
+            first_account_balance__after_transfer["amount"]) - perform_transfer_operation_fee
         perform_transfer_operations = self.utils.perform_transfer_operations(self, account_1=created_account_ids[0],
                                                                              account_2=created_account_ids[1],
                                                                              database_api_id=
@@ -126,5 +129,3 @@ class CreateTransferAsset(BaseTest):
                                                                              transfer_amount_for_first_account,
                                                                              log_broadcast=True
                                                                              )
-
-
