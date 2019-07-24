@@ -405,7 +405,7 @@
             "_max_bba_steps": 12
         },
         "sidechain_config": {
-            "eth_contract_address": "c87395b45C1c199F25a6c2Be43515C41d53751Af",
+            "eth_contract_address": "758029f50a9601e2f4e4ad316033eb7fa9bd4535",
             "eth_committee_update_method": {
                 "method": "f1e3eb60",
                 "gas": 1000000
@@ -469,42 +469,42 @@
             "name": "init0",
             "active_key": "ECHOHCm2TxVGHWD73VYGo2uXTt6SfJKAbgUpYK89Qn7SBWrk",
             "echorand_key": "ECHOHCm2TxVGHWD73VYGo2uXTt6SfJKAbgUpYK89Qn7SBWrk",
-            "eth_address": "aB7e25b0458DF3BB8076cD35796Aa6f1756D31E7",
+            "eth_address": "f372c3b578534Ac5C1Cf0Cca7049A279d1ca3e79",
             "is_lifetime_member": true
         },
         {
             "name": "init1",
             "active_key": "ECHOBkNyokP3TnvQNbQBNE7hkfuHNVbmczpP6cXx8D7BEH5T",
             "echorand_key": "ECHOBkNyokP3TnvQNbQBNE7hkfuHNVbmczpP6cXx8D7BEH5T",
-            "eth_address": "1770CE6DDFD6C7ea71c07cD17E63771DC22c89E8",
+            "eth_address": "Fba802D86f8d9b080eD247e712751DDBF86086A9",
             "is_lifetime_member": true
         },
         {
             "name": "init2",
             "active_key": "ECHO4fKHe1EH1rYBxxqvUzRgXdWFqKNWffPk2yK34Hkw18jq",
             "echorand_key": "ECHO4fKHe1EH1rYBxxqvUzRgXdWFqKNWffPk2yK34Hkw18jq",
-            "eth_address": "7E798A0e43D52D2E7BE0996820D7b9AF3CcD418B",
+            "eth_address": "f5Ee319f0641805A3C1Ff3f0ABAacBBC7AB7E303",
             "is_lifetime_member": true
         },
         {
             "name": "init3",
             "active_key": "ECHOCYRALckympkHkSpHu4QHMQhAPE8xBpY7S1SMWjjk7SHM",
             "echorand_key": "ECHOCYRALckympkHkSpHu4QHMQhAPE8xBpY7S1SMWjjk7SHM",
-            "eth_address": "0F58e9e9a3260163ac9126eedfA6205f8c9B312D",
+            "eth_address": "7fD9941433fcF0d4CC9A9FC847D01dbB9ed2EBf9",
             "is_lifetime_member": true
         },
         {
             "name": "init4",
             "active_key": "ECHOCh3WGJCMKkBJHFJpzaC378cwwYisNbNKpD6oYhcuA6nR",
             "echorand_key": "ECHOCh3WGJCMKkBJHFJpzaC378cwwYisNbNKpD6oYhcuA6nR",
-            "eth_address": "4DE1618a5E0f038b78F7044Fa9dD8F778eA6d6ef",
+            "eth_address": "17B5Cb805fDC853fF6A8f893193Ba6ad29B9Fe86",
             "is_lifetime_member": true
         },
         {
             "name": "init5",
             "active_key": "ECHOD5vmsdJr82JAbXpLZgxsebCewQJvQFBpmeAjPUzQrPEB",
             "echorand_key": "ECHOD5vmsdJr82JAbXpLZgxsebCewQJvQFBpmeAjPUzQrPEB",
-            "eth_address": "484035B3c9F0e0756B930A3A735e030Ce8fdc06E",
+            "eth_address": "DBCD9F4807d30abdDeC6ED3AFe4237fcB946c88B",
             "is_lifetime_member": true
         },
         {
@@ -546,27 +546,27 @@
     "initial_committee_candidates": [
         {
             "owner_name": "init0",
-            "eth_address": "aB7e25b0458DF3BB8076cD35796Aa6f1756D31E7"
+            "eth_address": "f372c3b578534Ac5C1Cf0Cca7049A279d1ca3e79"
         },
         {
             "owner_name": "init1",
-            "eth_address": "1770CE6DDFD6C7ea71c07cD17E63771DC22c89E8"
+            "eth_address": "Fba802D86f8d9b080eD247e712751DDBF86086A9"
         },
         {
             "owner_name": "init2",
-            "eth_address": "7E798A0e43D52D2E7BE0996820D7b9AF3CcD418B"
+            "eth_address": "f5Ee319f0641805A3C1Ff3f0ABAacBBC7AB7E303"
         },
         {
             "owner_name": "init3",
-            "eth_address": "0F58e9e9a3260163ac9126eedfA6205f8c9B312D"
+            "eth_address": "7fD9941433fcF0d4CC9A9FC847D01dbB9ed2EBf9"
         },
         {
             "owner_name": "init4",
-            "eth_address": "4DE1618a5E0f038b78F7044Fa9dD8F778eA6d6ef"
+            "eth_address": "17B5Cb805fDC853fF6A8f893193Ba6ad29B9Fe86"
         },
         {
             "owner_name": "init5",
-            "eth_address": "484035B3c9F0e0756B930A3A735e030Ce8fdc06E"
+            "eth_address": "DBCD9F4807d30abdDeC6ED3AFe4237fcB946c88B"
         }
     ],
     "initial_chain_id": "aa34045518f1469a28fa4578240d5f039afa9959c0b95ce3b39674efa691fb21",

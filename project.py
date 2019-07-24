@@ -44,14 +44,15 @@ EXECUTION_STATUS_PATH = os.path.join(RESOURCES_DIR, "execution_status.json")
 ECHO_INITIAL_BALANCE = int(GENESIS["initial_balances"][0]["amount"])
 ECHO_ASSET_SYMBOL = GENESIS["initial_balances"][0]["asset_symbol"]
 INITIAL_ACCOUNTS = GENESIS["initial_accounts"]
+INITIAL_COMMITTEE_CANDIDATES = GENESIS["initial_committee_candidates"]
 INITIAL_ACCOUNTS_COUNT = len(INITIAL_ACCOUNTS)
 INITIAL_ACCOUNTS_NAMES = []
 for i in range(INITIAL_ACCOUNTS_COUNT):
     INITIAL_ACCOUNTS_NAMES.append(INITIAL_ACCOUNTS[i]["name"])
 INITIAL_ACCOUNTS_ETH_ADDRESSES = []
-for i in range(INITIAL_ACCOUNTS_COUNT):
-    if "eth_address" in INITIAL_ACCOUNTS[i]:
-        INITIAL_ACCOUNTS_ETH_ADDRESSES.append(INITIAL_ACCOUNTS[i]["eth_address"])
+for i, initial_committee_candidate in enumerate(INITIAL_COMMITTEE_CANDIDATES):
+    if initial_committee_candidate["owner_name"] == INITIAL_ACCOUNTS_NAMES[i]:
+        INITIAL_ACCOUNTS_ETH_ADDRESSES.append(initial_committee_candidate["eth_address"])
 ACCOUNT_PREFIX = "account"
 DEFAULT_ACCOUNTS_COUNT = 1000
 MAIN_TEST_ACCOUNT_COUNT = 1
