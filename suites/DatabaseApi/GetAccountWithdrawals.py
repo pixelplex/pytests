@@ -33,7 +33,7 @@ class GetAccountWithdrawals(BaseTest):
 
     def setup_suite(self):
         super().setup_suite()
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
@@ -46,7 +46,7 @@ class GetAccountWithdrawals(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.web3.eth.accounts[0]
+        self.eth_address = self.get_default_ethereum_account_address()
         lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):
@@ -69,6 +69,7 @@ class GetAccountWithdrawals(BaseTest):
 
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
+        lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the network")
         eth_account_address = self.utils.get_eth_address(self, new_account,
@@ -76,11 +77,14 @@ class GetAccountWithdrawals(BaseTest):
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.eth_trx.get_unpaid_fee(self, new_account, in_ethereum=True)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, new_account)
+        lcc.log_info("Unpaid fee for creation ethereum address for '{}' account: '{}'".format(new_account,
+                                                                                              unpaid_fee_in_ethereum))
 
         lcc.set_step("Send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
-                                                            value=eth_amount + unpaid_fee)
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, _from=self.eth_address,
+                                                            _to=eth_account_address,
+                                                            value=eth_amount + unpaid_fee_in_ethereum)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get account balance in ethereum")
