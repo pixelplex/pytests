@@ -6,6 +6,7 @@ import time
 
 import lemoncheesecake.api as lcc
 from echopy import Echo
+from eth_account import Account
 from lemoncheesecake.matching import is_str, is_integer, check_that_entry
 from web3 import Web3
 from websocket import create_connection
@@ -16,8 +17,9 @@ from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID, \
-    DEFAULT_ACCOUNTS_COUNT, EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, ETHEREUM_CONTRACTS
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, ETHEREUM_URL, ETH_ASSET_ID, \
+    DEFAULT_ACCOUNTS_COUNT, EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, ETHEREUM_CONTRACTS, ROPSTEN, ROPSTEN_PK, \
+    GANACHE_PK
 
 
 class BaseTest(object):
@@ -42,6 +44,14 @@ class BaseTest(object):
     def create_connection_to_echo():
         # Method create connection to Echo network
         return create_connection(url=BASE_URL)
+
+    def get_default_ethereum_account_address(self):
+        if not ROPSTEN:
+            # return self.web3.eth.accounts[0]
+            self.web3.eth.defaultAccount = Account.privateKeyToAccount(GANACHE_PK)
+            return self.web3.eth.defaultAccount.address
+        self.web3.eth.defaultAccount = Account.privateKeyToAccount(ROPSTEN_PK)
+        return self.web3.eth.defaultAccount.address
 
     def get_object_type(self, object_types):
         # Give object type mask
@@ -333,14 +343,6 @@ class BaseTest(object):
             lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
-    @staticmethod
-    def get_transfer_id(response, log_response=True):
-        transfer_identifier_hex = str(response["result"][1].get("tr_receipt").get("log")[0].get("data"))[:64][-8:]
-        transfer_id = int(str(transfer_identifier_hex), 16)
-        if log_response:
-            lcc.log_info("Transfer identifier is {}".format(transfer_id))
-        return transfer_id
-
     def get_contract_output(self, response, output_type, in_hex=False, len_output_string=0, debug_mode=False):
         contract_output = str(response["result"][1].get("exec_res").get("output"))
         if debug_mode:
@@ -548,19 +550,19 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
-    def _connect_to_ganache_ethereum(self):
-        # Create connection to ganache ethereum
-        lcc.set_step("Open connection to ganache ethereum")
-        lcc.log_url(GANACHE_URL)
-        self.web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
+    def _connect_to_ethereum(self):
+        # Create connection to ethereum
+        lcc.set_step("Open connection to ethereum")
+        lcc.log_url(ETHEREUM_URL)
+        self.web3 = Web3(Web3.HTTPProvider(ETHEREUM_URL))
         if self.web3.isConnected() is None or not self.web3.isConnected():
-            lcc.log_error("Connection to ganache ethereum not established")
-            raise Exception("Connection to ganache ethereum not established")
-        lcc.log_info("Connection to ganache ethereum successfully created")
+            lcc.log_error("Connection to ethereum not established")
+            raise Exception("Connection to ethereum not established")
+        lcc.log_info("Connection to ethereum successfully created")
 
     def perform_pre_deploy_setup(self, database_api_identifier):
         # Perform pre-deploy for run tests on the empty node
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Pre-deploy setup")
         lcc.log_info("Empty node. Start pre-deploy setup...")
@@ -574,10 +576,15 @@ class BaseTest(object):
 
     def check_node_status(self):
         database_api_identifier = self.get_identifier("database")
-        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+        if not ROPSTEN:
+            response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+                                            database_api_identifier)
+            if not self.get_response(response_id)["result"]:
+                return self.perform_pre_deploy_setup(database_api_identifier)
+        response_id = self.send_request(self.get_request("get_account_by_name", [self.accounts[0]]),
                                         database_api_identifier)
         if not self.get_response(response_id)["result"]:
-            self.perform_pre_deploy_setup(database_api_identifier)
+            return self.perform_pre_deploy_setup(database_api_identifier)
 
     def setup_suite(self):
         # Check status of connection
