@@ -227,7 +227,7 @@ class BaseTest(object):
         except IndexError as index:
             lcc.log_error("Response: This index does not exist: '{}'".format(index))
 
-    def get_notice(self, id_response, object_id=None, notices_list=False, log_response=True, debug_mode=False):
+    def get_notice(self, id_response, object_id=None, operation_id=None, notices_list=False, log_response=True, debug_mode=False):
         # Receive notice from server
         try:
             if debug_mode:
@@ -240,7 +240,7 @@ class BaseTest(object):
                 if log_response:
                     lcc.log_info("Received notice with list of notifications:\n{}".format(json.dumps(notice, indent=4)))
                 return notice["params"][1][0]
-            return self.receiver.get_notice(id_response, object_id, log_response)
+            return self.receiver.get_notice(id_response, object_id, log_response, operation_id)
         except KeyError as key:
             lcc.log_error("Notice: That key does not exist: '{}'".format(key))
         except IndexError as index:

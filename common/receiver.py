@@ -94,7 +94,7 @@ class Receiver(object):
                         json.dumps(response, indent=4)))
             return notice_obj
 
-    def get_notice(self, id_response, object_id, print_log):
+    def get_notice(self, id_response, object_id, print_log, operation_id=None):
         response = json.loads(self.web_socket.recv())
         if response.get("params")[0] != id_response:
             lcc.log_error(
@@ -124,6 +124,8 @@ class Receiver(object):
                 lcc.log_info(
                     "Received notice about successful creation of new account:\n{}".format(
                         json.dumps(response, indent=4)))
+            return notice_params
+        if (notice_params["operations"]) and (notice_params["operations"][0][0] == operation_id):
             return notice_params
         lcc.log_warn(
             "Not validate response, got params:\n{}".format(json.dumps(response.get("params")[1], indent=4)))
