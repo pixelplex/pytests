@@ -26,7 +26,7 @@ class ERC20ContractFeePool(BaseTest):
 
     def setup_suite(self):
         super().setup_suite()
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
