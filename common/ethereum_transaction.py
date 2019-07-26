@@ -88,15 +88,20 @@ class EthereumTransactions(object):
         return bool(int(method_call_result.hex(), 16))
 
     @staticmethod
-    def deploy_contract_in_ethereum_network(web3, eth_address, contract_abi, contract_bytecode):
+    def deploy_contract_in_ethereum_network(web3, eth_address, contract_abi, contract_bytecode, pass_phrase="pass"):
         private_key = ROPSTEN_PK if ROPSTEN else GANACHE_PK
         list_eth_accounts = web3.personal.listAccounts
         if eth_address not in list_eth_accounts:
             # Import account using private key and pass phrase
-            web3.personal.importRawKey(private_key, "pass_phrase")
+            web3.personal.importRawKey(private_key, pass_phrase)
             list_eth_accounts = web3.personal.listAccounts
+        if ROPSTEN:
+            for eth_account in list_eth_accounts:
+                if eth_account == eth_address:
+                    eth_address = eth_account
+                    break
             # Unlock account using private key and pass phrase
-            web3.personal.unlockAccount(list_eth_accounts[-1], "pass_phrase")
+            web3.personal.unlockAccount(eth_address, pass_phrase)
         # Set pre-funded account as sender
         web3.eth.defaultAccount = eth_address
         # Instantiate and deploy contract
@@ -125,6 +130,8 @@ class EthereumTransactions(object):
         tx_hash = contract_instance.functions.transfer(account_eth_address, amount).transact()
         # Wait for transaction to be mined...
         transfer_result = web3.eth.waitForTransactionReceipt(tx_hash)
+        if not transfer_result:
+            raise Exception("Transfer ERC20 tokens to account failed.")
         if log_transaction:
             lcc.log_info("Transaction:\n{}".format(web3.eth.getTransaction(tx_hash)))
         if log_transaction_logs:

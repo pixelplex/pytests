@@ -121,10 +121,10 @@ class ERC20(BaseTest):
 
         lcc.set_step("First transfer erc20 to ethereum address of created account")
         erc20_deposit_amounts.append(self.get_random_amount(_to=self.in_ethereum_erc20_balance))
-        transfer_result = self.eth_trx.transfer(self.web3, self.erc20_contract, self.eth_account_address,
-                                                erc20_deposit_amounts[0])
-        if not transfer_result:
-            raise Exception("Transfer ERC20 tokens to account failed.")
+        self.eth_trx.transfer(self.web3, self.erc20_contract, self.eth_account_address, erc20_deposit_amounts[0])
+        lcc.log_info(
+            "Transfer '{}' erc20 tokens to '{}' account completed successfully".format(erc20_deposit_amounts[0],
+                                                                                       self.eth_account_address))
 
         lcc.set_step("First: Get ERC20 account deposits")
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier)
@@ -157,10 +157,10 @@ class ERC20(BaseTest):
 
         lcc.set_step("Second transfer erc20 to ethereum address of created account")
         erc20_deposit_amounts.append(self.get_random_amount(_to=updated_in_ethereum_erc20_balance))
-        transfer_result = self.eth_trx.transfer(self.web3, self.erc20_contract, self.eth_account_address,
-                                                erc20_deposit_amounts[1])
-        if not transfer_result:
-            raise Exception("Transfer ERC20 tokens to account failed.")
+        self.eth_trx.transfer(self.web3, self.erc20_contract, self.eth_account_address, erc20_deposit_amounts[1])
+        lcc.log_info(
+            "Transfer '{}' erc20 tokens to '{}' account completed successfully".format(erc20_deposit_amounts[1],
+                                                                                       self.eth_account_address))
 
         lcc.set_step("Second: Get ERC20 account deposits")
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier,
@@ -197,7 +197,7 @@ class ERC20(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario withdrawing erc20 tokens from the echo account")
-    @lcc.depends_on("SideChain.ERC20.ERC20.erc20_sidechain_pre_run_scenario")
+    @lcc.depends_on("SideChain.ERC20.ERC20.erc20_in_scenario")
     def erc20_out_scenario(self):
         erc20_withdraw_amounts = []
         withdraw_erc20_token_ids = []
