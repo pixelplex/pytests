@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import decimal
 import json
 from copy import deepcopy
 
@@ -62,13 +63,16 @@ class EthereumTransactions(object):
 
     @staticmethod
     def get_unpaid_fee(base_test, account_id):
+        eeth_accuracy = "1.000000"
         method_call_result = base_test.web3.eth.call(
             {
                 "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
                 "data": UNPAID_FEE_METHOD + base_test.get_byte_code_param(account_id)
             }
         )
-        return round((int(method_call_result.hex()[-64:], 16) / 1e18), 6)
+        method_call_result = float(decimal.Decimal(int(method_call_result.hex()[-64:], 16) / 1e18).quantize(
+            decimal.Decimal(eeth_accuracy), rounding=decimal.ROUND_UP))
+        return method_call_result
 
     @staticmethod
     def get_status_of_committee_member(base_test, committee_member_address):
