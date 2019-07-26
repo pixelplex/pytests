@@ -77,7 +77,7 @@ class GetAccountWithdrawals(BaseTest):
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, new_account)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.web3, new_account)
         lcc.log_info("Unpaid fee for creation ethereum address for '{}' account: '{}'".format(new_account,
                                                                                               unpaid_fee_in_ethereum))
 

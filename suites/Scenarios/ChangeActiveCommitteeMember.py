@@ -81,7 +81,7 @@ class ChangeActiveCommitteeMember(BaseTest):
 
         lcc.set_step("Get all committee members statuses. Store active committee members")
         for eth_address in active_committee_members["eth_addresses"]:
-            committee_member_status = self.eth_trx.get_status_of_committee_member(self, eth_address)
+            committee_member_status = self.eth_trx.get_status_of_committee_member(self, self.web3, eth_address)
             if not committee_member_status:
                 raise Exception("Active committee member with '{}' eth_address in the ECHO network "
                                 "do not compare with members in the Ethereum network".format(eth_address))
@@ -153,11 +153,11 @@ class ChangeActiveCommitteeMember(BaseTest):
         lcc.log_info("'{}' old committee member address: '{}', '{}' new committee member address: '{}'"
                      "".format(old_member_id, old_member_address, new_member_id, new_member_address))
 
-        new_committee_member_status = self.eth_trx.get_status_of_committee_member(self, new_member_address)
+        new_committee_member_status = self.eth_trx.get_status_of_committee_member(self, self.web3, new_member_address)
         check_that("'status of new committee member '{}''".format(new_member_address), new_committee_member_status,
                    is_true())
 
-        old_committee_member_status = self.eth_trx.get_status_of_committee_member(self, old_member_address)
+        old_committee_member_status = self.eth_trx.get_status_of_committee_member(self, self.web3, old_member_address)
         check_that("'status of old committee member '{}''".format(old_member_address), old_committee_member_status,
                    is_false())
 
@@ -203,10 +203,10 @@ class ChangeActiveCommitteeMember(BaseTest):
         lcc.log_info("'{}' old committee member address: '{}', '{}' new committee member address: '{}'"
                      "".format(old_member_id, old_member_address, new_member_id, new_member_address))
 
-        new_committee_member_status = self.eth_trx.get_status_of_committee_member(self, new_member_address)
+        new_committee_member_status = self.eth_trx.get_status_of_committee_member(self, self.web3, new_member_address)
         check_that("'status of new committee member '{}''".format(new_member_address), new_committee_member_status,
                    is_true())
 
-        old_committee_member_status = self.eth_trx.get_status_of_committee_member(self, old_member_address)
+        old_committee_member_status = self.eth_trx.get_status_of_committee_member(self, self.web3, old_member_address)
         check_that("'status of old committee member '{}''".format(old_member_address), old_committee_member_status,
                    is_false())

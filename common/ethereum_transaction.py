@@ -5,7 +5,8 @@ from copy import deepcopy
 
 import lemoncheesecake.api as lcc
 
-from project import ETHEREUM_OPERATIONS, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD, COMMITTEE
+from project import ETHEREUM_OPERATIONS, ETH_CONTRACT_ADDRESS, UNPAID_FEE_METHOD, COMMITTEE, ROPSTEN_PK, ROPSTEN, \
+    GANACHE_PK
 
 
 class EthereumTransactions(object):
@@ -62,11 +63,11 @@ class EthereumTransactions(object):
         self.broadcast(web3=web3, transaction=transaction)
 
     @staticmethod
-    def get_unpaid_fee(base_test, account_id):
+    def get_unpaid_fee(base_test, web3, account_id):
         eeth_accuracy = "1.000000"
-        method_call_result = base_test.web3.eth.call(
+        method_call_result = web3.eth.call(
             {
-                "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
+                "to": web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
                 "data": UNPAID_FEE_METHOD + base_test.get_byte_code_param(account_id)
             }
         )
@@ -75,30 +76,38 @@ class EthereumTransactions(object):
         return method_call_result
 
     @staticmethod
-    def get_status_of_committee_member(base_test, committee_member_address):
+    def get_status_of_committee_member(base_test, web3, committee_member_address):
         if committee_member_address[:2] == "0x":
             committee_member_address = committee_member_address[2:]
-        method_call_result = base_test.web3.eth.call(
+        method_call_result = web3.eth.call(
             {
-                "to": base_test.web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
+                "to": web3.toChecksumAddress(ETH_CONTRACT_ADDRESS),
                 "data": COMMITTEE + base_test.get_byte_code_param(committee_member_address)
             }
         )
         return bool(int(method_call_result.hex(), 16))
 
     @staticmethod
-    def deploy_contract_in_ethereum_network(base_test, eth_address, contract_abi, contract_bytecode):
+    def deploy_contract_in_ethereum_network(web3, eth_address, contract_abi, contract_bytecode):
+        private_key = ROPSTEN_PK if ROPSTEN else GANACHE_PK
+        list_eth_accounts = web3.personal.listAccounts
+        if eth_address not in list_eth_accounts:
+            # Import account using private key and pass phrase
+            web3.personal.importRawKey(private_key, "pass_phrase")
+            list_eth_accounts = web3.personal.listAccounts
+            # Unlock account using private key and pass phrase
+            web3.personal.unlockAccount(list_eth_accounts[-1], "pass_phrase")
         # Set pre-funded account as sender
-        base_test.web3.eth.defaultAccount = eth_address
+        web3.eth.defaultAccount = eth_address
         # Instantiate and deploy contract
-        contract = base_test.web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
+        contract = web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
         # Submit the transaction that deploys the contract
         tx_hash = contract.constructor().transact()
         # Wait for the transaction to be mined, and get the transaction receipt
-        tx_receipt = base_test.web3.eth.waitForTransactionReceipt(tx_hash)
+        tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
         contract_address = tx_receipt.contractAddress
         # Create the contract instance with the newly-deployed address
-        contract = base_test.web3.eth.contract(
+        contract = web3.eth.contract(
             address=contract_address,
             abi=contract_abi,
         )
@@ -109,15 +118,15 @@ class EthereumTransactions(object):
         return contract_instance.functions.balanceOf(eth_address).call()
 
     @staticmethod
-    def transfer(base_test, contract_instance, account_eth_address, amount, log_transaction=True,
+    def transfer(web3, contract_instance, account_eth_address, amount, log_transaction=True,
                  log_transaction_logs=False):
         if account_eth_address[:2] != "0x":
             account_eth_address = "0x" + account_eth_address
         tx_hash = contract_instance.functions.transfer(account_eth_address, amount).transact()
         # Wait for transaction to be mined...
-        transfer_result = base_test.web3.eth.waitForTransactionReceipt(tx_hash)
+        transfer_result = web3.eth.waitForTransactionReceipt(tx_hash)
         if log_transaction:
-            lcc.log_info("Transaction:\n{}".format(base_test.web3.eth.getTransaction(tx_hash)))
+            lcc.log_info("Transaction:\n{}".format(web3.eth.getTransaction(tx_hash)))
         if log_transaction_logs:
-            lcc.log_info("Transaction logs:\n{}".format(base_test.web3.eth.getTransactionReceipt(tx_hash).logs))
+            lcc.log_info("Transaction logs:\n{}".format(web3.eth.getTransactionReceipt(tx_hash).logs))
         return transfer_result

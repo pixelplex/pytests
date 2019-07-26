@@ -84,7 +84,7 @@ class ERC20(BaseTest):
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
         self.erc20_contract = \
-            self.eth_trx.deploy_contract_in_ethereum_network(self, eth_address=self.eth_account.address,
+            self.eth_trx.deploy_contract_in_ethereum_network(self.web3, eth_address=self.eth_account.address,
                                                              contract_abi=self.erc20_abi,
                                                              contract_bytecode=self.erc20_contract_code)
         lcc.log_info(
@@ -121,12 +121,12 @@ class ERC20(BaseTest):
 
         lcc.set_step("First transfer erc20 to ethereum address of created account")
         erc20_deposit_amounts.append(self.get_random_amount(_to=self.in_ethereum_erc20_balance))
-        transfer_result = self.eth_trx.transfer(self, self.erc20_contract, self.eth_account_address,
+        transfer_result = self.eth_trx.transfer(self.web3, self.erc20_contract, self.eth_account_address,
                                                 erc20_deposit_amounts[0])
         if not transfer_result:
             raise Exception("Transfer ERC20 tokens to account failed.")
 
-        lcc.set_step("Get ERC20 account deposits")
+        lcc.set_step("First: Get ERC20 account deposits")
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier)
         deposits = response["result"]
         require_that("'account deposits'", deposits, has_length(1))
@@ -157,12 +157,12 @@ class ERC20(BaseTest):
 
         lcc.set_step("Second transfer erc20 to ethereum address of created account")
         erc20_deposit_amounts.append(self.get_random_amount(_to=updated_in_ethereum_erc20_balance))
-        transfer_result = self.eth_trx.transfer(self, self.erc20_contract, self.eth_account_address,
+        transfer_result = self.eth_trx.transfer(self.web3, self.erc20_contract, self.eth_account_address,
                                                 erc20_deposit_amounts[1])
         if not transfer_result:
             raise Exception("Transfer ERC20 tokens to account failed.")
 
-        lcc.set_step("Get ERC20 account deposits")
+        lcc.set_step("Second: Get ERC20 account deposits")
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier,
                                                          previous_account_deposits=deposits)
         deposits = response["result"]

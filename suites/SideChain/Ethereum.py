@@ -114,7 +114,7 @@ class Ethereum(BaseTest):
         eth_amount = self.get_random_amount(amount_type=float)
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.new_account)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.web3, self.new_account)
         lcc.log_info("Unpaid fee for creation ethereum address for '{}' account: '{}'".format(self.new_account,
                                                                                               unpaid_fee_in_ethereum))
 

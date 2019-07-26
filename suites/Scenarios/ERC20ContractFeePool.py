@@ -65,7 +65,7 @@ class ERC20ContractFeePool(BaseTest):
             "Default ERC20 contract fee pool amount after creation is '{}'".format(register_erc20_token_fee_pool))
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_address=self.eth_address,
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3, eth_address=self.eth_address,
                                                                           contract_abi=self.erc20_abi,
                                                                           contract_bytecode=self.erc20_contract_code)
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
