@@ -68,9 +68,11 @@ class SetPendingTransactionCallback(BaseTest):
         check_that("'subscribe callback'", response["result"], is_none())
 
         lcc.set_step("Broadcast transfer operation and get notice")
-        self.utils.perform_transfer_operations(self, self.echo_acc0, self.echo_acc1,
-                                               self.__database_api_identifier)
-        notice = self.get_notice(subscription_callback_id, log_response=True, debug_mode=True)
+        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
+                                                         to_account_id=self.echo_acc1)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
         check_that("notice", notice, is_not_none(), quiet=True)
 
 
@@ -134,11 +136,14 @@ class PositiveTesting(BaseTest):
         check_that("'subscribe callback'", response["result"], is_none())
 
         lcc.set_step("Broadcast transfer operation")
-        broadcast_result = self.utils.perform_transfer_operations(self, self.echo_acc0, self.echo_acc1,
-                                                                  self.__database_api_identifier)
-        operation_id = self.echo.config.operation_ids.TRANSFER
+        operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
+                                                         to_account_id=self.echo_acc1)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+
         lcc.set_step("Get notice about call contract and check notice of perform transfer operation")
-        notice = self.get_notice(subscription_callback_id, operation_id=operation_id)
+        notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
         del broadcast_result["trx"]["operation_results"]
         check_that("notice params", notice, equal_to(broadcast_result["trx"]))
 
@@ -168,8 +173,7 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        operation_id = self.echo.config.operation_ids.CALL_CONTRACT
         lcc.set_step("Get notice about call contract and check notice of call contract operation")
-        notice = self.get_notice(subscription_callback_id, operation_id=operation_id)
+        notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
         del broadcast_result["trx"]["operation_results"]
         check_that("notice params", notice, equal_to(broadcast_result["trx"]))
