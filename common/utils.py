@@ -663,14 +663,16 @@ class Utils(object):
                                    temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         temp_count += 1
         response_id = base_test.send_request(base_test.get_request("get_erc20_account_deposits", [account_id]),
-                                             database_api_id)
-        response = base_test.get_response(response_id)
+                                             database_api_id, debug_mode=True)
+        response = base_test.get_response(response_id, log_response=True)
         if response["result"] and response["result"] != previous_account_deposits:
             return response
         if temp_count <= BLOCKS_NUM_TO_WAIT:
             base_test.set_timeout_wait(timeout, print_log=False)
             self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_erc20_account_deposits(base_test, account_id, database_api_id, temp_count=temp_count)
+            return self.get_erc20_account_deposits(base_test, account_id, database_api_id,
+                                                   previous_account_deposits=previous_account_deposits,
+                                                   temp_count=temp_count)
         raise Exception(
             "No needed '{}' account erc20 deposits. Waiting time result='{}'".format(account_id,
                                                                                      self.waiting_time_result))
@@ -686,7 +688,9 @@ class Utils(object):
         if temp_count <= BLOCKS_NUM_TO_WAIT:
             base_test.set_timeout_wait(timeout, print_log=False)
             self.waiting_time_result = self.waiting_time_result + timeout
-            return self.get_erc20_account_withdrawals(base_test, account_id, database_api_id, temp_count=temp_count)
+            return self.get_erc20_account_withdrawals(base_test, account_id, database_api_id,
+                                                      previous_account_withdrawals=previous_account_withdrawals,
+                                                      temp_count=temp_count)
         raise Exception(
             "No needed '{}' account erc20 withdrawals. Waiting time result='{}'".format(account_id,
                                                                                         self.waiting_time_result))
