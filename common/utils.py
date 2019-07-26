@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import datetime
+import math
 import time
 from copy import deepcopy
-
-import math
 
 from fixtures.base_fixtures import get_random_valid_asset_name
 from project import BLOCK_RELEASE_INTERVAL, GENESIS, BLOCKS_NUM_TO_WAIT
