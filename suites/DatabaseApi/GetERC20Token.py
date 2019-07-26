@@ -13,7 +13,7 @@ SUITE = {
 @lcc.prop("suite_run_option_1", "main")
 @lcc.prop("suite_run_option_2", "positive")
 @lcc.prop("suite_run_option_3", "negative")
-@lcc.tags("database_api", "get_erc20_token")
+@lcc.tags("database_api", "get_erc20_token", "sidechain")
 @lcc.suite("Check work of method 'get_erc20_token'", rank=1)
 class GetERC20Token(BaseTest):
 
@@ -54,15 +54,14 @@ class GetERC20Token(BaseTest):
         erc20_symbol = get_random_valid_asset_name
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        deployment = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_account=self.eth_address,
-                                                                      contract_abi=self.erc20_abi,
-                                                                      contract_bytecode=self.erc20_contract_code)
-        eth_erc20_contract_address = deployment.get("contract_address")
-        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(eth_erc20_contract_address))
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_address=self.eth_address,
+                                                                          contract_abi=self.erc20_abi,
+                                                                          contract_bytecode=self.erc20_contract_code)
+        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.echo_acc0,
-                                                                      eth_addr=eth_erc20_contract_address[2:],
+                                                                      eth_addr=erc20_contract.address,
                                                                       name=contract_name,
                                                                       symbol=erc20_symbol,
                                                                       database_api_id=self.__database_api_identifier)
@@ -72,11 +71,11 @@ class GetERC20Token(BaseTest):
             "1.20.x"))  # todo: echo_erc20_contract_id
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
-        response_id = self.send_request(self.get_request("get_erc20_token", [eth_erc20_contract_address[2:]]),
+        response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_erc20_token' with eth_erc20_contract_address='{}' parameter".format(
-            eth_erc20_contract_address[2:]))
+            erc20_contract.address[2:]))
 
         lcc.set_step("Check simple work of method 'get_erc20_token'")
         require_that("'length of ERC20 object'", result, has_length(7))
@@ -104,7 +103,7 @@ class GetERC20Token(BaseTest):
 
 
 @lcc.prop("suite_run_option_2", "positive")
-@lcc.tags("database_api", "get_erc20_token")
+@lcc.tags("database_api", "get_erc20_token", "sidechain")
 @lcc.suite("Positive testing of method 'get_erc20_token'", rank=2)
 class PositiveTesting(BaseTest):
 
@@ -148,15 +147,14 @@ class PositiveTesting(BaseTest):
         erc20_token_decimals = get_random_integer_up_to_ten
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        deployment = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_account=self.eth_address,
-                                                                      contract_abi=self.erc20_abi,
-                                                                      contract_bytecode=self.erc20_contract_code)
-        eth_erc20_contract_address = deployment.get("contract_address")
-        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(eth_erc20_contract_address))
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_address=self.eth_address,
+                                                                          contract_abi=self.erc20_abi,
+                                                                          contract_bytecode=self.erc20_contract_code)
+        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.echo_acc0,
-                                                                      eth_addr=eth_erc20_contract_address[2:],
+                                                                      eth_addr=erc20_contract.address,
                                                                       name=contract_name,
                                                                       symbol=erc20_symbol,
                                                                       decimals=erc20_token_decimals,
@@ -167,17 +165,17 @@ class PositiveTesting(BaseTest):
             "1.20.x"))  # todo: echo_erc20_contract_id
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
-        response_id = self.send_request(self.get_request("get_erc20_token", [eth_erc20_contract_address[2:]]),
+        response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_erc20_token' with eth_erc20_contract_address='{}' parameter".format(
-            eth_erc20_contract_address[2:]))
+            erc20_contract.address[2:]))
 
         with this_dict(result):
             # todo: uncomment. Bug ECHO-1043
             # check_that_entry("id", equal_to(echo_erc20_contract_id))
             check_that_entry("owner", equal_to(self.echo_acc0))
-            check_that_entry("eth_addr", equal_to(eth_erc20_contract_address[2:]))
+            check_that_entry("eth_addr", equal_to(erc20_contract.address[2:]))
             check_that_entry("name", equal_to(contract_name))
             check_that_entry("symbol", equal_to(erc20_symbol))
             check_that_entry("decimals", equal_to(erc20_token_decimals))
@@ -193,15 +191,14 @@ class PositiveTesting(BaseTest):
         erc20_symbol = get_random_valid_asset_name
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        deployment = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_account=self.eth_address,
-                                                                      contract_abi=self.erc20_abi,
-                                                                      contract_bytecode=self.erc20_contract_code)
-        eth_erc20_contract_address = deployment.get("contract_address")
-        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(eth_erc20_contract_address))
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_address=self.eth_address,
+                                                                          contract_abi=self.erc20_abi,
+                                                                          contract_bytecode=self.erc20_contract_code)
+        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.echo_acc0,
-                                                                      eth_addr=eth_erc20_contract_address[2:],
+                                                                      eth_addr=erc20_contract.address,
                                                                       name=contract_name,
                                                                       symbol=erc20_symbol,
                                                                       database_api_id=self.__database_api_identifier)
@@ -211,11 +208,11 @@ class PositiveTesting(BaseTest):
             echo_erc20_contract_id))
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
-        response_id = self.send_request(self.get_request("get_erc20_token", [eth_erc20_contract_address[2:]]),
+        response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
                                         self.__database_api_identifier)
         response_1 = self.get_response(response_id)
         lcc.log_info("Call method 'get_erc20_token' with eth_erc20_contract_address='{}' parameter".format(
-            eth_erc20_contract_address[2:]))
+            erc20_contract.address[2:]))
 
         lcc.set_step("Get account by id")
         # todo: Bug ECHO-1043

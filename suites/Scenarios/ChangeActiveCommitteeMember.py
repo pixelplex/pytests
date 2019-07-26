@@ -11,7 +11,7 @@ SUITE = {
 
 
 @lcc.prop("suite_run_option_1", "main")
-@lcc.tags("change_active_committee_member")
+@lcc.tags("change_active_committee_member", "sidechain")
 @lcc.suite("Check scenario 'Change active committee members'")
 class ChangeActiveCommitteeMember(BaseTest):
 

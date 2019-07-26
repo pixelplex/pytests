@@ -83,9 +83,9 @@ class EthereumTransactions(object):
         return bool(int(method_call_result.hex(), 16))
 
     @staticmethod
-    def deploy_contract_in_ethereum_network(base_test, eth_account, contract_abi, contract_bytecode):
+    def deploy_contract_in_ethereum_network(base_test, eth_address, contract_abi, contract_bytecode):
         # Set pre-funded account as sender
-        base_test.web3.eth.defaultAccount = eth_account
+        base_test.web3.eth.defaultAccount = eth_address
         # Instantiate and deploy contract
         contract = base_test.web3.eth.contract(abi=contract_abi, bytecode=contract_bytecode)
         # Submit the transaction that deploys the contract

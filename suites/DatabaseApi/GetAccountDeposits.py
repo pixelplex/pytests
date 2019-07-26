@@ -15,7 +15,7 @@ SUITE = {
 @lcc.prop("suite_run_option_1", "main")
 @lcc.prop("suite_run_option_2", "positive")
 @lcc.prop("suite_run_option_3", "negative")
-@lcc.tags("database_api", "get_account_deposits")
+@lcc.tags("database_api", "get_account_deposits", "sidechain")
 @lcc.suite("Check work of method 'get_account_deposits'", rank=1)
 class GetAccountDeposits(BaseTest):
 
@@ -46,7 +46,7 @@ class GetAccountDeposits(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.get_default_ethereum_account_address()
+        self.eth_address = self.get_default_ethereum_account().address
         lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):

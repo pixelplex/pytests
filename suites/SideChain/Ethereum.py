@@ -12,7 +12,7 @@ SUITE = {
 
 
 @lcc.prop("suite_run_option_1", "main")
-@lcc.tags("sidechain_ethereum")
+@lcc.tags("sidechain_ethereum", "sidechain")
 @lcc.suite("Check scenario 'EthToEcho and EchoToEth'")
 class Ethereum(BaseTest):
 
@@ -75,7 +75,7 @@ class Ethereum(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.get_default_ethereum_account_address()
+        self.eth_address = self.get_default_ethereum_account().address
         lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):

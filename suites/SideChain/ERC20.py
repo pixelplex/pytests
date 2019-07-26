@@ -13,7 +13,7 @@ SUITE = {
 
 
 @lcc.prop("suite_run_option_1", "main")
-@lcc.tags("sidechain_erc20")
+@lcc.tags("sidechain_erc20", "sidechain")
 @lcc.suite("Check scenario 'ERC20ToEcho and ERC20FromEchoToEth'")
 class ERC20(BaseTest):
 
@@ -22,7 +22,7 @@ class ERC20(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.eth_address = None
+        self.eth_account = None
         self.erc20_contract_code = self.get_byte_code("erc20", "code", ethereum_contract=True)
         self.erc20_abi = self.get_abi("erc20")
         self.erc20_balanceOf = self.get_byte_code("erc20", "balanceOf(address)", ethereum_contract=True)
@@ -32,7 +32,6 @@ class ERC20(BaseTest):
         self.in_ethereum_erc20_balance = None
         self.in_ethereum_start_erc20_balance = None
         self.in_echo_erc20_balance = None
-        self.eth_erc20_contract_address = None
         self.erc20_token_id = None
         self.erc20_contract_id = None
 
@@ -53,8 +52,8 @@ class ERC20(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.get_default_ethereum_account_address()
-        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
+        self.eth_account = self.get_default_ethereum_account()
+        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_account.address))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -84,22 +83,21 @@ class ERC20(BaseTest):
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(self.new_account, self.eth_account_address))
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        deployment = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_account=self.eth_address,
-                                                                      contract_abi=self.erc20_abi,
-                                                                      contract_bytecode=self.erc20_contract_code)
-        self.erc20_contract = deployment.get("contract_instance")
-        self.eth_erc20_contract_address = deployment.get("contract_address")
+        self.erc20_contract = \
+            self.eth_trx.deploy_contract_in_ethereum_network(self, eth_address=self.eth_account.address,
+                                                             contract_abi=self.erc20_abi,
+                                                             contract_bytecode=self.erc20_contract_code)
         lcc.log_info(
-            "ERC20 contract created in Ethereum network, address: '{}'".format(self.eth_erc20_contract_address))
+            "ERC20 contract created in Ethereum network, address: '{}'".format(self.erc20_contract.address))
 
         lcc.set_step("Get ethereum account ERC20 tokens balance in the Ethereum network")
-        self.in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
+        self.in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_account.address)
         self.in_ethereum_start_erc20_balance = self.in_ethereum_erc20_balance
         require_that("'in ethereum owner's erc20 balance'", self.in_ethereum_erc20_balance, greater_than(0))
 
         lcc.set_step("Perform register erc20 token operation")
         bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.new_account,
-                                                                      eth_addr=self.eth_erc20_contract_address[2:],
+                                                                      eth_addr=self.erc20_contract.address,
                                                                       name=name, symbol=symbol,
                                                                       database_api_id=self.__database_api_identifier)
         # todo: uncomment. Bug ECHO-1043
@@ -108,7 +106,7 @@ class ERC20(BaseTest):
             "1.20.x"))  # todo: echo_erc20_contract_id
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
-        response_id = self.send_request(self.get_request("get_erc20_token", [self.eth_erc20_contract_address[2:]]),
+        response_id = self.send_request(self.get_request("get_erc20_token", [self.erc20_contract.address[2:]]),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
         self.erc20_token_id = result["id"]
@@ -153,7 +151,7 @@ class ERC20(BaseTest):
         require_that("'in echo account's erc20 balance'", in_echo_erc20_balance, equal_to(erc20_deposit_amounts[0]))
 
         lcc.set_step("Get updated ethereum account ERC20 tokens balance in the Ethereum network")
-        updated_in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
+        updated_in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_account.address)
         require_that("'in ethereum owner's erc20 balance'", updated_in_ethereum_erc20_balance,
                      equal_to(self.in_ethereum_erc20_balance - erc20_deposit_amounts[0]))
 
@@ -191,7 +189,7 @@ class ERC20(BaseTest):
                      equal_to(erc20_deposit_amounts[0] + erc20_deposit_amounts[1]))
 
         lcc.set_step("Get final ethereum account ERC20 tokens balance in the Ethereum network")
-        final_in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_address)
+        final_in_ethereum_erc20_balance = self.eth_trx.get_balance_of(self.erc20_contract, self.eth_account.address)
         require_that("'in ethereum owner'serc20 balance'", final_in_ethereum_erc20_balance,
                      equal_to(updated_in_ethereum_erc20_balance - erc20_deposit_amounts[1]))
         self.in_echo_erc20_balance = in_echo_erc20_balance
@@ -213,7 +211,7 @@ class ERC20(BaseTest):
         lcc.set_step("Perform first withdraw ERC20 token operation")
         erc20_withdraw_amounts.append(str(self.get_random_amount(_to=self.in_echo_erc20_balance)))
         bd_result = self.utils.perform_withdraw_erc20_token_operation(self, account=self.new_account,
-                                                                      to=self.eth_address[2:],
+                                                                      to=self.eth_account.address,
                                                                       erc20_token=self.erc20_token_id,
                                                                       value=erc20_withdraw_amounts[0],
                                                                       database_api_id=self.__database_api_identifier)
@@ -249,7 +247,8 @@ class ERC20(BaseTest):
 
         lcc.set_step("Get updated ethereum account ERC20 tokens balance in the Ethereum network")
         updated_in_ethereum_erc20_balance = \
-            self.utils.get_updated_account_erc20_balance_in_eth_network(self, self.erc20_contract, self.eth_address,
+            self.utils.get_updated_account_erc20_balance_in_eth_network(self, self.erc20_contract,
+                                                                        self.eth_account.address,
                                                                         self.in_ethereum_erc20_balance)
         require_that("'in ethereum owner'serc20 balance'", updated_in_ethereum_erc20_balance,
                      equal_to(self.in_ethereum_erc20_balance + int(erc20_withdraw_amounts[0])))
@@ -257,7 +256,7 @@ class ERC20(BaseTest):
         lcc.set_step("Perform second withdraw ERC20 token operation to withdraw all ERC20 balance")
         erc20_withdraw_amounts.append(str(in_echo_erc20_balance))
         bd_result = self.utils.perform_withdraw_erc20_token_operation(self, account=self.new_account,
-                                                                      to=self.eth_address[2:],
+                                                                      to=self.eth_account.address,
                                                                       erc20_token=self.erc20_token_id,
                                                                       value=erc20_withdraw_amounts[1],
                                                                       database_api_id=self.__database_api_identifier)
@@ -293,7 +292,8 @@ class ERC20(BaseTest):
 
         lcc.set_step("Get final ethereum account ERC20 tokens balance in the Ethereum network")
         final_in_ethereum_erc20_balance = \
-            self.utils.get_updated_account_erc20_balance_in_eth_network(self, self.erc20_contract, self.eth_address,
+            self.utils.get_updated_account_erc20_balance_in_eth_network(self, self.erc20_contract,
+                                                                        self.eth_account.address,
                                                                         self.in_ethereum_erc20_balance)
         require_that("'in ethereum owner'serc20 balance'", final_in_ethereum_erc20_balance,
                      equal_to(updated_in_ethereum_erc20_balance + int(erc20_withdraw_amounts[1])))

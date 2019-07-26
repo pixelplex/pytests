@@ -642,6 +642,8 @@ class Utils(object):
 
     def perform_withdraw_erc20_token_operation(self, base_test, account, to, erc20_token, value, database_api_id,
                                                log_broadcast=False):
+        if to[:2] == "0x":
+            to = to[2:]
         operation = base_test.echo_ops.get_withdraw_erc20_token_operation(echo=base_test.echo, account=account,
                                                                           to=to, erc20_token=erc20_token, value=value)
         if account != base_test.echo_acc0:
