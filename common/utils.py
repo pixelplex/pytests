@@ -622,6 +622,8 @@ class Utils(object):
 
     def perform_register_erc20_token_operation(self, base_test, account, eth_addr, name, symbol, database_api_id,
                                                decimals=0, log_broadcast=False):
+        if eth_addr[:2] == "0x":
+            eth_addr = eth_addr[2:]
         operation = base_test.echo_ops.get_register_erc20_token_operation(echo=base_test.echo, account=account,
                                                                           eth_addr=eth_addr, name=name, symbol=symbol,
                                                                           decimals=decimals)
@@ -631,7 +633,6 @@ class Utils(object):
                                                                log_broadcast=log_broadcast)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
-
         collected_operation = base_test.collect_operations(operation, database_api_id)
         broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                         log_broadcast=log_broadcast)

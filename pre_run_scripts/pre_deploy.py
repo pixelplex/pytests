@@ -88,12 +88,11 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 
 
 def distribute_balance_between_committee_addresses(base_test):
-    ethereum_account = base_test.get_default_ethereum_account_address()
-    default_account_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3, ethereum_account)
+    eth_account_address = base_test.get_default_ethereum_account().address
+    default_account_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3, eth_account_address)
     balance_to_transfer = int('{:.0f}'.format(default_account_balance / 100 * 5))
     for i in range(len(INITIAL_COMMITTEE_ETH_ADDRESSES)):
-        transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
-                                                                 _from=ethereum_account,
+        transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3, _from=eth_account_address,
                                                                  _to=INITIAL_COMMITTEE_ETH_ADDRESSES[i],
                                                                  value=balance_to_transfer)
         broadcast_result = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction,

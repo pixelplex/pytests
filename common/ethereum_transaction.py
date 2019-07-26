@@ -68,7 +68,6 @@ class EthereumTransactions(object):
                 "data": UNPAID_FEE_METHOD + base_test.get_byte_code_param(account_id)
             }
         )
-        # todo: round(x, 6)
         return round((int(method_call_result.hex()[-64:], 16) / 1e18), 6)
 
     @staticmethod
@@ -99,11 +98,11 @@ class EthereumTransactions(object):
             address=contract_address,
             abi=contract_abi,
         )
-        return {"contract_instance": contract, "contract_address": contract_address}
+        return contract
 
     @staticmethod
-    def get_balance_of(contract_instance, eth_account):
-        return contract_instance.functions.balanceOf(eth_account).call()
+    def get_balance_of(contract_instance, eth_address):
+        return contract_instance.functions.balanceOf(eth_address).call()
 
     @staticmethod
     def transfer(base_test, contract_instance, account_eth_address, amount, log_transaction=True,

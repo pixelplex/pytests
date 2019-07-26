@@ -45,13 +45,12 @@ class BaseTest(object):
         # Method create connection to Echo network
         return create_connection(url=BASE_URL)
 
-    def get_default_ethereum_account_address(self):
+    def get_default_ethereum_account(self):
         if not ROPSTEN:
-            # return self.web3.eth.accounts[0]
             self.web3.eth.defaultAccount = Account.privateKeyToAccount(GANACHE_PK)
-            return self.web3.eth.defaultAccount.address
+            return self.web3.eth.defaultAccount
         self.web3.eth.defaultAccount = Account.privateKeyToAccount(ROPSTEN_PK)
-        return self.web3.eth.defaultAccount.address
+        return self.web3.eth.defaultAccount
 
     def get_object_type(self, object_types):
         # Give object type mask
