@@ -590,7 +590,7 @@ class BaseTest(object):
         lcc.set_step("Open connection")
         lcc.log_url(BASE_URL)
         self.ws = self.create_connection_to_echo()
-        if not self.ws.connected:
+        if self.ws.connected is None or not self.ws.connected:
             lcc.log_error("WebSocket connection not established")
             raise Exception("WebSocket connection not established")
         lcc.log_info("WebSocket connection successfully created")
