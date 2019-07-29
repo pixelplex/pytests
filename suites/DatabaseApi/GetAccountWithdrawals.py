@@ -15,7 +15,7 @@ SUITE = {
 @lcc.prop("suite_run_option_1", "main")
 @lcc.prop("suite_run_option_2", "positive")
 @lcc.prop("suite_run_option_3", "negative")
-@lcc.tags("database_api", "get_account_withdrawals")
+@lcc.tags("database_api", "get_account_withdrawals", "sidechain")
 @lcc.suite("Check work of method 'get_account_withdrawals'", rank=1)
 class GetAccountWithdrawals(BaseTest):
 
@@ -33,7 +33,7 @@ class GetAccountWithdrawals(BaseTest):
 
     def setup_suite(self):
         super().setup_suite()
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
@@ -46,7 +46,7 @@ class GetAccountWithdrawals(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.web3.eth.accounts[0]
+        self.eth_address = self.get_default_ethereum_account().address
         lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):
@@ -69,6 +69,7 @@ class GetAccountWithdrawals(BaseTest):
 
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
+        lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the network")
         eth_account_address = self.utils.get_eth_address(self, new_account,
@@ -76,16 +77,18 @@ class GetAccountWithdrawals(BaseTest):
         lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee = self.eth_trx.get_unpaid_fee(self, new_account, in_ethereum=True)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.web3, new_account)
+        lcc.log_info("Unpaid fee for creation ethereum address for '{}' account: '{}'".format(new_account,
+                                                                                              unpaid_fee_in_ethereum))
 
         lcc.set_step("Send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=eth_account_address,
-                                                            value=eth_amount + unpaid_fee)
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, _from=self.eth_address,
+                                                            _to=eth_account_address,
+                                                            value=eth_amount + unpaid_fee_in_ethereum)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get account balance in ethereum")
-        ethereum_balance = self.utils.get_account_balances(self, new_account, self.__database_api_identifier,
-                                                           self.eth_asset)["amount"]
+        ethereum_balance = self.utils.get_eth_balance(self, new_account, self.__database_api_identifier)
 
         lcc.set_step("First withdraw eth from ECHO network to Ethereum network")
         withdraw_amount = self.get_random_amount(_to=int(ethereum_balance))
@@ -101,9 +104,30 @@ class GetAccountWithdrawals(BaseTest):
         sidechain_burn_operations.insert(0, sidechain_burn_operation)
         lcc.log_info("First withdraw operation stored")
 
+        lcc.set_step("Get account history operations")
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
+        response = self.utils.get_account_history_operations(self, new_account, operation_id,
+                                                             self.__history_api_identifier,
+                                                             limit=len(sidechain_burn_operations))
+        lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
+
+        lcc.set_step("Check response from method 'get_account_history_operations'")
+        for i in range(len(response["result"])):
+            operation_in_history = response["result"][i]["op"]
+            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            check_that("operation_id", operation_in_history[0], equal_to(operation_id))
+            with this_dict(operation_in_history[1]):
+                check_that_entry("fee", equal_to(sidechain_burn_operations[i][1]["fee"]))
+                with this_dict(operation_in_history[1]["value"]):
+                    self.check_uint256_numbers(operation_in_history[1]["value"], "amount")
+                    check_that_entry("asset_id", equal_to(sidechain_burn_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_burn_operations[i][1]["account"]))
+                check_that_entry("withdraw_id",
+                                 starts_with(self.get_object_type(self.echo.config.object_types.WITHDRAW_ETH)))
+
         lcc.set_step("Get updated account balance in ethereum after first withdraw")
-        ethereum_balance = self.utils.get_account_balances(self, new_account, self.__database_api_identifier,
-                                                           self.eth_asset)["amount"]
+        ethereum_balance = self.utils.get_eth_balance(self, new_account, self.__database_api_identifier,
+                                                      previous_balance=ethereum_balance)
 
         lcc.set_step("Second withdraw eth from ECHO network to Ethereum network")
         withdraw_amount = self.get_random_amount(_to=int(ethereum_balance))
@@ -122,7 +146,8 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("Get account history operations")
         operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
         response = self.utils.get_account_history_operations(self, new_account, operation_id,
-                                                             self.__history_api_identifier, limit=2)
+                                                             self.__history_api_identifier,
+                                                             limit=len(sidechain_burn_operations))
         lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
 
         lcc.set_step("Check response from method 'get_account_history_operations'")

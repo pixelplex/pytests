@@ -2,8 +2,8 @@
 import json
 
 from project import ECHO_INITIAL_BALANCE, NATHAN_PK, INITIAL_ACCOUNTS_COUNT, INITIAL_ACCOUNTS_NAMES, \
-    ACCOUNT_PREFIX, DEFAULT_ACCOUNTS_COUNT, MAIN_TEST_ACCOUNT_COUNT, WALLETS, INITIAL_ACCOUNTS_ETH_ADDRESSES, \
-    ETH_ASSET_SYMBOL
+    ACCOUNT_PREFIX, DEFAULT_ACCOUNTS_COUNT, MAIN_TEST_ACCOUNT_COUNT, WALLETS, INITIAL_COMMITTEE_ETH_ADDRESSES, \
+    ETH_ASSET_SYMBOL, ROPSTEN
 
 BALANCE_TO_ACCOUNT = ECHO_INITIAL_BALANCE / (INITIAL_ACCOUNTS_COUNT + MAIN_TEST_ACCOUNT_COUNT)
 
@@ -88,12 +88,12 @@ def distribute_balance_between_main_accounts(base_test, nathan_id, database_api)
 
 
 def distribute_balance_between_committee_addresses(base_test):
-    default_account_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3,
-                                                                                   base_test.web3.eth.accounts[0])
+    eth_account_address = base_test.get_default_ethereum_account().address
+    default_account_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3, eth_account_address)
     balance_to_transfer = int('{:.0f}'.format(default_account_balance / 100 * 5))
-    for i in range(len(INITIAL_ACCOUNTS_ETH_ADDRESSES)):
-        transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3,
-                                                                 to=INITIAL_ACCOUNTS_ETH_ADDRESSES[i],
+    for i in range(len(INITIAL_COMMITTEE_ETH_ADDRESSES)):
+        transaction = base_test.eth_trx.get_transfer_transaction(web3=base_test.web3, _from=eth_account_address,
+                                                                 _to=INITIAL_COMMITTEE_ETH_ADDRESSES[i],
                                                                  value=balance_to_transfer)
         broadcast_result = base_test.eth_trx.broadcast(web3=base_test.web3, transaction=transaction,
                                                        log_transaction=False)
@@ -138,15 +138,19 @@ def pre_deploy_echo(base_test, database_api, lcc):
     nathan = get_account(base_test, "nathan", database_api)
     nathan_id = get_account_id(nathan)
     nathan_public_key = get_public_key(nathan)
-    if not distribute_balance_between_committee_addresses(base_test):
-        raise Exception("Ethereum balance is not distributed")
-    lcc.log_info("Ethereum balance distributed between committee addresses successfully")
-    if not import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
-        raise Exception("Broadcast failed")
-    lcc.log_info("Balance to nathan imported successfully")
-    if not distribute_balance_between_main_accounts(base_test, nathan_id, database_api):
-        raise Exception("Balance is not distributed")
-    lcc.log_info("Balance distributed between main accounts successfully")
+    if not ROPSTEN:
+        if not distribute_balance_between_committee_addresses(base_test):
+            raise Exception("Ethereum balance is not distributed")
+        lcc.log_info("Ethereum balance distributed between committee addresses successfully")
+        if not import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_api):
+            raise Exception("Broadcast failed")
+        lcc.log_info("Balance to nathan imported successfully")
+        if not distribute_balance_between_main_accounts(base_test, nathan_id, database_api):
+            raise Exception("Balance is not distributed")
+        lcc.log_info("Balance distributed between main accounts successfully")
+        if create_eth_asset_id(base_test, nathan_id, database_api) != base_test.eth_asset:
+            raise Exception("Ethereum asset did not created in echo network")
+        lcc.log_info("Ethereum asset created in echo network successfully")
     if not register_default_accounts(base_test, database_api):
         raise Exception("Default accounts are not created")
     lcc.log_info("Default accounts created successfully. Accounts count: '{}'".format(DEFAULT_ACCOUNTS_COUNT))
@@ -159,6 +163,3 @@ def pre_deploy_echo(base_test, database_api, lcc):
     if not make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
         raise Exception("Default accounts did not become asset echo holders")
     lcc.log_info("All default accounts became echo holders successfully")
-    if create_eth_asset_id(base_test, nathan_id, database_api) != base_test.eth_asset:
-        raise Exception("Ethereum asset did not created in echo network")
-    lcc.log_info("Ethereum asset created in echo network successfully")

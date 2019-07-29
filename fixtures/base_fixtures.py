@@ -20,14 +20,14 @@ def get_random_integer():
 
 @lcc.fixture(scope="test")
 def get_random_integer_up_to_hundred():
-    random_int = random.randrange(1, 100)
+    random_int = random.randrange(2, 100)
     lcc.log_info("Generated random integer up to a hundred: {}".format(random_int))
     return random_int
 
 
 @lcc.fixture(scope="test")
 def get_random_integer_up_to_fifty():
-    random_int = random.randrange(1, 50)
+    random_int = random.randrange(2, 50)
     lcc.log_info("Generated random integer up to a fifty: {}".format(random_int))
     return random_int
 
