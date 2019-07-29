@@ -16,7 +16,7 @@ BLOCK_RELEASE_INTERVAL = json.load(open(GENESIS))["initial_parameters"]["block_i
 
 def run(echo_connection):
     if get_head_block_num(echo_connection):
-        os.system("lcc run --exit-error-on-failure && lcc report --failed")
+        os.system("lcc run --exit-error-on-failure")
     else:
         time.sleep(BLOCK_RELEASE_INTERVAL)
         run(echo_connection)
