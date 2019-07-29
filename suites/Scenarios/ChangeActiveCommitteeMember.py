@@ -20,7 +20,6 @@ class ChangeActiveCommitteeMember(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.eth_address = None
 
     def get_active_committee_members_ids(self):
         response_id = self.send_request(self.get_request("get_global_properties"), self.__database_api_identifier)

@@ -22,7 +22,7 @@ class GetERC20Token(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.eth_address = None
+        self.eth_account = None
         self.erc20_contract_code = self.get_byte_code("erc20", "code", ethereum_contract=True)
         self.erc20_abi = self.get_abi("erc20")
 
@@ -39,8 +39,8 @@ class GetERC20Token(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.web3.eth.accounts[0]
-        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
+        self.eth_account = self.get_default_ethereum_account()
+        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_account.address))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -54,7 +54,8 @@ class GetERC20Token(BaseTest):
         erc20_symbol = get_random_valid_asset_name
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3, eth_address=self.eth_address,
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3,
+                                                                          eth_address=self.eth_account.address,
                                                                           contract_abi=self.erc20_abi,
                                                                           contract_bytecode=self.erc20_contract_code)
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
@@ -112,7 +113,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.eth_address = None
+        self.eth_account = None
         self.erc20_contract_code = self.get_byte_code("erc20", "code", ethereum_contract=True)
         self.erc20_abi = self.get_abi("erc20")
 
@@ -129,8 +130,8 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.web3.eth.accounts[0]
-        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
+        self.eth_account = self.get_default_ethereum_account()
+        lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_account.address))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -147,7 +148,8 @@ class PositiveTesting(BaseTest):
         erc20_token_decimals = get_random_integer_up_to_ten
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3, eth_address=self.eth_address,
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3,
+                                                                          eth_address=self.eth_account.address,
                                                                           contract_abi=self.erc20_abi,
                                                                           contract_bytecode=self.erc20_contract_code)
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
@@ -191,7 +193,8 @@ class PositiveTesting(BaseTest):
         erc20_symbol = get_random_valid_asset_name
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3, eth_address=self.eth_address,
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3,
+                                                                          eth_address=self.eth_account.address,
                                                                           contract_abi=self.erc20_abi,
                                                                           contract_bytecode=self.erc20_contract_code)
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
