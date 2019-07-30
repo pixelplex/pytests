@@ -596,7 +596,7 @@ class BaseTest(object):
         lcc.log_info("WebSocket connection successfully created")
         self.receiver = Receiver(web_socket=self.ws)
         self.__login_echo()
-        self.check_node_status()
+        # self.check_node_status()
 
     def teardown_suite(self):
         # Close connection to WebSocket
