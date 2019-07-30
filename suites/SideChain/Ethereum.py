@@ -12,7 +12,7 @@ SUITE = {
 
 
 @lcc.prop("suite_run_option_1", "main")
-@lcc.tags("sidechain_ethereum")
+@lcc.tags("sidechain_ethereum", "sidechain")
 @lcc.suite("Check scenario 'EthToEcho and EchoToEth'")
 class Ethereum(BaseTest):
 
@@ -27,8 +27,16 @@ class Ethereum(BaseTest):
         self.temp_count = 0
 
     @staticmethod
-    def get_random_amount(_to, _from=0.01):
-        return round(random.uniform(_from, _to))
+    def get_random_amount(_from=None, _to=None, amount_type=None):
+        if amount_type == float:
+            if (_from and _to) is None:
+                _from, _to = 0.01, 0.1
+            return random.uniform(_from, _to)
+        if amount_type == int:
+            if _from is None:
+                _from = 1
+            return random.randrange(_from, _to)
+        return random.randrange(_from, _to)
 
     def withdraw_eth_to_ethereum_address(self, from_account, withdraw_amount):
         lcc.set_step("Get address balance in ethereum network")
@@ -56,7 +64,7 @@ class Ethereum(BaseTest):
 
     def setup_suite(self):
         super().setup_suite()
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
@@ -67,7 +75,7 @@ class Ethereum(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.web3.eth.accounts[0]
+        self.eth_address = self.get_default_ethereum_account().address
         lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):
@@ -86,16 +94,11 @@ class Ethereum(BaseTest):
 
         lcc.set_step("Get account balance in ethereum of new account")
         ethereum_balance = self.utils.get_account_balances(self, self.new_account, self.__database_api_identifier,
-                                                           self.eth_asset)
-        check_that(
-            "'balance in ethereum'",
-            ethereum_balance["amount"],
-            equal_to(0)
-        )
+                                                           self.eth_asset)["amount"]
+        check_that("'balance in ethereum'", ethereum_balance, equal_to(0))
 
         lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, self.new_account, self.__database_api_identifier,
-                                                          log_broadcast=False)
+        self.utils.perform_generate_eth_address_operation(self, self.new_account, self.__database_api_identifier)
         lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the network")
@@ -105,22 +108,24 @@ class Ethereum(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario entering eth assets to the echo account")
-    @lcc.depends_on("SideChain.Ethereum.Ethereum.sidechain_ethereum_pre_run_scenario")
-    def ethereum_in_scenario(self, get_random_float_up_to_ten):
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
+    def ethereum_in_scenario(self):
         min_eth_amount = 0.01
-        eth_amount = get_random_float_up_to_ten
+        eth_amount = self.get_random_amount(amount_type=float)
 
         lcc.set_step("Get unpaid fee for ethereum address creation")
-        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.new_account, in_ethereum=True)
+        unpaid_fee_in_ethereum = self.eth_trx.get_unpaid_fee(self, self.web3, self.new_account)
+        lcc.log_info("Unpaid fee for creation ethereum address for '{}' account: '{}'".format(self.new_account,
+                                                                                              unpaid_fee_in_ethereum))
 
         lcc.set_step("First send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, _from=self.eth_address,
+                                                            _to=self.eth_account_address,
                                                             value=min_eth_amount + unpaid_fee_in_ethereum)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get updated account balance in ethereum after first in")
-        ethereum_balance_first_in = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)[
-            "amount"]
+        ethereum_balance_first_in = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)
 
         check_that(
             "'updated balance in ethereum'",
@@ -129,14 +134,14 @@ class Ethereum(BaseTest):
         )
 
         lcc.set_step("Second send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, _from=self.eth_address,
+                                                            _to=self.eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get updated account balance in ethereum after second in")
-        ethereum_balance_second_in = self.utils.get_account_balances(self, self.new_account,
-                                                                     self.__database_api_identifier,
-                                                                     self.eth_asset)["amount"]
+        ethereum_balance_second_in = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier,
+                                                                ethereum_balance_first_in)
         check_that(
             "'updated balance in ethereum'",
             ethereum_balance_second_in,
@@ -144,23 +149,24 @@ class Ethereum(BaseTest):
         )
 
         lcc.set_step("Withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount = self.get_random_amount(_to=ethereum_balance_second_in)
+        withdraw_amount = self.get_random_amount(_to=ethereum_balance_second_in, amount_type=int)
         lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount, self.new_account))
         self.withdraw_eth_to_ethereum_address(self.new_account, withdraw_amount)
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth between accounts")
-    @lcc.depends_on("SideChain.Ethereum.Ethereum.sidechain_ethereum_pre_run_scenario")
-    def transfer_eeth_scenario(self, get_random_float_up_to_ten):
-        eth_amount = get_random_float_up_to_ten
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
+    def transfer_eeth_scenario(self):
+        eth_amount = self.get_random_amount(amount_type=float)
 
         lcc.set_step("Send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, _from=self.eth_address,
+                                                            _to=self.eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get account balance in ethereum")
-        ethereum_balance = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)["amount"]
+        ethereum_balance = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)
         lcc.log_info("Account '{}' balance in ethereum is '{}'".format(self.new_account, ethereum_balance))
 
         lcc.set_step("Get recipient balance in ethereum before transfer")
@@ -170,14 +176,16 @@ class Ethereum(BaseTest):
             "Recipient '{}' balance before transfer in ethereum is '{}'".format(self.echo_acc0, recipient_balance))
 
         lcc.set_step("Transfer eeth from account to recipient")
-        transfer_amount = self.get_random_amount(_to=ethereum_balance)
+        transfer_amount = self.get_random_amount(_to=ethereum_balance, amount_type=int)
         self.utils.perform_transfer_operations(self, self.new_account, self.echo_acc0, self.__database_api_identifier,
                                                transfer_amount=transfer_amount, amount_asset_id=self.eth_asset)
-        lcc.log_info("Transfer operation performed")
+        lcc.log_info(
+            "Transfer operation performed, transfer amount: '{}' '{}' assets".format(transfer_amount, self.eth_asset))
 
         lcc.set_step("Get recipient balance in ethereum after transfer")
         recipient_balance_after_transfer = self.utils.get_eth_balance(self, self.echo_acc0,
-                                                                      self.__database_api_identifier)["amount"]
+                                                                      self.__database_api_identifier,
+                                                                      ethereum_balance)
         lcc.log_info("Recipient '{}' balance after "
                      "transfer in ethereum is '{}'".format(self.echo_acc0, recipient_balance_after_transfer))
 
@@ -189,26 +197,27 @@ class Ethereum(BaseTest):
         )
 
         lcc.set_step("Withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount = self.get_random_amount(_to=recipient_balance_after_transfer)
+        withdraw_amount = self.get_random_amount(_to=recipient_balance_after_transfer, amount_type=int)
         lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount, self.echo_acc0))
         self.withdraw_eth_to_ethereum_address(self.echo_acc0, withdraw_amount)
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario transferring eeth to account addresses")
-    @lcc.depends_on("SideChain.Ethereum.Ethereum.sidechain_ethereum_pre_run_scenario")
-    def transfer_eeth_to_account_address_scenario(self, get_random_float_up_to_ten, get_random_string):
-        eth_amount = get_random_float_up_to_ten
+    @lcc.depends_on("SideChain.Ethereum.Ethereum.ethereum_sidechain_pre_run_scenario")
+    def transfer_eeth_to_account_address_scenario(self, get_random_string):
+        eth_amount = self.get_random_amount(amount_type=float)
         label = get_random_string
         addresses_count = 2
         account_addresses = []
 
         lcc.set_step("Send eth to ethereum address of created account")
-        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, to=self.eth_account_address,
+        transaction = self.eth_trx.get_transfer_transaction(web3=self.web3, _from=self.eth_address,
+                                                            _to=self.eth_account_address,
                                                             value=eth_amount)
         self.eth_trx.broadcast(web3=self.web3, transaction=transaction)
 
         lcc.set_step("Get account balance in ethereum")
-        ethereum_balance = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)["amount"]
+        ethereum_balance = self.utils.get_eth_balance(self, self.new_account, self.__database_api_identifier)
         lcc.log_info("Account '{}' balance in ethereum is '{}'".format(self.new_account, ethereum_balance))
 
         lcc.set_step("Get recipient balance in ethereum before transfer")
@@ -234,7 +243,7 @@ class Ethereum(BaseTest):
         lcc.log_info("Call method 'get_account_addresses' of '{}' account".format(self.echo_acc0))
 
         lcc.set_step("Transfer eeth assets via first account_address")
-        transfer_amount = self.get_random_amount(_to=ethereum_balance)
+        transfer_amount = self.get_random_amount(_to=ethereum_balance, amount_type=int)
         self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[-1],
                                                           self.__database_api_identifier,
                                                           transfer_amount=transfer_amount,
@@ -242,7 +251,8 @@ class Ethereum(BaseTest):
 
         lcc.set_step("Get account balance after transfer and store")
         recipient_balance_after_transfer = self.utils.get_eth_balance(self, self.echo_acc0,
-                                                                      self.__database_api_identifier)["amount"]
+                                                                      self.__database_api_identifier,
+                                                                      ethereum_balance)
         lcc.log_info("Recipient '{}' balance after "
                      "transfer in ethereum is '{}'".format(self.echo_acc0, recipient_balance_after_transfer))
 
@@ -254,7 +264,7 @@ class Ethereum(BaseTest):
         )
 
         lcc.set_step("Transfer assets via second account_address")
-        transfer_amount = self.get_random_amount(_to=ethereum_balance - transfer_amount)
+        transfer_amount = self.get_random_amount(_to=ethereum_balance - transfer_amount, amount_type=int)
         self.utils.perform_transfer_to_address_operations(self, self.new_account, account_addresses[-2],
                                                           self.__database_api_identifier,
                                                           transfer_amount=transfer_amount,
@@ -262,7 +272,8 @@ class Ethereum(BaseTest):
 
         lcc.set_step("Get account balance after second transfer and store")
         recipient_balance_after_second_transfer = self.utils.get_eth_balance(self, self.echo_acc0,
-                                                                             self.__database_api_identifier)["amount"]
+                                                                             self.__database_api_identifier,
+                                                                             recipient_balance_after_transfer)
         lcc.log_info("Recipient '{}' balance after second "
                      "transfer in ethereum is '{}'".format(self.echo_acc0, recipient_balance_after_second_transfer))
 
@@ -274,6 +285,6 @@ class Ethereum(BaseTest):
         )
 
         lcc.set_step("Withdraw eth from ECHO network to Ethereum network")
-        withdraw_amount = self.get_random_amount(_to=recipient_balance_after_second_transfer)
+        withdraw_amount = self.get_random_amount(_to=recipient_balance_after_second_transfer, amount_type=int)
         lcc.log_info("Withdrawing '{}' eeth from '{}' account".format(withdraw_amount, self.echo_acc0))
         self.withdraw_eth_to_ethereum_address(self.echo_acc0, withdraw_amount)

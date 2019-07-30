@@ -5,7 +5,7 @@ import time
 import lemoncheesecake.api as lcc
 
 from common.validation import Validator
-from project import BLOCK_RELEASE_INTERVAL
+from project import BLOCK_RELEASE_INTERVAL, BLOCKS_NUM_TO_WAIT
 
 
 class Receiver(object):
@@ -15,7 +15,6 @@ class Receiver(object):
         self.web_socket = web_socket
         self.validator = Validator()
         self.waiting_time_result = 0
-        self.block_count = 10
 
     @staticmethod
     def set_timeout_wait(seconds):
@@ -60,7 +59,7 @@ class Receiver(object):
                     break
         temp_count += 1
         if not actual_id.startswith(expected_id):
-            if temp_count <= self.block_count:
+            if temp_count <= BLOCKS_NUM_TO_WAIT:
                 self.set_timeout_wait(timeout)
                 self.waiting_time_result = self.waiting_time_result + timeout
                 response = json.loads(self.web_socket.recv())
