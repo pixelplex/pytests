@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
+import time
 
 import lemoncheesecake.api as lcc
 
 from common.validation import Validator
+from project import BLOCK_RELEASE_INTERVAL, BLOCKS_NUM_TO_WAIT
 
 
 class Receiver(object):
@@ -12,6 +14,11 @@ class Receiver(object):
         super().__init__()
         self.web_socket = web_socket
         self.validator = Validator()
+        self.waiting_time_result = 0
+
+    @staticmethod
+    def set_timeout_wait(seconds):
+        time.sleep(seconds)
 
     @staticmethod
     def get_positive_result(response, print_log):
@@ -42,19 +49,35 @@ class Receiver(object):
             return self.get_negative_result(response, print_log)
         return self.get_positive_result(response, print_log)
 
-    def get_notice_obj(self, response, expected_id, print_log):
-        notice_obj = response.get("params")[1][0][0]
-        actual_id = notice_obj["id"]
-        if (self.validator.is_dynamic_global_object_id(actual_id)) and (actual_id == expected_id):
-            if print_log:
-                lcc.log_info(
-                    "Received notice about the update of an dynamic global object:\n{}".format(
-                        json.dumps(response, indent=4)))
-            return notice_obj
+    def get_notice_obj(self, response, expected_id, print_log, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+        actual_id, notice_obj = None, None
+        notice_objs = response.get("params")[1][0]
+        for notice_obj in notice_objs:
+            actual_id = notice_obj["id"]
+            if len(notice_objs) > 1:
+                if actual_id.startswith(expected_id):
+                    break
+        temp_count += 1
+        if not actual_id.startswith(expected_id):
+            if temp_count <= BLOCKS_NUM_TO_WAIT:
+                self.set_timeout_wait(timeout)
+                self.waiting_time_result = self.waiting_time_result + timeout
+                response = json.loads(self.web_socket.recv())
+                return self.get_notice_obj(response, expected_id, print_log, temp_count=temp_count)
+            lcc.log_error(
+                "Not valid object id, got '{}' but expected '{}', response: {}".format(actual_id, expected_id,
+                                                                                       json.dumps(response, indent=4)))
+            raise Exception("Not valid object id")
         if (self.validator.is_block_id(actual_id)) and (actual_id.startswith(expected_id)):
             if print_log:
                 lcc.log_info(
                     "The object with the results of the implementation of contracts of the block:\n{}".format(
+                        json.dumps(response, indent=4)))
+            return notice_obj
+        if (self.validator.is_dynamic_global_object_id(actual_id)) and (actual_id == expected_id):
+            if print_log:
+                lcc.log_info(
+                    "Received notice about the update of an dynamic global object:\n{}".format(
                         json.dumps(response, indent=4)))
             return notice_obj
         if (self.validator.is_contract_history_id(actual_id)) and (actual_id.startswith(expected_id)):
@@ -63,10 +86,12 @@ class Receiver(object):
                     "Received notice about the update of contract history object:\n{}".format(
                         json.dumps(response, indent=4)))
             return notice_obj
-        lcc.log_error(
-            "Not valid object id, got '{}' but expected '{}', response: {}".format(actual_id, expected_id,
-                                                                                   json.dumps(response, indent=4)))
-        raise Exception("Not valid object id")
+        if (self.validator.is_transaction_id(actual_id)) and (actual_id.startswith(expected_id)):
+            if print_log:
+                lcc.log_info(
+                    "The object with the results of the implementation of transaction:\n{}".format(
+                        json.dumps(response, indent=4)))
+            return notice_obj
 
     def get_notice(self, id_response, object_id, print_log):
         response = json.loads(self.web_socket.recv())

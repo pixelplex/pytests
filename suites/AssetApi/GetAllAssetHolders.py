@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_all_asset_holders")
 @lcc.suite("Check work of method 'get_all_asset_holders'", rank=1)
 class GetAllAssetHolders(BaseTest):
@@ -44,7 +44,7 @@ class GetAllAssetHolders(BaseTest):
                 check_that_entry("count", greater_than_or_equal_to(0))
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("asset_api", "get_all_asset_holders")
 @lcc.suite("Positive testing of method 'get_all_asset_holders'", rank=2)
 class PositiveTesting(BaseTest):
@@ -54,6 +54,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__asset_api_identifier = None
+        self.echo_acc0 = None
         self.new_asset_name = None
         self.new_asset_id = None
         self.position_on_the_list = None
@@ -74,7 +75,7 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                 self.__asset_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -130,7 +131,7 @@ class PositiveTesting(BaseTest):
             check_that_entry("count", is_integer(1))
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_all_asset_holders")
 @lcc.suite("Negative testing of method 'get_all_asset_holders'", rank=3)
 class NegativeTesting(BaseTest):

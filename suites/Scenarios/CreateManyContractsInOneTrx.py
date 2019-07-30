@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("many_contracts_in_one_trx")
 @lcc.suite("Check scenario 'Create many contracts in a single transaction'")
 class CreateManyContractsInOneTrx(BaseTest):
@@ -19,6 +19,7 @@ class CreateManyContractsInOneTrx(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.contract = self.get_byte_code("piggy", "code")
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -29,7 +30,7 @@ class CreateManyContractsInOneTrx(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 

@@ -10,7 +10,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("hello_world")
 @lcc.suite("Check scenario 'Hello World'")
 class HelloWorld(BaseTest):
@@ -19,6 +19,7 @@ class HelloWorld(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
         self.greet = self.get_byte_code("piggy", "greet")
         self.get_pennie = self.get_byte_code("piggy", "getPennie")
@@ -34,7 +35,7 @@ class HelloWorld(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -64,7 +65,9 @@ class HelloWorld(BaseTest):
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 
         lcc.set_step("Check get 'Hello World!!!'")
-        contract_output = self.get_contract_output(contract_result, output_type=str)[1:]
+        expected_string = "Hello World!!!"
+        contract_output = self.get_contract_output(contract_result, output_type=str,
+                                                   len_output_string=len(expected_string))
         check_that(
             "return of method 'greet'",
             contract_output,

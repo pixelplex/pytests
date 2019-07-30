@@ -20,15 +20,22 @@ def get_random_integer():
 
 @lcc.fixture(scope="test")
 def get_random_integer_up_to_hundred():
-    random_int = random.randrange(1, 100)
+    random_int = random.randrange(2, 100)
     lcc.log_info("Generated random integer up to a hundred: {}".format(random_int))
     return random_int
 
 
 @lcc.fixture(scope="test")
 def get_random_integer_up_to_fifty():
-    random_int = random.randrange(1, 50)
+    random_int = random.randrange(2, 50)
     lcc.log_info("Generated random integer up to a fifty: {}".format(random_int))
+    return random_int
+
+
+@lcc.fixture(scope="test")
+def get_random_integer_up_to_ten():
+    random_int = random.randrange(2, 10)
+    lcc.log_info("Generated random integer up to a ten: {}".format(random_int))
     return random_int
 
 
@@ -119,6 +126,18 @@ def get_random_hex_string():
     random_hex_string = ''.join(hex(ord(x))[2:] for x in random_string)
     lcc.log_info("Generated random hex string: {}".format(random_hex_string))
     return random_hex_string
+
+
+@lcc.fixture(scope="test")
+def get_random_not_hex_string():
+    not_hex_letters = ""
+    for letter in string.ascii_letters:
+        if ord("F") < ord(letter) <= ord("Z") or ord("f") < ord(letter) <= ord("z"):
+            not_hex_letters = not_hex_letters + letter
+    random_not_hex_string = ''.join(
+        random.SystemRandom().choice(not_hex_letters + string.digits) for _ in range(RANGE_OF_STR_FOR_HEX))
+    lcc.log_info("Generated random not hex string: {}".format(random_not_hex_string))
+    return random_not_hex_string
 
 
 @lcc.fixture(scope="test")

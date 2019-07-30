@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_account_by_name")
 @lcc.suite("Check work of method 'get_account_by_name'", rank=1)
 class GetAccountByName(BaseTest):
@@ -46,7 +46,7 @@ class GetAccountByName(BaseTest):
         lcc.set_step("Checking committee-account")
         account_info = response["result"]
         with this_dict(account_info):
-            if check_that("account_info", account_info, has_length(19)):
+            if check_that("account_info", account_info, has_length(20)):
                 if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
                     lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
                         account_info["membership_expiration_date"]))
@@ -63,7 +63,7 @@ class GetAccountByName(BaseTest):
                 else:
                     lcc.log_info("'name' has correct format: account_name")
                 check_that_entry("active", is_dict(), quiet=True)
-                if not self.validator.is_echo_rand_key(account_info["echorand_key"]):
+                if not self.validator.is_echorand_key(account_info["echorand_key"]):
                     lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
                 else:
                     lcc.log_info("'echorand_key' has correct format: echo_rand_key")
@@ -78,6 +78,7 @@ class GetAccountByName(BaseTest):
                 check_that_entry("blacklisted_accounts", is_list(), quiet=True)
                 check_that_entry("active_special_authority", is_list(), quiet=True)
                 check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
                 lcc.set_step("Check 'active' field")
                 with this_dict(account_info["active"]):
@@ -97,7 +98,7 @@ class GetAccountByName(BaseTest):
                         check_that_entry("extensions", is_list(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_account_by_name")
 @lcc.suite("Positive testing of method 'get_account_by_name'", rank=2)
 class PositiveTesting(BaseTest):
@@ -106,6 +107,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -116,7 +118,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 

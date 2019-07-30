@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("history_api", "get_relative_account_history")
 @lcc.suite("Check work of method 'get_relative_account_history'", rank=1)
 class GetRelativeAccountHistory(BaseTest):
@@ -21,6 +21,7 @@ class GetRelativeAccountHistory(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -32,7 +33,7 @@ class GetRelativeAccountHistory(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -70,7 +71,7 @@ class GetRelativeAccountHistory(BaseTest):
                 check_that_entry("virtual_op", is_integer(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("history_api", "get_relative_account_history")
 @lcc.suite("Positive testing of method 'get_relative_account_history'", rank=2)
 class PositiveTesting(BaseTest):
@@ -80,6 +81,8 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
+        self.echo_acc1 = None
 
     def get_relative_account_history(self, account, stop, limit, start, negative=False):
         lcc.log_info("Get relative '{}' account history".format(account))
@@ -99,9 +102,9 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
 

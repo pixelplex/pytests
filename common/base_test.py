@@ -6,6 +6,7 @@ import time
 
 import lemoncheesecake.api as lcc
 from echopy import Echo
+from eth_account import Account
 from lemoncheesecake.matching import is_str, is_integer, check_that_entry
 from web3 import Web3
 from websocket import create_connection
@@ -16,7 +17,9 @@ from common.receiver import Receiver
 from common.utils import Utils
 from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
-from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, GANACHE_URL, ETH_ASSET_ID
+from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, ETHEREUM_URL, ETH_ASSET_ID, \
+    DEFAULT_ACCOUNTS_COUNT, EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, ETHEREUM_CONTRACTS, ROPSTEN, ROPSTEN_PK, \
+    GANACHE_PK
 
 
 class BaseTest(object):
@@ -34,14 +37,20 @@ class BaseTest(object):
         self.validator = Validator()
         self.echo_asset = "1.3.0"
         self.eth_asset = ETH_ASSET_ID
-        self.echo_acc0 = ACCOUNT_PREFIX + "0"
-        self.echo_acc1 = ACCOUNT_PREFIX + "1"
-        self.echo_acc2 = ACCOUNT_PREFIX + "2"
+        # Declare all default accounts
+        self.accounts = ["{}{}".format(ACCOUNT_PREFIX, account_num) for account_num in range(DEFAULT_ACCOUNTS_COUNT)]
 
     @staticmethod
     def create_connection_to_echo():
         # Method create connection to Echo network
         return create_connection(url=BASE_URL)
+
+    def get_default_ethereum_account(self):
+        if not ROPSTEN:
+            self.web3.eth.defaultAccount = Account.privateKeyToAccount(GANACHE_PK)
+            return self.web3.eth.defaultAccount
+        self.web3.eth.defaultAccount = Account.privateKeyToAccount(ROPSTEN_PK)
+        return self.web3.eth.defaultAccount
 
     def get_object_type(self, object_types):
         # Give object type mask
@@ -67,30 +76,62 @@ class BaseTest(object):
             check_that_entry(key, is_integer(), quiet=quiet)
 
     @staticmethod
-    def get_time():
+    def get_time(global_time=False):
+        if global_time:
+            return time.strftime("%H:%M:%S", time.gmtime())
         return time.strftime("%H:%M:%S", time.localtime())
+
+    @staticmethod
+    def get_datetime(global_datetime=False):
+        if global_datetime:
+            return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
+        return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
 
     def set_timeout_wait(self, seconds, print_log=True):
         if print_log:
-            lcc.log_info("Start a '{}' second sleep... local_time:'{}'".format(seconds, self.get_time()))
+            lcc.log_info("Start a '{}' second(s) sleep..."
+                         "\nglobal_time:'{}'"
+                         "\nlocal_time:'{}'".format(seconds, self.get_time(global_time=True), self.get_time()))
         time.sleep(seconds)
         if print_log:
-            lcc.log_info("Sleep is over, local_time:'{}'".format(self.get_time()))
+            lcc.log_info("Sleep is over.\nglobal_time:'{}'\nlocal_time:'{}'".format(self.get_time(global_time=True),
+                                                                                    self.get_time()))
 
     @staticmethod
     def get_value_for_sorting_func(str_value):
         return int(str_value[str_value.rfind('.') + 1:])
 
     @staticmethod
-    def get_byte_code(contract_name, code_or_method_name):
+    def get_byte_code(contract_name, code_or_method_name, ethereum_contract=False):
+        if ethereum_contract:
+            return ETHEREUM_CONTRACTS[contract_name][code_or_method_name]
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
 
-    def get_byte_code_param(self, param):
+    @staticmethod
+    def get_abi(contract_name):
+        return ETHEREUM_CONTRACTS[contract_name]["abi"]
+
+    def get_byte_code_param(self, param, param_type=None):
+        hex_param_64 = "0000000000000000000000000000000000000000000000000000000000000000"
+        if param_type == int and self.validator.is_uint256(param):
+            param = hex(param).split('x')[-1]
+            hex_param = hex_param_64[:-len(param)] + param
+            return hex_param
+        if param_type == str and self.validator.is_string(param):
+            param_in_hex = codecs.encode(param).hex()
+            len_param_in_hex = hex(len(param)).split('x')[-1]
+            part_1 = hex_param_64[:-2] + "20"
+            part_2 = hex_param_64[:-len(len_param_in_hex)] + len_param_in_hex
+            part_3 = None
+            if len(param_in_hex) < 64:
+                part_3 = param_in_hex + hex_param_64[:-len(param_in_hex)]
+            return part_1 + part_2 + part_3
         if self.validator.is_object_id(param):
             param = hex(int(param.split('.')[2])).split('x')[-1]
-            hex_param = "0000000000000000000000000000000000000000000000000000000000000000"
-            hex_param = hex_param[:-len(param)] + param
+            hex_param = hex_param_64[:-len(param)] + param
             return hex_param
+        if self.validator.is_eth_address(param):
+            return hex_param_64[:-len(param)] + param
         lcc.log_error("Param not valid, got: {}".format(param))
         raise Exception("Param not valid")
 
@@ -301,23 +342,15 @@ class BaseTest(object):
             lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
-    @staticmethod
-    def get_transfer_id(response, log_response=True):
-        transfer_identifier_hex = str(response["result"][1].get("tr_receipt").get("log")[0].get("data"))[:64][-8:]
-        transfer_id = int(str(transfer_identifier_hex), 16)
-        if log_response:
-            lcc.log_info("Transfer identifier is {}".format(transfer_id))
-        return transfer_id
-
-    def get_contract_output(self, response, output_type, in_hex=False, debug_mode=False):
+    def get_contract_output(self, response, output_type, in_hex=False, len_output_string=0, debug_mode=False):
         contract_output = str(response["result"][1].get("exec_res").get("output"))
         if debug_mode:
             lcc.log_debug("Output is '{}'".format(str(contract_output)))
         if in_hex:
             return contract_output
         if output_type == str:
-            contract_output = str(codecs.decode(contract_output, "hex").decode('utf-8'))
-            return contract_output.replace("\u0000", "").replace("\u000e", "")
+            contract_output = (contract_output[128:])[:len_output_string * 2]
+            return str(codecs.decode(contract_output, "hex").decode('utf-8'))
         if output_type == int:
             return int(contract_output, 16)
         if output_type == "contract_address":
@@ -453,6 +486,33 @@ class BaseTest(object):
                                         database_api_identifier, debug_mode=debug_mode)
         return self.get_trx_completed_response(response_id, debug_mode=debug_mode)
 
+    def get_next_maintenance_time(self, database_api_identifier):
+        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), database_api_identifier)
+        next_maintenance_time = self.get_response(response_id)["result"]["next_maintenance_time"].split('T')[1]
+        lcc.log_info("Next maintenance time: '{}' in global time".format(next_maintenance_time))
+        return next_maintenance_time
+
+    @staticmethod
+    def convert_time_in_seconds(time_format, separator=":"):
+        time_format = time_format.split(separator)
+        time_in_seconds = (int(time_format[0]) * 3600 + int(time_format[1]) * 60 + int(time_format[2]))
+        return time_in_seconds
+
+    @staticmethod
+    def get_waiting_time_till_maintenance(next_maintenance_time_in_sec, time_now_in_sec):
+        if next_maintenance_time_in_sec > time_now_in_sec:
+            return next_maintenance_time_in_sec - time_now_in_sec
+        return BLOCK_RELEASE_INTERVAL
+
+    def wait_for_next_maintenance(self, database_api_identifier, print_log=True):
+        next_maintenance_time_in_sec = self.convert_time_in_seconds(
+            self.get_next_maintenance_time(database_api_identifier))
+        time_now_in_sec = self.convert_time_in_seconds(self.get_time(global_time=True))
+        waiting_time = self.get_waiting_time_till_maintenance(next_maintenance_time_in_sec, time_now_in_sec)
+        lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
+        self.set_timeout_wait(waiting_time, print_log=print_log)
+        lcc.log_info("Maintenance finished")
+
     @staticmethod
     def _login_status(response):
         # Check authorization status
@@ -489,41 +549,48 @@ class BaseTest(object):
             raise Exception("Connection to echopy-lib not closed")
         lcc.log_info("Connection to echopy-lib closed")
 
-    def _connect_to_ganache_ethereum(self):
-        # Create connection to ganache ethereum
-        lcc.set_step("Open connection to ganache ethereum")
-        lcc.log_url(GANACHE_URL)
-        self.web3 = Web3(Web3.HTTPProvider(GANACHE_URL))
+    def _connect_to_ethereum(self):
+        # Create connection to ethereum
+        lcc.set_step("Open connection to ethereum")
+        lcc.log_url(ETHEREUM_URL)
+        self.web3 = Web3(Web3.HTTPProvider(ETHEREUM_URL))
         if self.web3.isConnected() is None or not self.web3.isConnected():
-            lcc.log_error("Connection to ganache ethereum not established")
-            raise Exception("Connection to ganache ethereum not established")
-        lcc.log_info("Connection to ganache ethereum successfully created")
+            lcc.log_error("Connection to ethereum not established")
+            raise Exception("Connection to ethereum not established")
+        lcc.log_info("Connection to ethereum successfully created")
 
     def perform_pre_deploy_setup(self, database_api_identifier):
         # Perform pre-deploy for run tests on the empty node
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Pre-deploy setup")
         lcc.log_info("Empty node. Start pre-deploy setup...")
         if os.path.exists(WALLETS):
             os.remove(WALLETS)
+        if os.path.exists(EXECUTION_STATUS_PATH):
+            os.remove(EXECUTION_STATUS_PATH)
         pre_deploy_echo(self, database_api_identifier, lcc)
         lcc.log_info("Pre-deploy setup completed successfully")
         self._disconnect_to_echopy_lib()
 
     def check_node_status(self):
         database_api_identifier = self.get_identifier("database")
-        response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+        if not ROPSTEN:
+            response_id = self.send_request(self.get_request("get_named_account_balances", ["nathan", []]),
+                                            database_api_identifier)
+            if not self.get_response(response_id)["result"]:
+                return self.perform_pre_deploy_setup(database_api_identifier)
+        response_id = self.send_request(self.get_request("get_account_by_name", [self.accounts[0]]),
                                         database_api_identifier)
         if not self.get_response(response_id)["result"]:
-            self.perform_pre_deploy_setup(database_api_identifier)
+            return self.perform_pre_deploy_setup(database_api_identifier)
 
     def setup_suite(self):
         # Check status of connection
         lcc.set_step("Open connection")
         lcc.log_url(BASE_URL)
         self.ws = self.create_connection_to_echo()
-        if not self.ws.connected:
+        if self.ws.connected is None or not self.ws.connected:
             lcc.log_error("WebSocket connection not established")
             raise Exception("WebSocket connection not established")
         lcc.log_info("WebSocket connection successfully created")

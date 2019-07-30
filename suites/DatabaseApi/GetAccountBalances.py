@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_account_balances")
 @lcc.suite("Check work of method 'get_account_balances'", rank=1)
 class GetAccountBalances(BaseTest):
@@ -55,7 +55,7 @@ class GetAccountBalances(BaseTest):
                 check_that_entry("asset_id", equal_to(assets_ids[i]))
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_account_balances")
 @lcc.suite("Positive testing of method 'get_account_balances'", rank=2)
 class PositiveTesting(BaseTest):
@@ -64,6 +64,7 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -74,7 +75,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 

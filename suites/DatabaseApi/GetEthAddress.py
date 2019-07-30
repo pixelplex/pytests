@@ -3,16 +3,15 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_list, this_dict, has_length, is_bool, check_that_entry, is_none
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Method 'get_eth_address'"
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_eth_address")
 @lcc.suite("Check work of method 'get_eth_address'", rank=1)
 class GetEthAddress(BaseTest):
@@ -21,8 +20,8 @@ class GetEthAddress(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.temp_count = 0
-        self.block_count = 10
         self.waiting_time_result = 0
         self.no_address = True
 
@@ -35,7 +34,7 @@ class GetEthAddress(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -60,40 +59,23 @@ class GetEthAddress(BaseTest):
         lcc.log_info("Call method 'get_eth_address' of new account '{}'".format(new_account))
 
         lcc.set_step("Check simple work of method 'get_eth_address'")
-        check_that(
-            "'new account eth address'",
-            response["result"],
-            is_none(), quiet=True
-        )
-
-        # todo: remove transfer to new account. Bug ECHO-926
-        operation = self.echo_ops.get_transfer_operation(self.echo, self.echo_acc0, new_account, amount=200000)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        check_that("'new account eth address'", response["result"], is_none(), quiet=True)
 
         lcc.set_step("Generate ethereum address for new account")
         self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
+        lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get updated ethereum address of created account in the network")
-        while self.no_address:
-            self.temp_count += 1
-            response_id = self.send_request(self.get_request("get_eth_address", [new_account]),
-                                            self.__database_api_identifier)
-            response = self.get_response(response_id)
-            if response["result"]:
-                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
-                self.no_address = False
-            if self.temp_count <= self.block_count:
-                self.set_timeout_wait(BLOCK_RELEASE_INTERVAL, print_log=False)
-                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
-        lcc.log_info(
-            "Call method 'get_eth_address' of new account. Waiting time result='{}' seconds".format(
-                self.waiting_time_result))
+        eth_account_address = self.utils.get_eth_address(self, new_account,
+                                                         self.__database_api_identifier)["result"]["eth_addr"]
+        lcc.log_info("Ethereum address of '{}' account is '{}'".format(new_account, eth_account_address))
 
         lcc.set_step("Check new eth address in method 'get_eth_address'")
-        result = response["result"]
+        response_id = self.send_request(self.get_request("get_eth_address", [new_account]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
         with this_dict(result):
-            if check_that("account_eth_address", result, has_length(5)):
+            if check_that("account_eth_address", result, has_length(6)):
                 if not self.validator.is_eth_address_id(result["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(result["id"]))
                 else:
@@ -108,3 +90,4 @@ class GetEthAddress(BaseTest):
                     lcc.log_info("'eth_addr' has correct format: hex")
                 check_that_entry("is_approved", is_bool(), quiet=True)
                 check_that_entry("approves", is_list(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
