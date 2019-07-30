@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, equal_to, is_not_none
+from lemoncheesecake.matching import check_that, equal_to, is_none
 
 from common.base_test import BaseTest
 
 SUITE = {
-    "description": "Method 'broadcast_transaction_synchronous'"
+    "description": "Method 'broadcast_transaction_with_callback'"
 }
 
 
 @lcc.prop("testing", "main")
 @lcc.prop("testing", "positive")
 @lcc.prop("testing", "negative")
-@lcc.tags("network_broadcast_api", "broadcast_transaction_synchronous")
-@lcc.suite("Check work of method 'broadcast_transaction_synchronous'", rank=1)
-class BroadcastTransactionSynchronous(BaseTest):
+@lcc.tags("network_broadcast_api", "broadcast_transaction_with_callback")
+@lcc.suite("Check work of method 'broadcast_transaction_with_callback'", rank=1)
+class BroadcastTransactionWithCallback(BaseTest):
 
     def __init__(self):
         super().__init__()
@@ -23,6 +23,15 @@ class BroadcastTransactionSynchronous(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.echo_acc1 = None
+
+    def set_subscribe_callback(self, callback, notify_remove_create=False):
+        params = [callback, notify_remove_create]
+        response_id = self.send_request(self.get_request("set_subscribe_callback", params),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
+        if result is not None:
+            raise Exception("Subscription not issued")
+        lcc.log_info("Call method 'set_subscribe_callback', 'notify_remove_create'={}".format(notify_remove_create))
 
     def setup_suite(self):
         super().setup_suite()
@@ -47,8 +56,11 @@ class BroadcastTransactionSynchronous(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Simple work of method 'broadcast_transaction_synchronous'")
-    def method_main_check(self):
+    @lcc.test("Simple work of method 'broadcast_transaction_with_callback'")
+    def method_main_check(self, get_random_integer):
+        lcc.set_step("Set subscribe callback")
+        subscription_callback_id = get_random_integer
+        self.set_subscribe_callback(subscription_callback_id)
         transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
                                                                   from_account_id=self.echo_acc0,
                                                                   to_account_id=self.echo_acc1)
@@ -62,12 +74,17 @@ class BroadcastTransactionSynchronous(BaseTest):
         response = self.get_response(response_id)
         account_balance = response["result"][0]["amount"]
         lcc.set_step("Broadcast transaction")
-        response_id = self.send_request(self.get_request("broadcast_transaction_synchronous",
-                                                         [signed_tx.json()]),
+        response_id = self.send_request(self.get_request("broadcast_transaction_with_callback",
+                                                         [subscription_callback_id, signed_tx.json()]),
                                         self.__network_broadcast_identifier)
         response = self.get_response(response_id)
+        notice = self.get_notice(subscription_callback_id, notices_list=True)
+        lcc.set_step("Check that signed transaction in notice")
+        del notice["trx"]["signed_with_echorand_key"]
+        del notice["trx"]["operation_results"]
+        check_that("transaction", signed_tx.json(), equal_to(notice["trx"]))
         lcc.set_step("Сheck that transaction has passed")
-        check_that("'call method 'get_objects''", response["result"], is_not_none(), quiet=True)
+        check_that("'call method 'get_objects''", response["result"], is_none(), quiet=True)
         lcc.set_step("Get account balance after broadcast")
         response_id = self.send_request(self.get_request("get_account_balances",
                                                          [self.echo_acc1, [self.echo_asset]]),
