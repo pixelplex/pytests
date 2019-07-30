@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 
+from project import BASE_ASSET_SYMBOL
+
 NAME_MIN_LENGTH = 1
 NAME_MAX_LENGTH = 63
 
@@ -298,7 +300,7 @@ class Validator(object):
     def is_wif(self, value):
         return bool(self.wif_regex.match(value))
 
-    def is_echo_rand_key(self, value, address_prefix="ECHO"):
+    def is_echorand_key(self, value, address_prefix=BASE_ASSET_SYMBOL):
         if value[:len(address_prefix)] != address_prefix:
             return False
         key = value[len(address_prefix):]

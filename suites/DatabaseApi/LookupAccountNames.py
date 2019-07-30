@@ -50,7 +50,7 @@ class LookupAccountNames(BaseTest):
             else:
                 lcc.log_info("'name' has correct format: account_name")
             check_that_entry("active", is_dict(), quiet=True)
-            if not self.validator.is_echo_rand_key(account_info["echorand_key"]):
+            if not self.validator.is_echorand_key(account_info["echorand_key"]):
                 lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
             else:
                 lcc.log_info("'echorand_key' has correct format: echo_rand_key")
