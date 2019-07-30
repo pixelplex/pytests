@@ -46,6 +46,7 @@ class Validator(object):
     iso8601_regex = re.compile(r"^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01]"
                                r"[0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$")
     base58_regex = re.compile(r"^[1-9A-HJ-NP-Za-km-z]+$")
+    wif_regex = re.compile(r"^5[HJK][1-9A-Za-z][^OIl]{48}$")
 
     def __init__(self):
         super().__init__()
@@ -294,16 +295,14 @@ class Validator(object):
     def is_base58(self, value):
         return bool(self.base58_regex.match(value))
 
+    def is_wif(self, value):
+        return bool(self.wif_regex.match(value))
+
     def is_echo_rand_key(self, value, address_prefix="ECHO"):
         if value[:len(address_prefix)] != address_prefix:
             return False
         key = value[len(address_prefix):]
         if not self.is_base58(key) or 44 + len(address_prefix) < len(value) or len(value) < 43 + len(address_prefix):
-            return False
-        return True
-
-    def is_private_key(self, value):
-        if not self.is_base58(value) or 44 < len(value) or len(value) < 43:
             return False
         return True
 
