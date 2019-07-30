@@ -16,9 +16,9 @@ class EchoOperations(object):
 
     def get_signer(self, signer):
         """
-        :param signer: name, id or echo_rand_key
+        :param signer: name, id or wif key
         """
-        if self.validator.is_private_key(signer):
+        if self.validator.is_wif(signer):
             return signer
         wallets = json.load(open(WALLETS))
         if self.validator.is_account_name(signer):
