@@ -102,7 +102,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [ ] [get_proposed_transactions](https://echo-dev.io/developers/apis/database-api/#get_proposed_transactionsid)
 - [ ] [get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)
 - [ ] [subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)
-- [ ] [get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)
+- [x] [get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)
 - [x] [get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)
 - [ ] [call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)
 - [x] [get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)
@@ -113,7 +113,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] get_account_withdrawals
 - [x] get_contract_fee_pool_balance
 - [x] get_contract_pool_whitelist
-- [ ] get_erc20_token
+- [x] get_erc20_token
 - [ ] get_erc20_account_deposits
 - [ ] get_erc20_account_withdrawals
 

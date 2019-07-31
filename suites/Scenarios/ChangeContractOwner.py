@@ -22,7 +22,7 @@ class ChangeContractOwner(BaseTest):
         self.echo_acc1 = None
         self.echo_acc2 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def get_contract_owner(self, contract_id):
         param = [contract_id]
