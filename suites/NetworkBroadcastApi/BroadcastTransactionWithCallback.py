@@ -78,7 +78,7 @@ class BroadcastTransactionWithCallback(BaseTest):
                                                          [subscription_callback_id, signed_tx.json()]),
                                         self.__network_broadcast_identifier)
         response = self.get_response(response_id)
-        notice = self.get_notice(subscription_callback_id, notices_list=True)
+        notice = self.get_notice(subscription_callback_id)
         lcc.set_step("Check that signed transaction in notice")
         del notice["trx"]["signed_with_echorand_key"]
         del notice["trx"]["operation_results"]

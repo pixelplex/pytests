@@ -56,30 +56,22 @@ class Validator(object):
     @staticmethod
     def is_string(value):
         if not isinstance(value, str):
-            raise ValueError("Value is not string")
+            return False
         return True
 
     @staticmethod
     def is_int(value, x):
-        try:
-            value = abs(int(value))
-            if value > 2 ** x:
-                raise Exception("Entered value is greater than this type may contain")
-            else:
-                return True
-        except ValueError:
-            "Value is not integer"
+        value = abs(int(value))
+        if value > 2 ** x:
+            return False
+        return True
 
     @staticmethod
     def is_uint(value, x):
-        try:
-            value = int(value)
-            if value < 0 or value >= 2 ** x:
-                raise Exception("Entered value is greater than this type may contain")
-            else:
-                return True
-        except ValueError:
-            "Value is not integer"
+        value = int(value)
+        if value < 0 or value >= 2 ** x:
+            return False
+        return True
 
     def is_hex(self, value):
         if self.is_string(value):
