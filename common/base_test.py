@@ -366,15 +366,27 @@ class BaseTest(object):
             return contract_id
 
     @staticmethod
-    def get_contract_log_data(log, output_type, debug_mode=False):
-        log_data = str(log["data"])
+    def get_contract_log_data(response, output_type, debug_mode=False):
         if debug_mode:
-            lcc.log_info("Data is '{}'".format(log_data))
-        if output_type == str:
-            log_data = (log_data[128:])[:int(log_data[127]) * 2]
-            return str(codecs.decode(log_data, "hex").decode('utf-8'))
-        if output_type == int:
-            return int(log_data, 16)
+            lcc.log_info("Logs are '{}'".format(json.dumps(response, indent=4)))
+        contract_logs = response["result"][1].get("tr_receipt").get("log")
+        if not contract_logs:
+            raise Exception("Empty log")
+        if len(contract_logs) == 1:
+            contract_log_data = str(contract_logs.get("data"))
+            if output_type == str:
+                log_data = (contract_log_data[128:])[:int(contract_log_data[127]) * 2]
+                return str(codecs.decode(log_data, "hex").decode('utf-8'))
+            if output_type == int:
+                return int(contract_log_data, 16)
+        contract_log_data = []
+        for i, log_data in enumerate(contract_logs):
+            if output_type[i] == str:
+                log_data = (log_data.get("data")[128:])[:int(log_data.get("data")[127]) * 2]
+                contract_log_data.append(str(codecs.decode(log_data, "hex").decode('utf-8')))
+            if output_type[i] == int:
+                contract_log_data.append(int(log_data.get("data"), 16))
+        return contract_log_data
 
     @staticmethod
     def get_account_details_template(account_name, private_key, public_key, brain_key):
@@ -532,12 +544,13 @@ class BaseTest(object):
         lcc.log_info("Maintenance finished")
 
     @staticmethod
-    def keccak_log_value(method_name, log_info=False):
-        keccak_hash = keccak.new(digest_bits=256)
-        keccak_hash.update(bytes(method_name, 'utf-8'))
-        if log_info:
-            lcc.log_info("Hex 'keccak' method name: {}".format(str(keccak_hash.hexdigest())))
-        return keccak_hash.hexdigest()
+    def get_keccak_standard_value(value, digest_bits=256, encoding="utf-8", print_log=True):
+        keccak_hash = keccak.new(digest_bits=digest_bits)
+        keccak_hash.update(bytes(value, encoding=encoding))
+        keccak_hash_in_hex = keccak_hash.hexdigest()
+        if print_log:
+            lcc.log_info("'{}' value in keccak '{}' standard is '{}'".format(value, digest_bits, keccak_hash_in_hex))
+        return keccak_hash_in_hex
 
     @staticmethod
     def _login_status(response):
