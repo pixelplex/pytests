@@ -2,7 +2,7 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that_entry, equal_to, is_list, is_str, check_that, not_equal_to, \
+from lemoncheesecake.matching import this_dict, check_that_entry, equal_to, is_str, check_that, not_equal_to, \
     has_entry, has_length, require_that, is_true
 
 from common.base_test import BaseTest
@@ -44,7 +44,6 @@ class GetContractLogs(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("qa")
     @lcc.test("Simple work of method 'get_contract_logs'")
     def method_main_check(self, get_random_integer):
         value_amount = get_random_integer
@@ -54,7 +53,7 @@ class GetContractLogs(BaseTest):
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy, self.__database_api_identifier,
                                                  value_amount=value_amount)
 
-        lcc.set_step("Call contracts method getPennie and get it's block number")
+        lcc.set_step("Call contracts method getPennie and get trx block number")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -101,10 +100,12 @@ class PositiveTesting(BaseTest):
         self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
         self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
         self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
-        self.delete_uint = self.get_byte_code("dynamic_fields", "deleteUint256()")
         self.set_string = self.get_byte_code("dynamic_fields", "onStringChanged(string)")
         self.get_string = self.get_byte_code("dynamic_fields", "getString()")
-        self.delete_string = self.get_byte_code("dynamic_fields", "deleteString()")
+
+    @staticmethod
+    def get_random_value(start, end):
+        return random.randint(start, end)
 
     def setup_suite(self):
         super().setup_suite()
@@ -123,59 +124,41 @@ class PositiveTesting(BaseTest):
         self._disconnect_to_echopy_lib()
         super().teardown_suite()
 
-    @staticmethod
-    def get_contract_from_address(self, contract_identifier_hex):
-        contract_id = "{}{}".format("{}.{}.".format(
-            self.echo.config.reserved_spaces.PROTOCOL_IDS,
-            self.echo.config.object_types.CONTRACT),
-            int(str(contract_identifier_hex)[2:], 16))
-        if not self.validator.is_contract_id(contract_id):
-            lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
-        return contract_id
-
-    @staticmethod
-    def get_random_value(self, start, end):
-        return random.randint(start, end)
-
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs of two identical contracts")
+    @lcc.test("Check contract logs two identical contract calls")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
-    def check_contract_logs_of_two_identical_contracts(self, get_random_integer):
+    def check_contract_logs_two_identical_contract_calls(self, get_random_integer):
         value_amount = get_random_integer
+        call_count, _from, block_num = 2, 0, 0
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
-        lcc.set_step("Call contracts method getPennie and get its block number")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.getPennie, callee=contract_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        block_num = broadcast_result["block_num"]
+        lcc.set_step("Call contract method getPennie two times and get trx block number")
+        for i in range(call_count):
+            operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                                  bytecode=self.getPennie, callee=contract_id)
+            collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+            broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                       log_broadcast=False)
+            block_num = (broadcast_result["block_num"])
+            lcc.log_info("Method #'{}' 'getPennie' performed successfully, block_num: '{}'".format(i, block_num))
 
-        lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
-        response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num]),
+        lcc.set_step("Get contract logs after two identical contract calls")
+        params = [contract_id, _from, block_num]
+        response_id = self.send_request(self.get_request("get_contract_logs", params),
                                         self.__database_api_identifier)
-        result1 = self.get_response(response_id)["result"][0]
+        get_contract_logs_results = self.get_response(response_id, log_response=True)["result"]
+        lcc.log_info("Call method 'get_contract_logs' with params: '{}'".format(params))
 
-        lcc.set_step("Recall contract to have two identical logs")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.getPennie, callee=contract_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        block_num = broadcast_result["block_num"]
-
-        lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
-        response_id = self.send_request(self.get_request("get_contract_logs", [contract_id, 0, block_num]),
-                                        self.__database_api_identifier)
-
-        lcc.set_step("Check if contract logs identical")
-        result2 = self.get_response(response_id)["result"][0]
-
-        check_that("contract logs", result1, equal_to(result2))
+        lcc.set_step("Check contract logs two identical contract calls")
+        for i in range(len(get_contract_logs_results))[:-1]:
+            check_that(
+                "'contract logs two identical contract calls are the same'",
+                get_contract_logs_results[i] == get_contract_logs_results[i + 1],
+                is_true()
+            )
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs of two different contracts")
