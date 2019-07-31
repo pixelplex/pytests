@@ -2,8 +2,8 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that_entry, equal_to, is_str, check_that, not_equal_to, \
-    has_entry, has_length, require_that, is_true
+from lemoncheesecake.matching import this_dict, check_that_entry, equal_to, is_str, check_that, has_entry, has_length, \
+    require_that, is_true
 
 from common.base_test import BaseTest
 
@@ -95,13 +95,10 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.contract_piggy = self.get_byte_code("piggy", "code")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "pennieReturned()")
-        self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
-        self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
-        self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
-        self.set_string = self.get_byte_code("dynamic_fields", "onStringChanged(string)")
-        self.get_string = self.get_byte_code("dynamic_fields", "getString()")
+        self.dynamic_fields_contract = self.get_byte_code("dynamic_fields", "code")
+        self.set_all_values = self.get_byte_code("dynamic_fields", "setAllValues(uint256,string)")
 
     @staticmethod
     def get_random_value(start, end):
@@ -132,7 +129,7 @@ class PositiveTesting(BaseTest):
         call_count, _from, block_num = 2, 0, 0
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie two times and get trx block number")
@@ -161,59 +158,47 @@ class PositiveTesting(BaseTest):
             )
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs of two different contracts")
+    @lcc.test("Check contract logs two different contract calls")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
-    def check_contract_logs_of_two_different_contracts(self, get_random_integer, get_random_string):
+    def check_contract_logs_two_different_contract_calls(self, get_random_integer, get_random_string):
         int_param = get_random_integer
         string_param = get_random_string
+        _from = 0
 
-        lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
-                                                                self.__database_api_identifier)
+        lcc.set_step("Create 'dynamic_fields' contract in the Echo network and get it's contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.dynamic_fields_contract,
+                                                 self.__database_api_identifier)
 
-        lcc.set_step("Call method 'set_uint'")
-        bytecode = self.set_uint + self.get_byte_code_param(int_param, param_type=int)
+        lcc.set_step("Call method of dynamic_fields contract: 'set_all_values'")
+        int_param_code = self.get_byte_code_param(int_param, param_type=int)
+        string_param_code = self.get_byte_code_param(string_param, param_type=str, offset="40")
+        method_params = int_param_code + string_param_code
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=bytecode,
-                                                              callee=contract_dynamic_fields_id)
+                                                              bytecode=self.set_all_values + method_params,
+                                                              callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
 
-        lcc.set_step("Call method 'get_uint'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.get_uint,
-                                                              callee=contract_dynamic_fields_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        lcc.set_step("Call method 'set_string'")
-        bytecode = self.set_string + self.get_byte_code_param(string_param, param_type=str)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=bytecode,
-                                                              callee=contract_dynamic_fields_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        block_num = (broadcast_result["block_num"])
+        lcc.log_info("Method 'set_all_values' performed successfully, block_num: '{}'".format(block_num))
 
-        lcc.set_step("Call method 'get_string'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.get_string,
-                                                              callee=contract_dynamic_fields_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
+        lcc.set_step("Get contract logs after two identical contract calls")
+        params = [contract_id, _from, block_num]
+        response_id = self.send_request(self.get_request("get_contract_logs", params),
+                                        self.__database_api_identifier)
+        get_contract_logs_results = self.get_response(response_id)["result"]
+        lcc.log_info("Call method 'get_contract_logs' with params: '{}'".format(params))
 
-        lcc.set_step("Get current block with contract")
-        block_num = broadcast_result["block_num"]
+        lcc.set_step("Check contract logs two different contract calls")
+        for i in range(len(get_contract_logs_results))[:-1]:
+            check_that(
+                "'contract logs two different contract calls are not the same'",
+                get_contract_logs_results[i] != get_contract_logs_results[i + 1],
+                is_true()
+            )
 
-        lcc.set_step("Get contract logs from 0 block to current_block '{}'".format(block_num))
-        response_id = self.send_request(
-            self.get_request("get_contract_logs", [contract_dynamic_fields_id, 0, block_num]),
-            self.__database_api_identifier)
-
-        lcc.set_step("Check if contract logs different")
-        result = self.get_response(response_id)["result"]
-
-        check_that("contract logs", result[0], not_equal_to(result[1]))
+    # todo: stop here
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'start' to 'head_block_number'")
@@ -222,7 +207,7 @@ class PositiveTesting(BaseTest):
         value_amount = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contracts method getPennie")
@@ -255,7 +240,7 @@ class PositiveTesting(BaseTest):
         value_amount = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contracts method getPennie")
@@ -283,7 +268,7 @@ class PositiveTesting(BaseTest):
         value_amount = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contracts method getPennie")
@@ -320,7 +305,7 @@ class PositiveTesting(BaseTest):
         value_amount = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contracts method getPennie")
@@ -364,7 +349,7 @@ class PositiveTesting(BaseTest):
         value_amount = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier,
                                                  value_amount=value_amount)
 
@@ -400,7 +385,7 @@ class PositiveTesting(BaseTest):
         value_amount = get_random_integer
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier,
                                                  value_amount=value_amount)
 
