@@ -332,14 +332,20 @@ class BaseTest(object):
                 raise Exception("Wrong format of operation results")
         return operation_results
 
-    def get_contract_id(self, response, log_response=True):
-        contract_identifier_hex = response["result"][1].get("exec_res").get("new_address")
+    def get_contract_id(self, response, contract_call_result=False, log_response=True):
+        if not contract_call_result:
+            contract_identifier_hex = response["result"][1]["exec_res"]["new_address"]
+        else:
+            contract_identifier_hex = response["result"][1]["tr_receipt"]["log"][0]["address"]
+        if not self.validator.is_hex(contract_identifier_hex):
+            lcc.log_error("Wrong format of address, got {}".format(contract_identifier_hex))
+            raise Exception("Wrong format of address")
         contract_id = "{}{}".format(self.get_object_type(self.echo.config.object_types.CONTRACT),
                                     int(str(contract_identifier_hex)[2:], 16))
         if not self.validator.is_contract_id(contract_id):
             lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
             raise Exception("Wrong format of contract id")
-        if log_response:
+        if log_response and not contract_call_result:
             lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
