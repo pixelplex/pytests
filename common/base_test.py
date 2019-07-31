@@ -332,8 +332,10 @@ class BaseTest(object):
                 raise Exception("Wrong format of operation results")
         return operation_results
 
-    def get_contract_id(self, response, contract_call_result=False, log_response=True):
-        if not contract_call_result:
+    def get_contract_id(self, response, contract_call_result=False, address_format=None, log_response=True):
+        if address_format:
+            contract_identifier_hex = response
+        elif not contract_call_result:
             contract_identifier_hex = response["result"][1]["exec_res"]["new_address"]
         else:
             contract_identifier_hex = response["result"][1]["tr_receipt"]["log"][0]["address"]
