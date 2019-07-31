@@ -21,10 +21,10 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         self.__history_api_identifier = None
         self.echo_acc0 = None
         self.contract = self.get_byte_code("contract_create_contract", "code")
-        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract")
-        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["get_creator"]
+        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract()")
+        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["creator()"]
         self.tr_asset_to_creator = self.get_byte_code("contract_create_contract", "created_contract")[
-            "tr_asset_to_creator"]
+            "tr_asset_to_creator()"]
 
     def setup_suite(self):
         super().setup_suite()

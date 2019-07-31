@@ -102,14 +102,13 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "getPennie")
-        self.contract_dynamic_fields = self.get_byte_code("dynamic_fields_with_logs", "code")
-        self.set_uint = self.get_byte_code("dynamic_fields_with_logs", "setUint256")
-        self.get_uint = self.get_byte_code("dynamic_fields_with_logs", "getUint256")
-        self.delete_uint = self.get_byte_code("dynamic_fields_with_logs", "deleteUint256")
-        self.set_string = self.get_byte_code("dynamic_fields_with_logs", "setString")
-        self.get_string = self.get_byte_code("dynamic_fields_with_logs", "getString")
-        self.delete_string = self.get_byte_code("dynamic_fields_with_logs", "deleteString")
-        self.echo = Echo()
+        self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
+        self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
+        self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
+        self.delete_uint = self.get_byte_code("dynamic_fields", "deleteUint256()")
+        self.set_string = self.get_byte_code("dynamic_fields", "onStringChanged(string)")
+        self.get_string = self.get_byte_code("dynamic_fields", "getString()")
+        self.delete_string = self.get_byte_code("dynamic_fields", "deleteString()")
 
     def setup_suite(self):
         super().setup_suite()
