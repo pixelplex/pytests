@@ -22,7 +22,6 @@ from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PR
     DEFAULT_ACCOUNTS_COUNT, EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, ETHEREUM_CONTRACTS, ROPSTEN, ROPSTEN_PK, \
     GANACHE_PK
 
-from Crypto.Hash import keccak
 
 class BaseTest(object):
 
@@ -110,7 +109,6 @@ class BaseTest(object):
         if ethereum_contract:
             return ETHEREUM_CONTRACTS[contract_name][code_or_method_name]
         return ECHO_CONTRACTS[contract_name][code_or_method_name]
-
 
     @staticmethod
     def get_abi(contract_name):
@@ -371,16 +369,6 @@ class BaseTest(object):
                                         int(str(contract_output[contract_output.find("1") + 1:]), 16))
             return contract_id
 
-    def get_contract_log_data(self, log, output_type, debug_mode=False):
-        log_data = str(log["data"])
-        if debug_mode:
-            lcc.log_info("Data is '{}'".format(log_data))
-        if output_type == str:
-            log_data = (log_data[128:])[:int(log_data[127]) * 2]
-            return str(codecs.decode(log_data, "hex").decode('utf-8'))
-        if output_type == int:
-            return int(log_data, 16)
-
     @staticmethod
     def get_contract_log_data(response, output_type, debug_mode=False):
         if debug_mode:
@@ -558,13 +546,6 @@ class BaseTest(object):
         lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
         self.set_timeout_wait(seconds=waiting_time, print_log=print_log)
         lcc.log_info("Maintenance finished")
-
-    def keccak_log_value(self, method_name, log_info=False):
-        keccak_hash = keccak.new(digest_bits=256)
-        keccak_hash.update(bytes(method_name, 'utf-8'))
-        if log_info:
-            lcc.log_info("Keccak method name: {}".format(str(keccak_hash.hexdigest())))
-        return keccak_hash.hexdigest()
 
     @staticmethod
     def get_keccak_standard_value(value, digest_bits=256, encoding="utf-8", print_log=True):
