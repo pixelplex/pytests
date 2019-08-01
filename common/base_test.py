@@ -88,7 +88,9 @@ class BaseTest(object):
             return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
         return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
 
-    def set_timeout_wait(self, seconds, print_log=True):
+    def set_timeout_wait(self, seconds=None, wait_block_count=None, print_log=True):
+        if wait_block_count is not None:
+            seconds = wait_block_count * BLOCK_RELEASE_INTERVAL
         if print_log:
             lcc.log_info("Start a '{}' second(s) sleep..."
                          "\nglobal_time:'{}'"
@@ -542,7 +544,7 @@ class BaseTest(object):
         time_now_in_sec = self.convert_time_in_seconds(self.get_time(global_time=True))
         waiting_time = self.get_waiting_time_till_maintenance(next_maintenance_time_in_sec, time_now_in_sec)
         lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
-        self.set_timeout_wait(waiting_time, print_log=print_log)
+        self.set_timeout_wait(seconds=waiting_time, print_log=print_log)
         lcc.log_info("Maintenance finished")
 
     @staticmethod

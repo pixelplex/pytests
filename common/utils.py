@@ -336,15 +336,15 @@ class Utils(object):
                                                                                                     broadcast_result))
         return broadcast_result
 
-    def get_eth_address(self, base_test, account_id, database_api_id, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+    def get_eth_address(self, base_test, account_id, database_api_id, temp_count=0):
         temp_count += 1
         response_id = base_test.send_request(base_test.get_request("get_eth_address", [account_id]), database_api_id)
         response = base_test.get_response(response_id)
         if response["result"]:
             return response
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_eth_address(base_test, account_id, database_api_id, temp_count=temp_count)
         raise Exception(
             "No ethereum address of '{}' account. Waiting time result='{}'".format(account_id,
@@ -372,8 +372,8 @@ class Utils(object):
         if previous_balance and previous_balance != current_balance:
             return current_balance
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_eth_balance(base_test, account_id, database_api_id, previous_balance=previous_balance,
                                         temp_count=temp_count)
         if previous_balance:
@@ -391,15 +391,15 @@ class Utils(object):
             raise Exception("Can't cancel all cancel_all_subscriptions, got:\n{}".format(str(response)))
 
     def get_updated_address_balance_in_eth_network(self, base_test, account_address, previous_balance, currency="ether",
-                                                   temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+                                                   temp_count=0):
         temp_count += 1
         current_balance = base_test.eth_trx.get_address_balance_in_eth_network(base_test.web3, account_address,
                                                                                currency=currency)
         if previous_balance != current_balance:
             return current_balance
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_updated_address_balance_in_eth_network(base_test, account_address, previous_balance,
                                                                    currency=currency, temp_count=temp_count)
         raise Exception(
@@ -470,7 +470,7 @@ class Utils(object):
         return ts
 
     def get_account_history_operations(self, base_test, account_id, operation_id, history_api_id, limit, start="1.10.0",
-                                       stop="1.10.0", temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+                                       stop="1.10.0", temp_count=0):
         temp_count += 1
         params = [account_id, operation_id, start, stop, limit]
         response_id = base_test.send_request(base_test.get_request("get_account_history_operations", params),
@@ -479,15 +479,15 @@ class Utils(object):
         response = base_test.get_response(response_id, debug_mode=True)
         if "error" in response:
             if temp_count <= BLOCKS_NUM_TO_WAIT:
-                base_test.set_timeout_wait(timeout, print_log=False)
-                self.waiting_time_result = self.waiting_time_result + timeout
+                base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+                self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
                 return self.get_account_history_operations(base_test, account_id, operation_id, history_api_id,
                                                            start=start, limit=limit, stop=stop, temp_count=temp_count)
         if len(response["result"]) == limit:
             return response
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_account_history_operations(base_test, account_id, operation_id, history_api_id,
                                                        start=start, limit=limit, stop=stop, temp_count=temp_count)
         raise Exception(
@@ -659,16 +659,16 @@ class Utils(object):
         return broadcast_result
 
     def get_erc20_account_deposits(self, base_test, account_id, database_api_id, previous_account_deposits=None,
-                                   temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+                                   temp_count=0):
         temp_count += 1
         response_id = base_test.send_request(base_test.get_request("get_erc20_account_deposits", [account_id]),
-                                             database_api_id, debug_mode=True)
-        response = base_test.get_response(response_id, log_response=True)
+                                             database_api_id)
+        response = base_test.get_response(response_id)
         if response["result"] and response["result"] != previous_account_deposits:
             return response
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_erc20_account_deposits(base_test, account_id, database_api_id,
                                                    previous_account_deposits=previous_account_deposits,
                                                    temp_count=temp_count)
@@ -677,7 +677,7 @@ class Utils(object):
                                                                                      self.waiting_time_result))
 
     def get_erc20_account_withdrawals(self, base_test, account_id, database_api_id, previous_account_withdrawals=None,
-                                      temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
+                                      temp_count=0):
         temp_count += 1
         response_id = base_test.send_request(base_test.get_request("get_erc20_account_withdrawals", [account_id]),
                                              database_api_id)
@@ -685,8 +685,8 @@ class Utils(object):
         if response["result"] and response["result"] != previous_account_withdrawals:
             return response
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_erc20_account_withdrawals(base_test, account_id, database_api_id,
                                                       previous_account_withdrawals=previous_account_withdrawals,
                                                       temp_count=temp_count)
@@ -695,15 +695,14 @@ class Utils(object):
                                                                                         self.waiting_time_result))
 
     def get_updated_account_erc20_balance_in_eth_network(self, base_test, contract_instance, eth_account,
-                                                         previous_balance, temp_count=0,
-                                                         timeout=BLOCK_RELEASE_INTERVAL):
+                                                         previous_balance, temp_count=0):
         temp_count += 1
         current_balance = base_test.eth_trx.get_balance_of(contract_instance, eth_account)
         if previous_balance != current_balance:
             return current_balance
         if temp_count <= BLOCKS_NUM_TO_WAIT:
-            base_test.set_timeout_wait(timeout, print_log=False)
-            self.waiting_time_result = self.waiting_time_result + timeout
+            base_test.set_timeout_wait(wait_block_count=1, print_log=False)
+            self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
             return self.get_updated_account_erc20_balance_in_eth_network(base_test, contract_instance, eth_account,
                                                                          previous_balance, temp_count=temp_count)
         raise Exception(
