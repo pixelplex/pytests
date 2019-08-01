@@ -45,8 +45,8 @@ class GetContractLogs(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_contract_logs'")
-    def method_main_check(self, get_random_integer):
-        value_amount = get_random_integer
+    def method_main_check(self, get_random_integer_up_to_ten):
+        value_amount = get_random_integer_up_to_ten
         _from = 0
 
         lcc.set_step("Create contract in the Echo network and get it's contract id")
@@ -104,6 +104,20 @@ class PositiveTesting(BaseTest):
     def get_random_int(_from=0, _to=0):
         return random.randint(_from, _to)
 
+    def get_head_block_number(self):
+        self.set_timeout_wait(wait_block_count=1)
+        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
+                                        self.__database_api_identifier)
+        head_block_number = self.get_response(response_id)["result"]["head_block_number"]
+        lcc.log_info("head block number: {}".format(head_block_number))
+        return head_block_number
+
+    def get_contract_logs(self, contract_id=None, _from=None, _to=None, params=None):
+        if params is None:
+            params = [contract_id, _from, _to]
+        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
+        return self.get_response(response_id)["result"]
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -139,16 +153,16 @@ class PositiveTesting(BaseTest):
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                        log_broadcast=False)
-            block_num = (broadcast_result["block_num"])
+            block_num = broadcast_result["block_num"]
             lcc.log_info("Method #'{}' 'getPennie' performed successfully, block_num: '{}'".format(i, block_num))
 
         lcc.set_step("Get contract logs after two identical contract calls")
         params = [contract_id, _from, block_num]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        get_contract_logs_results = self.get_response(response_id)["result"]
+        get_contract_logs_results = self.get_contract_logs(params=params)
         lcc.log_info("Call method 'get_contract_logs' with params: '{}'".format(params))
 
         lcc.set_step("Check contract logs two identical contract calls")
+        require_that("'log has value'", bool(get_contract_logs_results), is_true(), quiet=True)
         for i in range(len(get_contract_logs_results))[:-1]:
             check_that(
                 "'contract logs two identical contract calls are the same'",
@@ -178,16 +192,16 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        block_num = (broadcast_result["block_num"])
+        block_num = broadcast_result["block_num"]
         lcc.log_info("Method 'set_all_values' performed successfully, block_num: '{}'".format(block_num))
 
         lcc.set_step("Get contract logs after two different contract calls")
         params = [contract_id, _from, block_num]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        get_contract_logs_results = self.get_response(response_id)["result"]
+        get_contract_logs_results = self.get_contract_logs(params=params)
         lcc.log_info("Call method 'get_contract_logs' with params: '{}'".format(params))
 
         lcc.set_step("Check contract logs two different contract calls")
+        require_that("'log has value'", bool(get_contract_logs_results), is_true(), quiet=True)
         for i in range(len(get_contract_logs_results))[:-1]:
             check_that(
                 "'contract logs two different contract calls are not the same'",
@@ -215,19 +229,14 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Method 'getPennie' performed successfully")
 
         lcc.set_step("Get the head_block number of the next block")
-        self.set_timeout_wait(wait_block_count=1)
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
-                                        self.__database_api_identifier)
-        head_block_number = self.get_response(response_id)["result"]["head_block_number"]
-        lcc.log_info("head block number: {}".format(head_block_number))
+        head_block_number = self.get_head_block_number()
 
         lcc.set_step("Get contract logs with 'to' param that equal to head_block_number")
-        params = [contract_id, _from, head_block_number]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        contract_logs = self.get_response(response_id)["result"]
+        contract_logs = self.get_contract_logs(contract_id=contract_id, _from=_from, _to=head_block_number)
         lcc.log_info("Call method 'get_contract_logs' with params: from='{}', to='{}'".format(_from, head_block_number))
 
         lcc.set_step("Check contract logs")
+        require_that("'log has value'", bool(contract_logs), is_true(), quiet=True)
         for log in contract_logs:
             if check_that("contract_logs", log, has_length(3)):
                 for key in contract_log_keys:
@@ -251,16 +260,16 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        current_block_num = broadcast_result["block_num"]
+        # todo: remove '-1'. Bug: ECHO-1032
+        current_block_num = broadcast_result["block_num"] - 1
         lcc.log_info("Method 'getPennie' performed successfully, current_block_num is '{}'".format(current_block_num))
 
         lcc.set_step("Get contract logs with 'to' param that equal to current_block_num")
-        params = [contract_id, _from, current_block_num]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        contract_logs = self.get_response(response_id)["result"]
+        contract_logs = self.get_contract_logs(contract_id=contract_id, _from=_from, _to=current_block_num)
         lcc.log_info("Call method 'get_contract_logs' with params: from='{}', to='{}'".format(_from, current_block_num))
 
         lcc.set_step("Check contract logs")
+        require_that("'log has value'", bool(contract_logs), is_true(), quiet=True)
         for log in contract_logs:
             if check_that("contract_logs", log, has_length(3)):
                 for key in contract_log_keys:
@@ -283,31 +292,27 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        current_block_num = broadcast_result["block_num"]
+        # todo: remove '-1'. Bug: ECHO-1032
+        current_block_num = broadcast_result["block_num"] - 1
         lcc.log_info("Method 'getPennie' performed successfully, current_block_num is '{}'".format(current_block_num))
 
         lcc.set_step("Get the head_block number of the next block")
-        self.set_timeout_wait(wait_block_count=1)
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
-                                        self.__database_api_identifier)
-        head_block_number = self.get_response(response_id)["result"]["head_block_number"]
-        lcc.log_info("head block number: {}".format(head_block_number))
+        head_block_number = self.get_head_block_number()
 
         lcc.set_step("Get contract logs with 'from' param is current_block_num, 'to' param is head_block_number")
-        params = [contract_id, current_block_num, head_block_number]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        contract_logs = self.get_response(response_id)["result"]
+        contract_logs = self.get_contract_logs(contract_id=contract_id, _from=current_block_num, _to=head_block_number)
         lcc.log_info("Call method 'get_contract_logs' with params: from='{}', to='{}'".format(current_block_num,
                                                                                               head_block_number))
 
         lcc.set_step("Check contract logs")
+        require_that("'log has value'", bool(contract_logs), is_true(), quiet=True)
         for log in contract_logs:
             if check_that("contract_logs", log, has_length(3)):
                 for key in contract_log_keys:
                     require_that("contract_logs", log, has_entry(key), quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs from 'random in [first block, current_block]' to 'head_block_number'")
+    @lcc.test("Check contract logs from 'random block in [first block, current_block]' to 'head_block_number'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_random_block_to_head_block_number(self, get_random_integer):
         value_amount = get_random_integer
@@ -323,7 +328,8 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        current_block_num = broadcast_result["block_num"]
+        # todo: remove '-1'. Bug: ECHO-1032
+        current_block_num = broadcast_result["block_num"] - 1
         lcc.log_info("Method 'getPennie' performed successfully, current_block_num is '{}'".format(current_block_num))
 
         lcc.set_step("Get random_block in [first block, current_block] interval")
@@ -331,20 +337,15 @@ class PositiveTesting(BaseTest):
         lcc.log_info("random block number: {}".format(random_block_num))
 
         lcc.set_step("Get the head_block number of the next block")
-        self.set_timeout_wait(wait_block_count=1)
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
-                                        self.__database_api_identifier)
-        head_block_number = self.get_response(response_id)["result"]["head_block_number"]
-        lcc.log_info("head block number: {}".format(head_block_number))
+        head_block_number = self.get_head_block_number()
 
         lcc.set_step("Get contract logs with 'from' param is random_block, 'to' param is head_block_number")
-        params = [contract_id, random_block_num, head_block_number]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        contract_logs = self.get_response(response_id)["result"]
+        contract_logs = self.get_contract_logs(contract_id=contract_id, _from=random_block_num, _to=head_block_number)
         lcc.log_info("Call method 'get_contract_logs' with params: from='{}', to='{}'".format(random_block_num,
                                                                                               head_block_number))
 
         lcc.set_step("Check contract logs")
+        require_that("'log has value'", bool(contract_logs), is_true(), quiet=True)
         for log in contract_logs:
             if check_that("contract_logs", log, has_length(3)):
                 for key in contract_log_keys:
@@ -375,27 +376,22 @@ class PositiveTesting(BaseTest):
         lcc.log_info("negative block number: {}".format(negative_block_num))
 
         lcc.set_step("Get the head_block number of the next block")
-        self.set_timeout_wait(wait_block_count=1)
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
-                                        self.__database_api_identifier)
-        head_block_number = self.get_response(response_id)["result"]["head_block_number"]
-        lcc.log_info("head_block number: {}".format(head_block_number))
+        head_block_number = self.get_head_block_number()
 
         lcc.set_step("Get contract logs with 'from' param is negative_block_number, 'to' param is head_block_number")
-        params = [contract_id, negative_block_num, head_block_number]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        contract_logs = self.get_response(response_id)["result"]
+        contract_logs = self.get_contract_logs(contract_id=contract_id, _from=negative_block_num, _to=head_block_number)
         lcc.log_info("Call method 'get_contract_logs' with params: from='{}', to='{}'".format(negative_block_num,
                                                                                               head_block_number))
 
         lcc.set_step("Check contract logs")
-        for log in contract_logs:
-            # todo: remove. Bug ECHO-1033.
-            check_that("contract_logs", log, equal_to([]))
-            # todo: uncomment. Bug ECHO-1033.
-            # if check_that("contract_logs", log, has_length(3)):
-            #     for key in contract_log_keys:
-            #         require_that("contract_logs", log, has_entry(key), quiet=True)
+        # todo: remove. Bug ECHO-1033.
+        check_that("contract_logs", contract_logs, equal_to([]))
+        # todo: uncomment. Bug ECHO-1033.
+        # require_that("'log has value'", bool(contract_logs), is_true(), quiet=True)
+        # for log in contract_logs:
+        #     if check_that("contract_logs", log, has_length(3)):
+        #         for key in contract_log_keys:
+        #             require_that("contract_logs", log, has_entry(key), quiet=True)
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'first block' to 'block before operation performed'")
@@ -425,21 +421,16 @@ class PositiveTesting(BaseTest):
         # todo: check previous block, why current_block-1 has logs? uncomment. Bug: ECHO-1032.
         # lcc.set_step("Get contract logs with 'to' param is current_block_num - 1")
         # _to = current_block_num - 1
-        # params = [contract_id, _from, _to]
-        # response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        # contract_logs = self.get_response(response_id, log_response=True)["result"]
+        # contract_logs = self.get_contract_logs(contract_id=contract_id, _from=_from, _to=_to)
         # lcc.log_info("Call method 'get_contract_logs' with params: from='{}', to='{}'".format(_from, _to))
 
         lcc.set_step("Get contract logs with 'to' param is before current block number")
-        params = [contract_id, _from, before_current_block_num]
-        response_id = self.send_request(self.get_request("get_contract_logs", params), self.__database_api_identifier)
-        contract_logs = self.get_response(response_id)["result"]
+        contract_logs = self.get_contract_logs(contract_id=contract_id, _from=_from, _to=before_current_block_num)
         lcc.log_info(
             "Call method 'get_contract_logs' with params: from='{}', to='{}'".format(_from, before_current_block_num))
 
         lcc.set_step("Check contract logs")
-        for log in contract_logs:
-            check_that("contract_logs", log, equal_to([]))
+        check_that("contract_logs", contract_logs, equal_to([]))
 
 
 @lcc.prop("testing", "negative")
