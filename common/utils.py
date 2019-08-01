@@ -362,8 +362,7 @@ class Utils(object):
             return base_test.get_response(response_id)["result"][0]
         return base_test.get_response(response_id)["result"]
 
-    def get_eth_balance(self, base_test, account_id, database_api_id, previous_balance=None, temp_count=0,
-                        timeout=BLOCK_RELEASE_INTERVAL):
+    def get_eth_balance(self, base_test, account_id, database_api_id, previous_balance=None, temp_count=0):
         temp_count += 1
         current_balance = self.get_account_balances(base_test, account_id, database_api_id, base_test.eth_asset)[
             "amount"]
