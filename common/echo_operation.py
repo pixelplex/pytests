@@ -477,10 +477,10 @@ class EchoOperations(object):
             tx.expiration = expiration
         tx.sign()
         if no_broadcast:
-            return tx.transaction_object
+            return tx.transaction_object.json()
         broadcast_result = tx.broadcast()
         if log_broadcast:
             lcc.log_info("Broadcast result: \n{}".format(json.dumps(broadcast_result, indent=4)))
         if get_signed_tx:
-            return broadcast_result, tx.transaction_object
+            return broadcast_result, tx.transaction_object.json(), tx.transaction_object
         return broadcast_result

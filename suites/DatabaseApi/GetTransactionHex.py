@@ -53,19 +53,20 @@ class GetTransaction(BaseTest):
 
         lcc.set_step("Broadcast transaction that contains simple transfer operation to the ECHO network")
         collected_operation = self.collect_operations(transfer_operation, self.__database_api_identifier)
-        broadcast_result, signed_tx = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                              log_broadcast=False, get_signed_tx=True)
+        broadcast_result, signed_tx, signed_tx_obj = self.echo_ops.broadcast(echo=self.echo,
+                                                                             list_operations=collected_operation,
+                                                                             log_broadcast=False, get_signed_tx=True)
         require_that(
             "broadcast transaction complete successfully",
             self.is_operation_completed(broadcast_result, 0), is_true(), quiet=True
         )
 
         lcc.set_step("Calculate hex of signed transaction")
-        signed_tx_hex_calculated = bytes(signed_tx).hex()
+        signed_tx_hex_calculated = bytes(signed_tx_obj).hex()
         lcc.log_info("Calculated hex of signed transaction: '{}'".format(signed_tx_hex_calculated))
 
         lcc.set_step("Get transaction hex")
-        response_id = self.send_request(self.get_request("get_transaction_hex", [signed_tx.json()]),
+        response_id = self.send_request(self.get_request("get_transaction_hex", [signed_tx]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         signed_tx_hex_by_api_method = response["result"]

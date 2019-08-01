@@ -145,7 +145,8 @@ class GetContractResult(BaseTest):
                         require_that("'log has value'", bool(logs), is_true(), quiet=True)
                         for log in logs:
                             with this_dict(log):
-                                contract_id_that_called = self.get_contract_id(response, contract_call_result=True)
+                                contract_id_that_called = self.get_contract_id(response, contract_call_result=True,
+                                                                               new_contract=False)
                                 require_that("contract_id", contract_id_that_called, equal_to(contract_id), quiet=True)
                                 log_values = log["log"]
                                 for log_value in log_values:
@@ -268,7 +269,6 @@ class PositiveTesting(BaseTest):
                                                               bytecode=self.set_all_values + method_params,
                                                               callee=dynamic_fields_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
         contract_call_result_id = self.get_operation_results_ids(broadcast_result)
@@ -284,9 +284,10 @@ class PositiveTesting(BaseTest):
             "Call method 'get_contract_result' with contract_call_result_id='{}' param".format(contract_call_result_id))
 
         lcc.set_step("Check contract result with several logs")
-        for log in dynamic_fields_contract_call_logs:
+        for i, log in enumerate(dynamic_fields_contract_call_logs):
+            lcc.log_info("Check log#'{}'".format(i))
             with this_dict(log):
-                contract_id_that_called = self.get_contract_id(response, contract_call_result=True)
+                contract_id_that_called = self.get_contract_id(response, contract_call_result=True, new_contract=False)
                 require_that("contract_id", contract_id_that_called, equal_to(dynamic_fields_contract_id), quiet=True)
                 log_values = log["log"]
                 for log_value in log_values:
@@ -309,7 +310,7 @@ class PositiveTesting(BaseTest):
         method_names_in_keccak_std = [self.get_keccak_standard_value(self.setUint256_method_name),
                                       self.get_keccak_standard_value(self.setString_method_name)]
         for i, log in enumerate(dynamic_fields_contract_call_logs):
-            check_that("'log value'", log["log"][0], equal_to(method_names_in_keccak_std[i]))
+            check_that("'log value'", log["log"][0], equal_to(method_names_in_keccak_std[i]), quiet=True)
 
         lcc.set_step("Check contract result log data")
         call_contract_params = [int_param, string_param]
