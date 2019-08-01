@@ -96,7 +96,8 @@ class SubscribeContractLogs(BaseTest):
         for log in contract_logs_notice:
             with this_dict(log):
                 if check_that("contract_log", log, has_length(3)):
-                    contract_id_that_called = self.get_contract_id(log["address"], address_format=True)
+                    contract_id_that_called = self.get_contract_id(log["address"], address_format=True,
+                                                                   new_contract=False)
                     require_that("contract_id", contract_id_that_called, equal_to(contract_id), quiet=True)
                     log_values = log["log"]
                     for log_value in log_values:
@@ -183,10 +184,8 @@ class PositiveTesting(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs in notices two identical contract calls")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
-    def check_contract_logs_in_notices_two_identical_contract_calls(self, get_random_integer,
-                                                                    get_random_integer_up_to_ten):
-        subscription_callback_id = get_random_integer
-        value_amount = get_random_integer_up_to_ten
+    def check_contract_logs_in_notices_two_identical_contract_calls(self, get_random_integer):
+        subscription_callback_id = value_amount = get_random_integer
         _from = 0
 
         lcc.set_step("Set subscribe callback")
@@ -198,6 +197,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Get the head_block number")
         head_block_number = self.get_head_block_number()
+
         lcc.set_step("Subscribe to created contract")
         self.subscribe_contract_logs(subscription_callback_id, contract_id, _from, head_block_number)
 
@@ -223,73 +223,84 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Check that first and second notices are the same")
         check_that(
-            "'first and second notices are the same'",
+            "'notices are the same'",
             contract_logs_notice_1 == contract_logs_notice_2,
             is_true()
         )
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs of two different contracts")
-    @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
-    def check_contract_logs_of_two_different_contracts(self, get_random_integer, get_random_string):
-        int_param = subscription_callback_id = get_random_integer
+    @lcc.test("Check contract logs in notices contract call that make two different logs")
+    @lcc.tags("qa")
+    # @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
+    def check_contract_logs_in_notice_contract_call_that_make_two_different_logs(self, get_random_integer,
+                                                                                 get_random_string):
+        subscription_callback_id = int_param = get_random_integer
         string_param = get_random_string
+        _from = 0
+
+        lcc.set_step("Set subscribe callback")
         self.set_subscribe_callback(subscription_callback_id)
 
-        lcc.set_step("Create 'Piggy' contract in the Echo network")
-        contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
-                                                                self.__database_api_identifier)
+        lcc.set_step("Create 'dynamic_fields' contract in the Echo network and get it's contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
+                                                 self.__database_api_identifier)
 
-        lcc.set_step("Get 'head_block_number'")
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)["result"]
-        head_block_number = response["head_block_number"]
+        lcc.set_step("Get the head_block number")
+        head_block_number = self.get_head_block_number()
 
-        lcc.set_step("Subscribe created contract")
-        response_id = self.send_request(self.get_request(
-            "subscribe_contract_logs", [subscription_callback_id,
-                                        contract_dynamic_fields_id, 0,
-                                        head_block_number + get_random_integer]),
-            self.__database_api_identifier, debug_mode=False)
-        response = self.get_response(response_id, log_response=False)
+        lcc.set_step("Subscribe to created contract")
+        self.subscribe_contract_logs(subscription_callback_id, contract_id, _from, head_block_number)
 
-        lcc.set_step("Call method 'set_uint' and 'set_string")
+        lcc.set_step("Call method of dynamic_fields contract: 'set_all_values'")
         int_param_code = self.get_byte_code_param(int_param, param_type=int)
         string_param_code = self.get_byte_code_param(string_param, param_type=str, offset="40")
-        bytecode = self.set_all_values + int_param_code + string_param_code
+        method_params = int_param_code + string_param_code
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=bytecode,
-                                                              callee=contract_dynamic_fields_id)
+                                                              bytecode=self.set_all_values + method_params,
+                                                              callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                log_broadcast=False)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        lcc.log_info("Method 'set_all_values' performed successfully")
 
         lcc.set_step("Get notices about updates of created contract")
-        notice_log_info = self.get_notice(subscription_callback_id)
-        call_contact_log0 = notice_log_info[0]
-        call_contract_log1 = notice_log_info[1]
+        contract_logs_notice = self.get_notice(subscription_callback_id)
 
-        lcc.set_step("Check subscribe on two different contracts log")
-        check_that("contract_log", call_contact_log0, not_equal_to(call_contract_log1))
-        contract_id_from_address = self.get_contract_from_address(self, call_contact_log0["address"])
+        lcc.set_step("Check contract result with several logs")
+        for i, log in enumerate(contract_logs_notice):
+            lcc.log_info("Check log#'{}'".format(i))
+            with this_dict(log):
+                contract_id_that_called = self.get_contract_id(log["address"], address_format=True, new_contract=False)
+                require_that("contract_id", contract_id_that_called, equal_to(contract_id), quiet=True)
+                log_values = log["log"]
+                for log_value in log_values:
+                    if not self.validator.is_hex(log_value):
+                        lcc.log_error("Wrong format of 'log_value', got: {}".format(log_value))
+                    else:
+                        lcc.log_info("'log_value' has correct format: hex")
+                if not self.validator.is_hex(log["data"]):
+                    lcc.log_error("Wrong format of 'data', got: {}".format(log["data"]))
+                else:
+                    lcc.log_info("'data' has correct format: hex")
+        for i in range(len(contract_logs_notice))[:-1]:
+            check_that(
+                "'addresses in contract call result are the same'",
+                contract_logs_notice[i]["address"] == contract_logs_notice[i + 1]["address"],
+                is_true()
+            )
 
-        check_that("contract_id", contract_dynamic_fields_id, equal_to(contract_id_from_address))
-        check_that("address", call_contact_log0["address"], equal_to(call_contract_log1["address"]))
+        lcc.set_step("Check contract result log value")
+        method_names_in_keccak_std = [self.get_keccak_standard_value(self.setUint256_method_name),
+                                      self.get_keccak_standard_value(self.setString_method_name)]
+        for i, log in enumerate(contract_logs_notice):
+            check_that("'log value'", log["log"][0], equal_to(method_names_in_keccak_std[i]), quiet=True)
 
-        check_that("log of 'set_uint' method", call_contact_log0["log"], is_list(), quiet=True)
-        check_that("log of 'set_string' method", call_contract_log1["log"], is_list(), quiet=True)
-
-        keccak_log0 = self.keccak_log_value(self.setUint256_method_name, log_info=True)
-        keccak_log1 = self.keccak_log_value(self.setString_method_name, log_info=True)
-        check_that("log value", call_contact_log0["log"][0], equal_to(keccak_log0))
-        check_that("log value1", call_contract_log1["log"][0], equal_to(keccak_log1))
-
-        data0 = self.get_contract_log_data(call_contact_log0, output_type=int)
-        data1 = self.get_contract_log_data(call_contract_log1, output_type=str)
-        check_that("data", data0, equal_to(int_param))
-        check_that("data", data1, equal_to(string_param))
+        lcc.set_step("Check contract result log data")
+        call_contract_params = [int_param, string_param]
+        output_types = [int, str]
+        log_data = self.get_contract_log_data(contract_logs_notice, output_types, log_format=True)
+        for i, data in enumerate(log_data):
+            lcc.log_info("Check data#'{}'".format(i))
+            check_that("'converted 'data' from hex'", data, equal_to(call_contract_params[i]))
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'start' to 'head_block_number'")

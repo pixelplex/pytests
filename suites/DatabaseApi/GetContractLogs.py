@@ -74,7 +74,8 @@ class GetContractLogs(BaseTest):
         for log in logs:
             with this_dict(log):
                 if check_that("contract_log", log, has_length(3)):
-                    contract_id_that_called = self.get_contract_id(log["address"], address_format=True)
+                    contract_id_that_called = self.get_contract_id(log["address"], address_format=True,
+                                                                   new_contract=False)
                     require_that("contract_id", contract_id_that_called, equal_to(contract_id), quiet=True)
                     log_values = log["log"]
                     for log_value in log_values:
@@ -171,9 +172,9 @@ class PositiveTesting(BaseTest):
             )
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs two different contract calls")
+    @lcc.test("Check contract logs contract call that make two different logs")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
-    def check_contract_logs_two_different_contract_calls(self, get_random_integer, get_random_string):
+    def check_contract_logs_contract_call_that_make_two_different_logs(self, get_random_integer, get_random_string):
         int_param = get_random_integer
         string_param = get_random_string
         _from = 0
@@ -200,11 +201,11 @@ class PositiveTesting(BaseTest):
         get_contract_logs_results = self.get_contract_logs(params=params)
         lcc.log_info("Call method 'get_contract_logs' with params: '{}'".format(params))
 
-        lcc.set_step("Check contract logs two different contract calls")
+        lcc.set_step("Check contract logs contract call that make two different logs")
         require_that("'log has value'", bool(get_contract_logs_results), is_true(), quiet=True)
         for i in range(len(get_contract_logs_results))[:-1]:
             check_that(
-                "'contract logs two different contract calls are not the same'",
+                "'contract logs are not the same'",
                 get_contract_logs_results[i] != get_contract_logs_results[i + 1],
                 is_true()
             )

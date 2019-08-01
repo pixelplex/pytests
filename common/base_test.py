@@ -334,7 +334,7 @@ class BaseTest(object):
                 raise Exception("Wrong format of operation results")
         return operation_results
 
-    def get_contract_id(self, response, contract_call_result=False, address_format=None, log_response=True):
+    def get_contract_id(self, response, contract_call_result=False, address_format=None, new_contract=True):
         if address_format:
             contract_identifier_hex = response
         elif not contract_call_result:
@@ -349,7 +349,7 @@ class BaseTest(object):
         if not self.validator.is_contract_id(contract_id):
             lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
             raise Exception("Wrong format of contract id")
-        if log_response and not contract_call_result:
+        if new_contract:
             lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
@@ -370,10 +370,13 @@ class BaseTest(object):
             return contract_id
 
     @staticmethod
-    def get_contract_log_data(response, output_type, debug_mode=False):
+    def get_contract_log_data(response, output_type, log_format=None, debug_mode=False):
         if debug_mode:
             lcc.log_info("Logs are '{}'".format(json.dumps(response, indent=4)))
-        contract_logs = response["result"][1].get("tr_receipt").get("log")
+        if log_format:
+            contract_logs = response
+        else:
+            contract_logs = response["result"][1].get("tr_receipt").get("log")
         if not contract_logs:
             raise Exception("Empty log")
         if len(contract_logs) == 1:
