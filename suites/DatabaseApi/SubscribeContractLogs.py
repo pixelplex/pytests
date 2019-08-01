@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, this_dict, check_that_entry, equal_to, is_list, is_str, not_equal_to, \
-    has_length, require_that, is_true
+from lemoncheesecake.matching import check_that, this_dict, check_that_entry, equal_to, is_str, has_length, \
+    require_that, is_true, has_entry
 
 from common.base_test import BaseTest
 
@@ -57,14 +57,6 @@ class SubscribeContractLogs(BaseTest):
         subscription_callback_id = get_random_integer
         value_amount = get_random_integer_up_to_ten
         _from = 0
-
-        lcc.set_step("Set subscribe callback")
-        response_id = self.send_request(self.get_request("set_subscribe_callback", [subscription_callback_id, False]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        if response["result"] is not None:
-            raise Exception("Subscription not issued")
-        lcc.log_info("Subscription successful")
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier,
@@ -138,14 +130,6 @@ class PositiveTesting(BaseTest):
         self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
         self.set_all_values = self.get_byte_code("dynamic_fields", self.setAllValues_method_name)
 
-    def set_subscribe_callback(self, callback, notify_remove_create=False):
-        response_id = self.send_request(self.get_request("set_subscribe_callback", [callback, notify_remove_create]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        if response["result"] is not None:
-            raise Exception("Subscription not issued")
-        lcc.log_info("Subscription successful, 'notify_remove_create'='{}'".format(notify_remove_create))
-
     def get_head_block_number(self):
         response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
                                         self.__database_api_identifier)
@@ -187,9 +171,6 @@ class PositiveTesting(BaseTest):
     def check_contract_logs_in_notices_two_identical_contract_calls(self, get_random_integer):
         subscription_callback_id = value_amount = get_random_integer
         _from = 0
-
-        lcc.set_step("Set subscribe callback")
-        self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
@@ -236,9 +217,6 @@ class PositiveTesting(BaseTest):
         subscription_callback_id = int_param = get_random_integer
         string_param = get_random_string
         _from = 0
-
-        lcc.set_step("Set subscribe callback")
-        self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'dynamic_fields' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
@@ -302,40 +280,40 @@ class PositiveTesting(BaseTest):
             check_that("'converted 'data' from hex'", data, equal_to(call_contract_params[i]))
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs from 'start' to 'head_block_number'")
+    @lcc.test("Check contract logs in notices from 'first block' to more than 'head_block_number'")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
-    def check_contract_logs_from_start_to_head_block_number(self, get_random_integer):
-        subscription_callback_id = get_random_integer
+    def check_contract_logs_in_notice_from_first_block_to_more_than_head_block_number(self, get_random_integer):
+        subscription_callback_id = value_amount = get_random_integer
+        _from = 0
+        contract_log_keys = ["address", "log", "data"]
 
-        lcc.set_step("Create 'Piggy' contract in the Echo network")
+        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
-                                                 self.__database_api_identifier, value_amount=10)
+                                                 self.__database_api_identifier, value_amount=value_amount)
 
-        lcc.set_step("Get 'head_block_number'")
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)["result"]
-        head_block_number = response["head_block_number"]
+        lcc.set_step("Get the head_block number and make 'to' param more than it")
+        _to = self.get_head_block_number() + get_random_integer
+        lcc.log_info("More than 'head_block_number' number is '{}'".format(_to))
 
-        lcc.set_step("Subscribe created contract")
-        response_id = self.send_request(self.get_request("subscribe_contract_logs", [subscription_callback_id,
-                                                                                     contract_id, 0,
-                                                                                     head_block_number + get_random_integer]),
-                                        self.__database_api_identifier, debug_mode=False)
-        response = self.get_response(response_id, log_response=False)
+        lcc.set_step("Subscribe to created contract")
+        self.subscribe_contract_logs(subscription_callback_id, contract_id, _from, _to)
 
-        lcc.set_step("Call contracts method getPennie")
+        lcc.set_step("Call contract method getPennie")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        lcc.log_info("Method 'getPennie' performed successfully")
 
-        notice = self.get_notice(subscription_callback_id)
-        notice_log_info = notice[0]
+        lcc.set_step("Get notices about updates of created contract")
+        contract_logs_notice = self.get_notice(subscription_callback_id)
 
-        lcc.set_step("Check if lenght of contract logs is 3")
-        with this_dict(notice_log_info):
-            check_that("lenght of notice contract logs", len(notice_log_info), equal_to(3))
+        lcc.set_step("Check contract logs in notice")
+        require_that("'log in notice has value'", bool(contract_logs_notice), is_true(), quiet=True)
+        for log in contract_logs_notice:
+            if check_that("contract_logs in notice", log, has_length(3)):
+                for key in contract_log_keys:
+                    require_that("contract_logs in notice", log, has_entry(key), quiet=True)
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from -1 block to 'head_block_number'")
