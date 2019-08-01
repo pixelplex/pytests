@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from time import strptime
 from datetime import datetime, timedelta
+from time import strptime
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, check_that, has_length, is_true, equal_to, is_none
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Method 'get_recent_transaction_by_id'"
@@ -120,7 +120,7 @@ class GetRecentTransactionById(BaseTest):
             )
             if expiration_status:
                 break
-        self.set_timeout_wait(BLOCK_RELEASE_INTERVAL)
+        self.set_timeout_wait(wait_block_count=2)
 
         lcc.set_step("Get recent transaction by id (after it expire)")
         response_id = self.send_request(self.get_request("get_recent_transaction_by_id", params),

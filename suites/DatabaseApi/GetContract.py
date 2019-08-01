@@ -81,8 +81,8 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.contract_piggy = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.breakPiggy = self.get_byte_code("piggy", "breakPiggy")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.breakPiggy = self.get_byte_code("piggy", "breakPiggy()")
         self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
         self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
         self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
