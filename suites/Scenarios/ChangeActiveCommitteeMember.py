@@ -137,7 +137,7 @@ class ChangeActiveCommitteeMember(BaseTest):
 
             lcc.set_step("Waiting for maintenance and release of two blocks")
             self.wait_for_next_maintenance(self.__database_api_identifier, print_log=True)
-            self.set_timeout_wait(BLOCK_RELEASE_INTERVAL * 2)
+            self.set_timeout_wait(wait_block_count=2)
 
             lcc.set_step("Get updated active committee members ids, ethereum addresses and store")
             updated_active_committee_members = self.get_active_committee_members()
@@ -191,7 +191,7 @@ class ChangeActiveCommitteeMember(BaseTest):
 
             lcc.set_step("Waiting for maintenance and release of two blocks")
             self.wait_for_next_maintenance(self.__database_api_identifier, print_log=True)
-            self.set_timeout_wait(BLOCK_RELEASE_INTERVAL * 2)
+            self.set_timeout_wait(wait_block_count=2)
 
             lcc.set_step("Get updated active committee members ids, ethereum addresses and store")
             active_committee_members_ids = updated_active_committee_members_ids

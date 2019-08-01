@@ -250,9 +250,9 @@ class PositiveTesting(BaseTest):
         check_that("'contract result output'", contract_result_output, equal_to(contract_code), quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test("Check contract logs of two different contracts")
+    @lcc.test("Check contract result of contract call that make two logs")
     @lcc.depends_on("DatabaseApi.GetContractResult.GetContractResult.method_main_check")
-    def check_contract_logs_of_two_different_contracts(self, get_random_integer, get_random_string):
+    def check_contract_result_of_contract_call_that_make_two_logs(self, get_random_integer, get_random_string):
         int_param = get_random_integer
         string_param = get_random_string
 
@@ -319,4 +319,4 @@ class PositiveTesting(BaseTest):
             lcc.log_info("Check data#'{}'".format(i))
             check_that("'converted 'data' from hex'", data, equal_to(call_contract_params[i]))
 
-# todo: add bloom test
+# todo: add test for testing bloom field
