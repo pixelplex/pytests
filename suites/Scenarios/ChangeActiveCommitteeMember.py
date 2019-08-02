@@ -3,7 +3,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, check_that, is_true, is_false, not_equal_to, equal_to
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL, ROPSTEN
+from project import ROPSTEN
 
 SUITE = {
     "description": "Check for updating the list of active committee members"
