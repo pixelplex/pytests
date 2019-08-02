@@ -62,7 +62,7 @@ class PositiveTesting(BaseTest):
         self.transfer_operation = None
         self.required_fee = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
         self.valid_contract_id = None
 
     def setup_suite(self):

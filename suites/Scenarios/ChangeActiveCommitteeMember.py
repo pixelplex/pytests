@@ -3,7 +3,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, check_that, is_true, is_false, not_equal_to, equal_to
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL, ROPSTEN
+from project import ROPSTEN
 
 SUITE = {
     "description": "Check for updating the list of active committee members"
@@ -73,7 +73,6 @@ class ChangeActiveCommitteeMember(BaseTest):
             super().teardown_suite()
 
     @lcc.prop("type", "scenario")
-    @lcc.tags("Bug ECHO-1074")
     @lcc.test("The scenario describes the mechanism of updating the list of active addresses of committee members")
     def change_committee_eth_address_scenario(self, get_random_valid_account_name):
         if not ROPSTEN:
@@ -138,7 +137,7 @@ class ChangeActiveCommitteeMember(BaseTest):
 
             lcc.set_step("Waiting for maintenance and release of two blocks")
             self.wait_for_next_maintenance(self.__database_api_identifier, print_log=True)
-            self.set_timeout_wait(BLOCK_RELEASE_INTERVAL * 2)
+            self.set_timeout_wait(wait_block_count=2)
 
             lcc.set_step("Get updated active committee members ids, ethereum addresses and store")
             updated_active_committee_members = self.get_active_committee_members()
@@ -192,7 +191,7 @@ class ChangeActiveCommitteeMember(BaseTest):
 
             lcc.set_step("Waiting for maintenance and release of two blocks")
             self.wait_for_next_maintenance(self.__database_api_identifier, print_log=True)
-            self.set_timeout_wait(BLOCK_RELEASE_INTERVAL * 2)
+            self.set_timeout_wait(wait_block_count=2)
 
             lcc.set_step("Get updated active committee members ids, ethereum addresses and store")
             active_committee_members_ids = updated_active_committee_members_ids

@@ -80,16 +80,16 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.contract_piggy = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.breakPiggy = self.get_byte_code("piggy", "breakPiggy")
-        self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
-        self.set_uint = self.get_byte_code("dynamic_fields", "setUint256")
-        self.get_uint = self.get_byte_code("dynamic_fields", "getUint256")
-        self.delete_uint = self.get_byte_code("dynamic_fields", "deleteUint256")
-        self.set_string = self.get_byte_code("dynamic_fields", "setString")
-        self.get_string = self.get_byte_code("dynamic_fields", "getString")
-        self.delete_string = self.get_byte_code("dynamic_fields", "deleteString")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.breakPiggy = self.get_byte_code("piggy", "breakPiggy()")
+        self.dynamic_fields_contract = self.get_byte_code("dynamic_fields", "code")
+        self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
+        self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
+        self.delete_uint = self.get_byte_code("dynamic_fields", "deleteUint256()")
+        self.set_string = self.get_byte_code("dynamic_fields", "onStringChanged(string)")
+        self.get_string = self.get_byte_code("dynamic_fields", "getString()")
+        self.delete_string = self.get_byte_code("dynamic_fields", "deleteString()")
 
     def setup_suite(self):
         super().setup_suite()
@@ -113,7 +113,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContract.GetContract.method_main_check")
     def check_contract_info_after_calling_contract_method(self):
         lcc.set_step("Create 'piggy' contract in ECHO network")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier)
 
         lcc.set_step("Get the contract by id")
@@ -125,7 +125,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check response of 'get_contract' before call any method. Store contract storage")
         contract_info = response["result"][1]
         code_before_contract_call = contract_info["code"]
-        check_that("'contract code'", self.contract_piggy, ends_with(code_before_contract_call), quiet=True)
+        check_that("'contract code'", self.piggy_contract, ends_with(code_before_contract_call), quiet=True)
         storage_before_contract_call = contract_info["storage"]
         lcc.log_info("Store contract storage before call 'greet' method")
 
@@ -155,7 +155,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetContract.GetContract.method_main_check")
     def check_contract_destroy_method(self):
         lcc.set_step("Create 'piggy' contract in ECHO network")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier)
 
         lcc.set_step("Get the contract by id and store info before destroy contract")
@@ -195,7 +195,7 @@ class PositiveTesting(BaseTest):
         string_param = get_random_string
 
         lcc.set_step("Create 'dynamic_fields' contract in ECHO network")
-        contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
+        contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.dynamic_fields_contract,
                                                                 self.__database_api_identifier)
 
         lcc.set_step("Get contract by id")

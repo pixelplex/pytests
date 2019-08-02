@@ -333,7 +333,7 @@ class PositiveTesting(BaseTest):
             lcc.log_info(str(e))
 
         lcc.set_step("Wait for begin timestamp")
-        self.set_timeout_wait(added_seconds)
+        self.set_timeout_wait(seconds=added_seconds)
 
         lcc.set_step("Withdraw balance after beginning timestamp")
         self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account, asset_amount,
@@ -350,7 +350,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Modified vesting_cliff_seconds and try to withdraw vesting balance")
-    @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
+    @lcc.tags("qqq")
+    # @lcc.depends_on("DatabaseApi.GetVestingBalances.GetVestingBalances.method_main_check")
     def create_vesting_balance_with_vesting_cliff_seconds(self, get_random_valid_asset_name, get_random_integer,
                                                           get_random_valid_account_name):
         asset_amount = get_random_integer
@@ -401,7 +402,7 @@ class PositiveTesting(BaseTest):
             lcc.log_info(str(e))
 
         lcc.set_step("Wait for finish vesting_cliff_seconds")
-        self.set_timeout_wait(vesting_cliff_seconds)
+        self.set_timeout_wait(seconds=vesting_cliff_seconds)
 
         lcc.set_step("Withdraw balance after finish vesting_cliff_seconds")
         self.utils.perform_vesting_balance_withdraw_operation(self, vesting_balance_id, new_account, asset_amount,
@@ -470,7 +471,7 @@ class PositiveTesting(BaseTest):
             lcc.log_info(str(e))
 
         lcc.set_step("Wait when 1/{} part of vesting_duration_seconds finish".format(part))
-        self.set_timeout_wait(duration_seconds // part)
+        self.set_timeout_wait(seconds=duration_seconds // part)
 
         lcc.set_step("Withdraw balance after finish vesting_cliff_seconds")
         withdraw_amount = asset_amount // part

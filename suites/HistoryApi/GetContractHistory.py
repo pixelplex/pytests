@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import lemoncheesecake.api as lcc
 import math
+
+import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_, this_dict, check_that_entry, is_str, is_list, is_integer, \
     require_that, require_that_in
 
@@ -95,7 +96,7 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = None
         self.echo_acc1 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
+        self.get_pennie = self.get_byte_code("piggy", "pennieReturned()")
         self.broadcast_result = None
 
     def get_contract_history(self, contract_id, stop, limit, start, negative=False):

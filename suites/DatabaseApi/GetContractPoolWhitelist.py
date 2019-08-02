@@ -102,7 +102,7 @@ class PositiveTesting(BaseTest):
         self.echo_acc5 = None
         self.echo_acc6 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def get_contract_pool_balance(self, contract_id):
         response_id = self.send_request(self.get_request("get_contract_pool_balance", [contract_id]),

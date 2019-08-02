@@ -5,6 +5,7 @@ import os
 import time
 
 import lemoncheesecake.api as lcc
+from Crypto.Hash import keccak
 from echopy import Echo
 from eth_account import Account
 from lemoncheesecake.matching import is_str, is_integer, check_that_entry
@@ -87,7 +88,9 @@ class BaseTest(object):
             return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
         return time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
 
-    def set_timeout_wait(self, seconds, print_log=True):
+    def set_timeout_wait(self, seconds=None, wait_block_count=None, print_log=True):
+        if wait_block_count is not None:
+            seconds = wait_block_count * BLOCK_RELEASE_INTERVAL
         if print_log:
             lcc.log_info("Start a '{}' second(s) sleep..."
                          "\nglobal_time:'{}'"
@@ -111,7 +114,7 @@ class BaseTest(object):
     def get_abi(contract_name):
         return ETHEREUM_CONTRACTS[contract_name]["abi"]
 
-    def get_byte_code_param(self, param, param_type=None):
+    def get_byte_code_param(self, param, param_type=None, offset="20"):
         hex_param_64 = "0000000000000000000000000000000000000000000000000000000000000000"
         if param_type == int and self.validator.is_uint256(param):
             param = hex(param).split('x')[-1]
@@ -120,7 +123,7 @@ class BaseTest(object):
         if param_type == str and self.validator.is_string(param):
             param_in_hex = codecs.encode(param).hex()
             len_param_in_hex = hex(len(param)).split('x')[-1]
-            part_1 = hex_param_64[:-2] + "20"
+            part_1 = hex_param_64[:-2] + offset
             part_2 = hex_param_64[:-len(len_param_in_hex)] + len_param_in_hex
             part_3 = None
             if len(param_in_hex) < 64:
@@ -236,7 +239,8 @@ class BaseTest(object):
         except IndexError as index:
             lcc.log_error("Response: This index does not exist: '{}'".format(index))
 
-    def get_notice(self, id_response, object_id=None, notices_list=False, log_response=True, debug_mode=False):
+    def get_notice(self, id_response, object_id=None, operation_id=None, notices_list=False, log_response=True,
+                   debug_mode=False):
         # Receive notice from server
         try:
             if debug_mode:
@@ -249,7 +253,7 @@ class BaseTest(object):
                 if log_response:
                     lcc.log_info("Received notice with list of notifications:\n{}".format(json.dumps(notice, indent=4)))
                 return notice["params"][1][0]
-            return self.receiver.get_notice(id_response, object_id, log_response)
+            return self.receiver.get_notice(id_response, object_id, operation_id, log_response)
         except KeyError as key:
             lcc.log_error("Notice: That key does not exist: '{}'".format(key))
         except IndexError as index:
@@ -331,18 +335,26 @@ class BaseTest(object):
                 raise Exception("Wrong format of operation results")
         return operation_results
 
-    def get_contract_id(self, response, log_response=True):
-        contract_identifier_hex = response["result"][1].get("exec_res").get("new_address")
+    def get_contract_id(self, response, contract_call_result=False, address_format=None, new_contract=True):
+        if address_format:
+            contract_identifier_hex = response
+        elif not contract_call_result:
+            contract_identifier_hex = response["result"][1]["exec_res"]["new_address"]
+        else:
+            contract_identifier_hex = response["result"][1]["tr_receipt"]["log"][0]["address"]
+        if not self.validator.is_hex(contract_identifier_hex):
+            lcc.log_error("Wrong format of address, got {}".format(contract_identifier_hex))
+            raise Exception("Wrong format of address")
         contract_id = "{}{}".format(self.get_object_type(self.echo.config.object_types.CONTRACT),
                                     int(str(contract_identifier_hex)[2:], 16))
         if not self.validator.is_contract_id(contract_id):
             lcc.log_error("Wrong format of contract id, got {}".format(contract_id))
             raise Exception("Wrong format of contract id")
-        if log_response:
+        if new_contract:
             lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
-    def get_contract_output(self, response, output_type, in_hex=False, len_output_string=0, debug_mode=False):
+    def get_contract_output(self, response, output_type=None, in_hex=False, len_output_string=0, debug_mode=False):
         contract_output = str(response["result"][1].get("exec_res").get("output"))
         if debug_mode:
             lcc.log_debug("Output is '{}'".format(str(contract_output)))
@@ -357,6 +369,32 @@ class BaseTest(object):
             contract_id = "{}{}".format(self.get_object_type(self.echo.config.object_types.CONTRACT),
                                         int(str(contract_output[contract_output.find("1") + 1:]), 16))
             return contract_id
+
+    @staticmethod
+    def get_contract_log_data(response, output_type, log_format=None, debug_mode=False):
+        if debug_mode:
+            lcc.log_info("Logs are '{}'".format(json.dumps(response, indent=4)))
+        if log_format:
+            contract_logs = response
+        else:
+            contract_logs = response["result"][1].get("tr_receipt").get("log")
+        if not contract_logs:
+            raise Exception("Empty log")
+        if len(contract_logs) == 1:
+            contract_log_data = str(contract_logs.get("data"))
+            if output_type == str:
+                log_data = (contract_log_data[128:])[:int(contract_log_data[127]) * 2]
+                return str(codecs.decode(log_data, "hex").decode('utf-8'))
+            if output_type == int:
+                return int(contract_log_data, 16)
+        contract_log_data = []
+        for i, log_data in enumerate(contract_logs):
+            if output_type[i] == str:
+                log_data = (log_data.get("data")[128:])[:int(log_data.get("data")[127]) * 2]
+                contract_log_data.append(str(codecs.decode(log_data, "hex").decode('utf-8')))
+            if output_type[i] == int:
+                contract_log_data.append(int(log_data.get("data"), 16))
+        return contract_log_data
 
     @staticmethod
     def get_account_details_template(account_name, private_key, public_key, brain_key):
@@ -510,8 +548,17 @@ class BaseTest(object):
         time_now_in_sec = self.convert_time_in_seconds(self.get_time(global_time=True))
         waiting_time = self.get_waiting_time_till_maintenance(next_maintenance_time_in_sec, time_now_in_sec)
         lcc.log_info("Waiting for maintenance... Time to wait: '{}' seconds".format(waiting_time))
-        self.set_timeout_wait(waiting_time, print_log=print_log)
+        self.set_timeout_wait(seconds=waiting_time, print_log=print_log)
         lcc.log_info("Maintenance finished")
+
+    @staticmethod
+    def get_keccak_standard_value(value, digest_bits=256, encoding="utf-8", print_log=True):
+        keccak_hash = keccak.new(digest_bits=digest_bits)
+        keccak_hash.update(bytes(value, encoding=encoding))
+        keccak_hash_in_hex = keccak_hash.hexdigest()
+        if print_log:
+            lcc.log_info("'{}' value in keccak '{}' standard is '{}'".format(value, digest_bits, keccak_hash_in_hex))
+        return keccak_hash_in_hex
 
     @staticmethod
     def _login_status(response):
