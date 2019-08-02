@@ -129,7 +129,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [ ] [broadcast_transaction](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transactionsigned_transaction)
 - [ ] [broadcast_block](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_blocksigned_block)
 - [ ] [broadcast_transaction_with_callback](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_with_callbackcallback-trx)
-- [ ] [broadcast_transaction_synchronous ](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_synchronous-trx)
+- [x] [broadcast_transaction_synchronous ](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_synchronous-trx)
 
 #### [Registration API](https://echo-dev.io/developers/apis/registration-api/#registration-api)
 
