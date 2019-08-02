@@ -104,7 +104,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)
 - [x] [get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)
 - [x] [get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)
-- [ ] [call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)
+- [x] [call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)
 - [x] [get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)
 - [x] [get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)
 - [x] get_eth_address

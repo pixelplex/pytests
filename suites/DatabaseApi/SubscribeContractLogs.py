@@ -124,12 +124,12 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.contract_piggy = self.get_byte_code("piggy", "code")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
         self.getPennie = self.get_byte_code("piggy", "pennieReturned()")
         self.setAllValues_method_name = "setAllValues(uint256,string)"
         self.setString_method_name = "onStringChanged(string)"
         self.setUint256_method_name = "onUint256Changed(uint256)"
-        self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
+        self.dynamic_fields_contract = self.get_byte_code("dynamic_fields", "code")
         self.set_all_values = self.get_byte_code("dynamic_fields", self.setAllValues_method_name)
 
     @staticmethod
@@ -179,7 +179,7 @@ class PositiveTesting(BaseTest):
         _from = 0
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Get the head_block number")
@@ -225,7 +225,7 @@ class PositiveTesting(BaseTest):
         _from = 0
 
         lcc.set_step("Create 'dynamic_fields' contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.dynamic_fields_contract,
                                                  self.__database_api_identifier)
 
         lcc.set_step("Get the head_block number")
@@ -294,7 +294,7 @@ class PositiveTesting(BaseTest):
         contract_log_keys = ["address", "log", "data"]
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Get the head_block number and make 'to' param more than it")
@@ -331,7 +331,7 @@ class PositiveTesting(BaseTest):
         contract_log_keys = ["address", "log", "data"]
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Get the head_block number")
@@ -370,7 +370,7 @@ class PositiveTesting(BaseTest):
         contract_log_keys = ["address", "log", "data"]
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Get the head_block number")
