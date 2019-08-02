@@ -7,7 +7,6 @@ from echopy import Echo
 
 from project import RESOURCES_DIR, BLOCK_RELEASE_INTERVAL
 
-
 if "BASE_URL" not in os.environ:
     BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]
 else:
