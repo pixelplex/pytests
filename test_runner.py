@@ -20,14 +20,7 @@ def get_head_block_num(echo_connection):
 
 def run(echo_connection):
     if get_head_block_num(echo_connection):
-        os.system(
-            """
-        if ! lcc run -a key_auths_multi_update --exit-error-on-failure; then
-        lcc report --failed
-        exit 1
-        fi
-            """
-        )
+        return os.system("if ! lcc run --exit-error-on-failure; then lcc report --failed; exit 1; fi")
     else:
         time.sleep(BLOCK_RELEASE_INTERVAL)
         run(echo_connection)
