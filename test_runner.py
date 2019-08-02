@@ -20,7 +20,7 @@ def get_head_block_num(echo_connection):
 
 def run(echo_connection):
     if get_head_block_num(echo_connection):
-        execution_status = os.system("if ! lcc run --exit-error-on-failure; then lcc report --failed; exit 1; fi")
+        execution_status = os.system("if ! lcc run --exit-error-on-failure -a get_potential_signatures; then lcc report --failed; exit 1; fi")
         sys.exit(1 if execution_status > 1 else execution_status)
     else:
         time.sleep(BLOCK_RELEASE_INTERVAL)

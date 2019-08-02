@@ -12,7 +12,7 @@ test:
     - sed -i "s/0xc87395b45C1c199F25a6c2Be43515C41d53751Af/$SIDECHAIN_ADDRESS/g" ./genesis.json
     - docker-compose up -d ganache
     - docker-compose up -d echo
-    - docker-compose up pytests
+    - docker-compose up --exit-code-from pytests pytests
   after_script:
     - docker-compose down -v
     - docker-compose rm -fv
