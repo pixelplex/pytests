@@ -354,7 +354,7 @@ class BaseTest(object):
             lcc.log_info("New Echo contract created, contract_id='{}'".format(contract_id))
         return contract_id
 
-    def get_contract_output(self, response, output_type, in_hex=False, len_output_string=0, debug_mode=False):
+    def get_contract_output(self, response, output_type=None, in_hex=False, len_output_string=0, debug_mode=False):
         contract_output = str(response["result"][1].get("exec_res").get("output"))
         if debug_mode:
             lcc.log_debug("Output is '{}'".format(str(contract_output)))
