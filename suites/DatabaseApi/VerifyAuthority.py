@@ -58,7 +58,7 @@ class VerifyAuthority(BaseTest):
         lcc.log_info("Valid transaction was signed")
 
         lcc.set_step("Verify authority")
-        response_id = self.send_request(self.get_request("verify_authority", [transaction_object.json()]),
+        response_id = self.send_request(self.get_request("verify_authority", [transaction_object]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         require_that(
@@ -123,7 +123,7 @@ class NegativeTesting(BaseTest):
 
         lcc.set_step("Verify authority with incorrect signed transaction")
         response_id = self.send_request(self.get_request("verify_authority",
-                                                         [self.signed_transaction_object.json()]),
+                                                         [self.signed_transaction_object]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id, negative=True)
         require_that(
@@ -153,7 +153,7 @@ class NegativeTesting(BaseTest):
         lcc.set_step("Verify authority of transaction without signature")
         transaction_object = self.signed_transaction_object.copy()
         del transaction_object["signatures"]
-        response_id = self.send_request(self.get_request("verify_authority", [transaction_object.json()]),
+        response_id = self.send_request(self.get_request("verify_authority", [transaction_object]),
                                         self.__database_api_identifier)
 
         response = self.get_response(response_id, negative=True)

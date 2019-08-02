@@ -5,7 +5,7 @@ import time
 import lemoncheesecake.api as lcc
 
 from common.validation import Validator
-from project import BLOCK_RELEASE_INTERVAL
+from project import BLOCK_RELEASE_INTERVAL, BLOCKS_NUM_TO_WAIT
 
 
 class Receiver(object):
@@ -15,7 +15,6 @@ class Receiver(object):
         self.web_socket = web_socket
         self.validator = Validator()
         self.waiting_time_result = 0
-        self.block_count = 10
 
     @staticmethod
     def set_timeout_wait(seconds):
@@ -60,7 +59,7 @@ class Receiver(object):
                     break
         temp_count += 1
         if not actual_id.startswith(expected_id):
-            if temp_count <= self.block_count:
+            if temp_count <= BLOCKS_NUM_TO_WAIT:
                 self.set_timeout_wait(timeout)
                 self.waiting_time_result = self.waiting_time_result + timeout
                 response = json.loads(self.web_socket.recv())
@@ -94,7 +93,7 @@ class Receiver(object):
                         json.dumps(response, indent=4)))
             return notice_obj
 
-    def get_notice(self, id_response, object_id, print_log):
+    def get_notice(self, id_response, object_id, operation_id, print_log):
         response = json.loads(self.web_socket.recv())
         if response.get("params")[0] != id_response:
             lcc.log_error(
@@ -114,16 +113,23 @@ class Receiver(object):
                 lcc.log_info(
                     "Received notice about the hash of a new block:\n{}".format(json.dumps(response, indent=4)))
             return notice_params
-        if (notice_params.get("address")) and (self.validator.is_hex(notice_params.get("log")[0])):
-            if print_log:
-                lcc.log_info(
-                    "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
-            return notice_params
+        if isinstance(notice_params, list):
+            for notice_param in notice_params:
+                if (notice_param["address"]) and (self.validator.is_hex(notice_param["log"][0])):
+                    if print_log:
+                        lcc.log_info(
+                            "Received notice about new contract logs:\n{}".format(json.dumps(response, indent=4)))
+                    return notice_params
         if (notice_params.get("block_num")) and (self.validator.is_hex(notice_params.get("tx_id"))):
             if print_log:
                 lcc.log_info(
                     "Received notice about successful creation of new account:\n{}".format(
                         json.dumps(response, indent=4)))
+            return notice_params
+        if (notice_params.get("ref_block_num")) and (notice_params.get("operations")[0][0] == operation_id):
+            if print_log:
+                lcc.log_info(
+                    "Received notice about pending transaction:\n{}".format(json.dumps(response, indent=4)))
             return notice_params
         lcc.log_warn(
             "Not validate response, got params:\n{}".format(json.dumps(response.get("params")[1], indent=4)))

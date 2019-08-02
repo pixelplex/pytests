@@ -62,7 +62,7 @@ class PositiveTesting(BaseTest):
         self.transfer_operation = None
         self.required_fee = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
         self.valid_contract_id = None
 
     def setup_suite(self):
@@ -180,7 +180,7 @@ class NegativeTesting(BaseTest):
     def get_required_fees(self, operations, asset, negative=False):
         params = [[operations], asset]
         response_id = self.send_request(self.get_request("get_required_fees", params), self.__database_api_identifier)
-        return self.get_response(response_id, negative=negative, log_response=True)
+        return self.get_response(response_id, negative=negative)
 
     def setup_suite(self):
         super().setup_suite()

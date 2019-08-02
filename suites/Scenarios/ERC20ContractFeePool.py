@@ -11,7 +11,7 @@ SUITE = {
 
 
 @lcc.prop("suite_run_option_1", "main")
-@lcc.tags("erc20_contract_fee_pool")
+@lcc.tags("erc20_contract_fee_pool", "sidechain")
 @lcc.suite("Check scenario 'ERC20 contract fee pool'")
 class ERC20ContractFeePool(BaseTest):
 
@@ -26,7 +26,7 @@ class ERC20ContractFeePool(BaseTest):
 
     def setup_suite(self):
         super().setup_suite()
-        self._connect_to_ganache_ethereum()
+        self._connect_to_ethereum()
         self._connect_to_echopy_lib()
         lcc.set_step("Setup for {}".format(self.__class__.__name__))
         self.__database_api_identifier = self.get_identifier("database")
@@ -37,7 +37,7 @@ class ERC20ContractFeePool(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
-        self.eth_address = self.web3.eth.accounts[0]
+        self.eth_address = self.get_default_ethereum_account().address
         lcc.log_info("Ethereum address in the ethereum network: '{}'".format(self.eth_address))
 
     def teardown_suite(self):
@@ -65,19 +65,18 @@ class ERC20ContractFeePool(BaseTest):
             "Default ERC20 contract fee pool amount after creation is '{}'".format(register_erc20_token_fee_pool))
 
         lcc.set_step("Deploy ERC20 contract in the Ethereum network")
-        deployment = self.eth_trx.deploy_contract_in_ethereum_network(self, eth_account=self.eth_address,
-                                                                      contract_abi=self.erc20_abi,
-                                                                      contract_bytecode=self.erc20_contract_code)
-        eth_erc20_contract_address = deployment.get("contract_address")
-        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(eth_erc20_contract_address))
+        erc20_contract = self.eth_trx.deploy_contract_in_ethereum_network(self.web3, eth_address=self.eth_address,
+                                                                          contract_abi=self.erc20_abi,
+                                                                          contract_bytecode=self.erc20_contract_code)
+        lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
         self.utils.perform_register_erc20_token_operation(self, account=self.echo_acc0,
-                                                          eth_addr=eth_erc20_contract_address[2:], name=name,
+                                                          eth_addr=erc20_contract.address, name=name,
                                                           symbol=symbol, database_api_id=self.__database_api_identifier)
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
-        response_id = self.send_request(self.get_request("get_erc20_token", [eth_erc20_contract_address[2:]]),
+        response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
                                         self.__database_api_identifier)
         erc20_contract_id = self.get_response(response_id)["result"]["contract"]
         lcc.log_info("ERC20 token has contract_id '{}'".format(erc20_contract_id))

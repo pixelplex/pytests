@@ -20,7 +20,7 @@ class AssetInt(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.contract = self.get_byte_code("asset_int", "code")
-        self.asset_balance = self.get_byte_code("asset_int", "assetBalance")
+        self.asset_balance = self.get_byte_code("asset_int", "assetbalance(address,uint64)")
 
     def setup_suite(self):
         super().setup_suite()
