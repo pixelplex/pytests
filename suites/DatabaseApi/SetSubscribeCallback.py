@@ -89,7 +89,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.contract_piggy = self.get_byte_code("piggy", "code")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
         self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
 
     def set_subscribe_callback(self, callback, notify_remove_create=False):
@@ -174,7 +174,7 @@ class PositiveTesting(BaseTest):
         self.set_subscribe_callback(subscription_callback_id, notify_remove_create=True)
 
         lcc.set_step("Create 'piggy' contract in ECHO network")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
                                                  self.__database_api_identifier, need_broadcast_result=True)
 
         lcc.set_step("Get notice about created contract")

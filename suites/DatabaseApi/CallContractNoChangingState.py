@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, is_list, equal_to
+from lemoncheesecake.matching import check_that, equal_to, require_that, is_true, is_false
 
 from common.base_test import BaseTest
 
@@ -22,7 +22,7 @@ class CallContractNoChangingState(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def setup_suite(self):
         super().setup_suite()
@@ -71,12 +71,14 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        self.piggy_contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.getPennie = self.get_byte_code("piggy", "getPennie")
-        self.contract_dynamic_fields = self.get_byte_code("dynamic_fields", "code")
+        self.dynamic_fields_contract = self.get_byte_code("dynamic_fields", "code")
         self.set_uint = self.get_byte_code("dynamic_fields", "onUint256Changed(uint256)")
         self.get_uint = self.get_byte_code("dynamic_fields", "getUint256()")
+        self.set_string = self.get_byte_code("dynamic_fields", "onStringChanged(string)")
+        self.get_string = self.get_byte_code("dynamic_fields", "getString()")
+        self.set_all_values = self.get_byte_code("dynamic_fields", "setAllValues(uint256,string)")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
+        self.getPennie = self.get_byte_code("piggy", "pennieReturned()")
 
     def setup_suite(self):
         super().setup_suite()
@@ -96,40 +98,87 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Check work of 'call_contract_no_changing_state' method, not empty call contract result")
+    @lcc.test("Check work of 'call_contract_no_changing_state' method, not empty output call contract result "
+              "(int and string type)")
     @lcc.depends_on("DatabaseApi.CallContractNoChangingState.CallContractNoChangingState.method_main_check")
-    def check_call_contract_no_changing_state_with_not_empty_call_contract_result(self):
-        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
+    def check_call_contract_no_changing_state_with_not_empty_call_contract_result(self, get_random_integer,
+                                                                                  get_random_string):
+        int_param, string_param = get_random_integer, get_random_string
+
+        lcc.set_step("Create 'dynamic_fields' contract in the Echo network and get it's contract id")
+        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.dynamic_fields_contract,
                                                  self.__database_api_identifier)
 
-        lcc.set_step("Call method of piggy contract: 'greet'")
+        lcc.set_step("Call method 'set_string' to add uint field in contract")
+        method_bytecode = self.set_string + self.get_byte_code_param(string_param, param_type=str)
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.greet, callee=contract_id)
+                                                              bytecode=method_bytecode, callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        lcc.log_info("Method 'set_string' performed successfully")
+
+        lcc.set_step("Call method 'get_string'")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.get_string, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        lcc.log_info("Method 'greet' performed successfully")
+        lcc.log_info("Method 'get_string' performed successfully")
 
         lcc.set_step("Get contract result output")
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
         contract_output_in_hex = self.get_contract_output(contract_result, in_hex=True)
+        lcc.tags("Contract output in hex: '{}'".format(contract_output_in_hex))
 
         lcc.set_step("Get call contract operation no changing state")
-        params = [contract_id, self.echo_acc0, self.echo_asset, self.greet]
+        params = [contract_id, self.echo_acc0, self.echo_asset, self.get_string]
         response_id = self.send_request(self.get_request("call_contract_no_changing_state", params),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
+        require_that("'method result has value'", bool(result), is_true(), quiet=True)
         lcc.log_info("Call method 'call_contract_no_changing_state' with params: '{}'".format(params))
 
         lcc.set_step("Check call contract operation no changing state equal to call contract result")
-        check_that("'call contract operation no changing state'", result, equal_to(contract_output_in_hex), quiet=True)
+        check_that("'call contract operation no changing state, output_type=string'", result,
+                   equal_to(contract_output_in_hex), quiet=True)
+
+        lcc.set_step("Call method 'set_uint' to add uint field in contract")
+        method_bytecode = self.set_uint + self.get_byte_code_param(int_param, param_type=int)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=method_bytecode, callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
+        lcc.log_info("Method 'set_uint' performed successfully")
+
+        lcc.set_step("Call method 'get_uint'")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.get_uint, callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Method 'get_uint' performed successfully")
+
+        lcc.set_step("Get contract result output")
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        contract_output_in_hex = self.get_contract_output(contract_result, in_hex=True)
+        lcc.tags("Contract output in hex: '{}'".format(contract_output_in_hex))
+
+        lcc.set_step("Get call contract operation no changing state")
+        params = [contract_id, self.echo_acc0, self.echo_asset, self.get_uint]
+        response_id = self.send_request(self.get_request("call_contract_no_changing_state", params),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
+        require_that("'method result has value'", bool(result), is_true(), quiet=True)
+        lcc.log_info("Call method 'call_contract_no_changing_state' with params: '{}'".format(params))
+
+        lcc.set_step("Check call contract operation no changing state equal to call contract result")
+        check_that("'call contract operation no changing state, output_type=int'", result,
+                   equal_to(contract_output_in_hex), quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test(
-        "Check work of 'call_contract_no_changing_state' method, empty call contract result but with new asset_id")
-    @lcc.tags("qa")
-    # @lcc.depends_on("DatabaseApi.CallContractNoChangingState.CallContractNoChangingState.method_main_check")
+    @lcc.test("Check work of 'call_contract_no_changing_state' method, empty output call contract result but with "
+              "new asset_id")
+    @lcc.depends_on("DatabaseApi.CallContractNoChangingState.CallContractNoChangingState.method_main_check")
     def check_call_contract_no_changing_state_with_empty_call_contract_result(self, get_random_valid_asset_name,
                                                                               get_random_integer):
         value_amount = get_random_integer
@@ -161,66 +210,15 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get contract result output")
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
         contract_output_in_hex = self.get_contract_output(contract_result, in_hex=True)
+        lcc.tags("Contract output in hex: '{}'".format(contract_output_in_hex))
 
         lcc.set_step("Get call contract operation no changing state")
         params = [contract_id, self.echo_acc0, new_asset_id, self.getPennie]
         response_id = self.send_request(self.get_request("call_contract_no_changing_state", params),
                                         self.__database_api_identifier)
         result = self.get_response(response_id)["result"]
+        require_that("'method result has no value'", bool(result), is_false(), quiet=True)
         lcc.log_info("Call method 'call_contract_no_changing_state' with params: '{}'".format(params))
 
         lcc.set_step("Check call contract operation no changing state equal to call contract result")
         check_that("'call contract operation no changing state'", result, equal_to(contract_output_in_hex), quiet=True)
-
-    # todo stop here
-
-    @lcc.prop("type", "method")
-    @lcc.test("Check contract output with int value using 'call_contract_no_changing_state'")
-    @lcc.depends_on("DatabaseApi.CallContractNoChangingState.CallContractNoChangingState.method_main_check")
-    def check_contract_with_two_output(self, get_random_integer):
-        int_param = get_random_integer
-
-        lcc.set_step("Create 'dynamic_fields' contract in ECHO network")
-        contract_dynamic_fields_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_dynamic_fields,
-                                                                self.__database_api_identifier)
-
-        lcc.set_step("Get contract by id")
-        response_id = self.send_request(self.get_request("get_contract", [contract_dynamic_fields_id]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_contract' with param: '{}'".format(contract_dynamic_fields_id))
-
-        lcc.set_step("Check storage of created contract without any fields")
-        contract_storage = response["result"][1]["storage"]
-        check_that("'contract storage'", contract_storage, is_list([]), quiet=True)
-
-        lcc.set_step("Call method 'set_uint' to add uint field in contract")
-        bytecode = self.set_uint + self.get_byte_code_param(int_param, param_type=int)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=bytecode,
-                                                              callee=contract_dynamic_fields_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
-
-        lcc.set_step("Call method 'get_uint'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.get_uint,
-                                                              callee=contract_dynamic_fields_id)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
-                                                   log_broadcast=False)
-        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
-        contract_output = contract_result["result"][1]["exec_res"]["output"]
-        contract_output_value = self.get_contract_output(contract_result, output_type=int)
-
-        lcc.set_step("Get response of 'call_contract_no_changing_state'")
-        response_id = self.send_request(self.get_request("call_contract_no_changing_state",
-                                                         [contract_dynamic_fields_id, self.echo_acc0, self.echo_asset,
-                                                          self.get_uint]),
-                                        self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
-        lcc.log_info("{}".format(result))
-        lcc.set_step(
-            "Check value of contract result and that result output equal to 'call_contract_no_changing_state' result")
-        check_that("'uint field in contract'", contract_output_value, equal_to(int_param))
-        check_that("contract_output", result, equal_to(contract_output))
