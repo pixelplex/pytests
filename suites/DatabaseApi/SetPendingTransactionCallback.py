@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
+
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_none, equal_to, is_not_none
 
@@ -21,15 +23,6 @@ class SetPendingTransactionCallback(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.echo_acc1 = None
-
-    def set_subscribe_callback(self, callback, notify_remove_create=False):
-        params = [callback, notify_remove_create]
-        response_id = self.send_request(self.get_request("set_subscribe_callback", params),
-                                        self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
-        if result is not None:
-            raise Exception("Subscription not issued")
-        lcc.log_info("Call method 'set_subscribe_callback', 'notify_remove_create'={}".format(notify_remove_create))
 
     def setup_suite(self):
         super().setup_suite()
@@ -56,25 +49,29 @@ class SetPendingTransactionCallback(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'set_pending_transaction_callback'")
     def method_main_check(self, get_random_integer):
-        lcc.set_step("Set subscribe callback")
         subscription_callback_id = get_random_integer
-        self.set_subscribe_callback(subscription_callback_id)
 
-        lcc.set_step("Set pending transaction callback and get response")
+        lcc.set_step("Subscribe to pending transactions")
         response_id = self.send_request(
             self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
             self.__database_api_identifier)
         response = self.get_response(response_id)
-        lcc.set_step("Check set subscribe callback")
+
+        lcc.set_step("Check simple work of method 'set_pending_transaction_callback'")
         check_that("'subscribe callback'", response["result"], is_none())
 
-        lcc.set_step("Broadcast transfer operation and get notice")
+        lcc.set_step("Perform transfer operation")
         operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
                                                          to_account_id=self.echo_acc1)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
-        notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
-        check_that("notice", notice, is_not_none(), quiet=True)
+        lcc.log_info("Transfer operation performed successfully")
+
+        lcc.set_step("Get notices about pending transaction")
+        notice = self.get_notice(subscription_callback_id, operation_id=operation[0], log_response=False)
+
+        lcc.set_step("Check subscribe pending transaction")
+        check_that("'notice about pending transaction'", notice, is_not_none(), quiet=True)
 
 
 @lcc.prop("suite_run_option_2", "positive")
@@ -87,17 +84,22 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.echo_acc1 = None
-        self.contract_piggy = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.piggy_contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
-    def set_subscribe_callback(self, callback, notify_remove_create=False):
-        params = [callback, notify_remove_create]
-        response_id = self.send_request(self.get_request("set_subscribe_callback", params),
-                                        self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
-        if result is not None:
-            raise Exception("Subscription not issued")
-        lcc.log_info("Call method 'set_subscribe_callback', 'notify_remove_create'={}".format(notify_remove_create))
+    def subscribe_pending_transactions(self, callback):
+        response_id = self.send_request(
+            self.get_request("set_pending_transaction_callback", [callback]), self.__database_api_identifier)
+        response = self.get_response(response_id)
+        if response["result"] is not None:
+            raise Exception("Subscription to pending transactions not issued")
+        lcc.log_info("Subscription to pending transactions successful")
+
+    @staticmethod
+    def get_trx_from_broadcast_result(broadcast_result):
+        trx = deepcopy(broadcast_result["trx"])
+        del trx["operation_results"]
+        return trx
 
     def setup_suite(self):
         super().setup_suite()
@@ -122,61 +124,68 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.test("Check 'set_pending_transaction_callback' with perform transfer operation")
+    @lcc.test("Check work of method with perform transfer operation")
     @lcc.depends_on("DatabaseApi.SetPendingTransactionCallback.SetPendingTransactionCallback.method_main_check")
-    def check_notice_of_pending_transaction_callback_with_transfer_operation(self, get_random_integer):
-        lcc.set_step("Set subscribe callback")
+    def check_notice_about_pending_transfer_transaction(self, get_random_integer):
         subscription_callback_id = get_random_integer
-        self.set_subscribe_callback(subscription_callback_id)
 
-        lcc.set_step("Set pending transaction callback and get response")
-        response_id = self.send_request(
-            self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
-            self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.set_step("Check set subscribe callback")
-        check_that("'subscribe callback'", response["result"], is_none())
+        lcc.set_step("Subscribe to pending transactions")
+        self.subscribe_pending_transactions(subscription_callback_id)
 
-        lcc.set_step("Broadcast transfer operation")
+        lcc.set_step("Perform transfer operation")
         operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
                                                          to_account_id=self.echo_acc1)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
+        lcc.log_info("Transfer operation performed successfully")
 
         lcc.set_step("Get notice about call contract and check notice of perform transfer operation")
         notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
-        del broadcast_result["trx"]["operation_results"]
-        check_that("notice params", notice, equal_to(broadcast_result["trx"]))
+
+        check_that("'notice about pending transfer transaction'", notice,
+                   equal_to(self.get_trx_from_broadcast_result(broadcast_result)), quiet=True)
 
     @lcc.prop("type", "method")
-    @lcc.test("Check 'set_pending_transaction_callback' with call contract operation")
+    @lcc.test("Check work of method with perform contract operations")
     @lcc.depends_on("DatabaseApi.SetPendingTransactionCallback.SetPendingTransactionCallback.method_main_check")
-    def check_notice_of_pending_transaction_callback_with_call_contract_operation(self, get_random_integer):
-        lcc.set_step("Set subscribe callback")
+    def check_notice_about_pending_contract_transactions(self, get_random_integer):
         subscription_callback_id = get_random_integer
-        self.set_subscribe_callback(subscription_callback_id, notify_remove_create=False)
 
-        lcc.set_step("Set pending transaction callback and get response")
-        response_id = self.send_request(
-            self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
-            self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.set_step("Check set subscribe callback")
-        check_that("'subscribe callback'", response["result"], is_none())
+        lcc.set_step("Subscribe to pending transactions")
+        self.subscribe_pending_transactions(subscription_callback_id)
 
-        lcc.set_step("Create 'piggy' contract in ECHO network")
-        contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract_piggy,
-                                                 self.__database_api_identifier, need_broadcast_result=True)
-
-        lcc.set_step("Call 'greet' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                              bytecode=self.greet,
-                                                              callee=contract_id.get("contract_id"))
+        lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
+        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                                bytecode=self.piggy_contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
                                                    log_broadcast=False)
-        lcc.set_step("Get notice about call contract and check notice of call contract operation")
+        lcc.log_info("Create contract operation performed successfully")
+
+        lcc.set_step("Get notices about pending create contract transaction")
         notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
-        del broadcast_result["trx"]["operation_results"]
-        check_that("notice params", notice, equal_to(broadcast_result["trx"]))
+
+        lcc.set_step("Check notices about pending create contract transaction")
+        check_that("'notice about pending create contract transaction'", notice,
+                   equal_to(self.get_trx_from_broadcast_result(broadcast_result)), quiet=True)
+
+        lcc.set_step("Get created 'piggy' contract id")
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        contract_id = self.get_contract_id(contract_result)
+        lcc.log_info("Created 'piggy' contract id: '{}'".format(contract_id))
+
+        lcc.set_step("Call contract method greet")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.greet, callee=contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Method 'greet' performed successfully")
+
+        lcc.set_step("Get notices about pending call contract transaction")
+        notice = self.get_notice(subscription_callback_id, operation_id=operation[0])
+
+        lcc.set_step("Check notices about pending call contract transaction")
+        check_that("'notice about pending call contract transaction'", notice,
+                   equal_to(self.get_trx_from_broadcast_result(broadcast_result)), quiet=True)

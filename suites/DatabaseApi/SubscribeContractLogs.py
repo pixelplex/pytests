@@ -248,7 +248,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get notices about updates of created contract")
         contract_logs_notice = self.get_notice(subscription_callback_id)
 
-        lcc.set_step("Check contract result with several logs")
+        lcc.set_step("Check contract logs in notice with several logs")
         for i, log in enumerate(contract_logs_notice):
             lcc.log_info("Check log#'{}'".format(i))
             with this_dict(log):
@@ -271,13 +271,13 @@ class PositiveTesting(BaseTest):
                 is_true()
             )
 
-        lcc.set_step("Check contract result log value")
+        lcc.set_step("Check contract log value in notice")
         method_names_in_keccak_std = [self.get_keccak_standard_value(self.setUint256_method_name),
                                       self.get_keccak_standard_value(self.setString_method_name)]
         for i, log in enumerate(contract_logs_notice):
             check_that("'log value'", log["log"][0], equal_to(method_names_in_keccak_std[i]), quiet=True)
 
-        lcc.set_step("Check contract result log data")
+        lcc.set_step("Check contract log data in notice")
         call_contract_params = [int_param, string_param]
         output_types = [int, str]
         log_data = self.get_contract_log_data(contract_logs_notice, output_types, log_format=True)
@@ -430,6 +430,8 @@ class NegativeTesting(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()

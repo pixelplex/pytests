@@ -130,6 +130,7 @@ class Receiver(object):
             if print_log:
                 lcc.log_info(
                     "Received notice about pending transaction:\n{}".format(json.dumps(response, indent=4)))
+            return notice_params
         lcc.log_warn(
             "Not validate response, got params:\n{}".format(json.dumps(response.get("params")[1], indent=4)))
         raise Exception("Not validate response")
