@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, has_length, has_item, is_true, equal_to
+from lemoncheesecake.matching import require_that, has_length, has_item, equal_to
 
 from common.base_test import BaseTest
 
@@ -64,7 +64,7 @@ class GetPotentialSignatures(BaseTest):
         expected_keys = [active_keys["key_auths"][0][0]]
 
         lcc.set_step("Get potential signatures for built transaction")
-        response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx.json()]),
+        response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call 'get_potential_signatures' method for built transaction")
@@ -165,7 +165,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Transaction was built")
 
         lcc.set_step("Get potential signatures for built transaction")
-        response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx.json()]),
+        response_id = self.send_request(self.get_request("get_potential_signatures", [signed_tx]),
                                         self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call 'get_potential_signatures' method for built transaction")

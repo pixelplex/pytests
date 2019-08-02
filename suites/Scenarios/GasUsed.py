@@ -21,7 +21,7 @@ class GasUsed(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.enough_fee_amount = 2000
         self.create_contract_id = None
         self.call_contract_id = None

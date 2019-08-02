@@ -3,6 +3,7 @@ import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, has_entry, is_str
 
 from common.base_test import BaseTest
+from project import BASE_ASSET_SYMBOL
 
 SUITE = {
     "description": "Method 'get_config'"
@@ -35,6 +36,7 @@ class GetConfig(BaseTest):
         lcc.log_info("Call method 'get_config'")
 
         lcc.set_step("Check main fields")
+        echo_config_symbols = ["ECHO_SYMBOL", "ECHO_ADDRESS_PREFIX", "ECHO_ED_PREFIX"]
         echo_configs = ["ECHO_MIN_ACCOUNT_NAME_LENGTH", "ECHO_MAX_ACCOUNT_NAME_LENGTH", "ECHO_MIN_ASSET_SYMBOL_LENGTH",
                         "ECHO_MAX_ASSET_SYMBOL_LENGTH", "ECHO_MAX_SHARE_SUPPLY", "ECHO_MAX_PAY_RATE",
                         "ECHO_MAX_SIG_CHECK_DEPTH", "ECHO_MIN_TRANSACTION_SIZE_LIMIT", "ECHO_MIN_BLOCK_INTERVAL",
@@ -63,37 +65,20 @@ class GetConfig(BaseTest):
                         "ECHO_CORE_ASSET_CYCLE_RATE", "ECHO_CORE_ASSET_CYCLE_RATE_BITS",
                         # todo: COMMITEE -> COMMITTEE. Bug ECHO-1026
                         "ECHO_DEFAULT_COMMITEE_PAY_VESTING_SECONDS", "ECHO_MAX_INTEREST_APR"]
+        echo_config_accounts = ["ECHO_COMMITTEE_ACCOUNT", "ECHO_RELAXED_COMMITTEE_ACCOUNT", "ECHO_NULL_ACCOUNT",
+                                "ECHO_TEMP_ACCOUNT"]
         with this_dict(response["result"]):
             if check_that("config", response["result"], has_length(70)):
-                check_that_entry("ECHO_SYMBOL", is_str("ECHO"), quiet=True)
-                check_that_entry("ECHO_ADDRESS_PREFIX", is_str("ECHO"), quiet=True)
-                check_that_entry("ECHO_ED_PREFIX", is_str("ECHO"), quiet=True)
+                for echo_config_symbol in echo_config_symbols:
+                    check_that_entry(echo_config_symbol, is_str(BASE_ASSET_SYMBOL), quiet=True)
                 for i in range(len(echo_configs)):
                     self.check_uint64_numbers(response["result"], echo_configs[i], quiet=True)
-
-                if not self.validator.is_account_id(response["result"]["ECHO_COMMITTEE_ACCOUNT"]):
-                    lcc.log_error("Wrong format of 'ECHO_COMMITTEE_ACCOUNT', got: {}".format(
-                        response["result"]["ECHO_COMMITTEE_ACCOUNT"]))
-                else:
-                    lcc.log_info("'ECHO_COMMITTEE_ACCOUNT' has correct format: account_id")
-
-                if not self.validator.is_account_id(response["result"]["ECHO_RELAXED_COMMITTEE_ACCOUNT"]):
-                    lcc.log_error("Wrong format of 'ECHO_RELAXED_COMMITTEE_ACCOUNT', got: {}".format(
-                        response["result"]["ECHO_RELAXED_COMMITTEE_ACCOUNT"]))
-                else:
-                    lcc.log_info("'ECHO_RELAXED_COMMITTEE_ACCOUNT' has correct format: account_id")
-
-                if not self.validator.is_account_id(response["result"]["ECHO_NULL_ACCOUNT"]):
-                    lcc.log_error("Wrong format of 'ECHO_NULL_ACCOUNT', got: {}".format(
-                        response["result"]["ECHO_NULL_ACCOUNT"]))
-                else:
-                    lcc.log_info("'ECHO_NULL_ACCOUNT' has correct format: account_id")
-
-                if not self.validator.is_account_id(response["result"]["ECHO_TEMP_ACCOUNT"]):
-                    lcc.log_error("Wrong format of 'ECHO_TEMP_ACCOUNT', got: {}".format(
-                        response["result"]["ECHO_TEMP_ACCOUNT"]))
-                else:
-                    lcc.log_info("'ECHO_TEMP_ACCOUNT' has correct format: account_id")
+                for echo_config_account in echo_config_accounts:
+                    if not self.validator.is_account_id(response["result"][echo_config_account]):
+                        lcc.log_error("Wrong format of '{}', got: {}".format(echo_config_account, response["result"][
+                            echo_config_account]))
+                    else:
+                        lcc.log_info("'{}' has correct format: account_id".format(echo_config_account))
 
 
 @lcc.prop("suite_run_option_3", "negative")
