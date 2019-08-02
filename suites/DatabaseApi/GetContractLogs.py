@@ -434,7 +434,7 @@ class PositiveTesting(BaseTest):
         check_that("contract_logs", contract_logs, equal_to([]))
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_contract_logs")
 @lcc.suite("Negative testing of method 'get_contract_logs'", rank=3)
 class NegativeTesting(BaseTest):

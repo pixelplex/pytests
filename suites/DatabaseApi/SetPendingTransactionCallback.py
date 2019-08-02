@@ -61,8 +61,9 @@ class SetPendingTransactionCallback(BaseTest):
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Set pending transaction callback and get response")
-        response_id = self.send_request(self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
-                                        self.__database_api_identifier)
+        response_id = self.send_request(
+            self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
+            self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.set_step("Check set subscribe callback")
         check_that("'subscribe callback'", response["result"], is_none())
@@ -129,8 +130,9 @@ class PositiveTesting(BaseTest):
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Set pending transaction callback and get response")
-        response_id = self.send_request(self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
-                                        self.__database_api_identifier)
+        response_id = self.send_request(
+            self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
+            self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.set_step("Check set subscribe callback")
         check_that("'subscribe callback'", response["result"], is_none())
@@ -156,8 +158,9 @@ class PositiveTesting(BaseTest):
         self.set_subscribe_callback(subscription_callback_id, notify_remove_create=False)
 
         lcc.set_step("Set pending transaction callback and get response")
-        response_id = self.send_request(self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
-                                        self.__database_api_identifier)
+        response_id = self.send_request(
+            self.get_request("set_pending_transaction_callback", [subscription_callback_id]),
+            self.__database_api_identifier)
         response = self.get_response(response_id)
         lcc.set_step("Check set subscribe callback")
         check_that("'subscribe callback'", response["result"], is_none())

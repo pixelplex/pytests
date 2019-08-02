@@ -93,7 +93,7 @@ class Receiver(object):
                         json.dumps(response, indent=4)))
             return notice_obj
 
-    def get_notice(self, id_response, object_id, print_log, operation_id=None):
+    def get_notice(self, id_response, object_id, operation_id, print_log):
         response = json.loads(self.web_socket.recv())
         if response.get("params")[0] != id_response:
             lcc.log_error(

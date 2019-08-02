@@ -114,7 +114,7 @@ class SubscribeContractLogs(BaseTest):
         check_that("result", contract_logs, equal_to(contract_logs_notice), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "subscribe_contract_logs")
 @lcc.suite("Positive testing of method 'subscribe_contract_logs'", rank=2)
 class PositiveTesting(BaseTest):
@@ -401,7 +401,7 @@ class PositiveTesting(BaseTest):
                     require_that("contract_logs in notice", log, has_entry(key), quiet=True)
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "subscribe_contract_logs")
 @lcc.suite("Negative testing of method 'subscribe_contract_logs'", rank=3)
 class NegativeTesting(BaseTest):
