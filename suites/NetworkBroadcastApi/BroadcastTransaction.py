@@ -143,19 +143,21 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check that account: {} doesn't exist in network".format(account_name))
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
-        check_that("'get_account_by_name' response", response["result"], is_none())
+        response_result = self.get_response(response_id)["result"]
+        check_that("'get_account_by_name' response", response_result, is_none())
 
+        lcc.set_step("Create 'account_create_operation'")
         operation = self.echo_ops.get_account_create_operation(self.echo, account_name, public_key[1], public_key[1],
                                                                registrar=self.echo_acc0, signer=self.echo_acc0)
-        lcc.set_step("Broadcast account create operation")
+
+        lcc.set_step("Sign transaction of 'account_create_operation' and broadcast")
         self.broadcast_transaction(operation)
 
         lcc.set_step("Check that account: {} created successfully".format(account_name))
         response_id = self.send_request(self.get_request("get_account_by_name", [account_name]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
-        check_that("'get_account_by_name' response", response["result"], is_not_none(), quiet=True)
+        response_result = self.get_response(response_id)["result"]
+        check_that("'get_account_by_name' response", response_result, is_not_none(), quiet=True)
 
 # todo: add operations "limit_order_create", "limit_order_cancel", "call_order_update", "fill_order",
 
@@ -166,41 +168,37 @@ class PositiveTesting(BaseTest):
     def broadcast_account_update_operation(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
 
-        lcc.set_step("Registration an account")
+        lcc.set_step("Create new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
-        response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
-                                        self.__database_api_identifier)
-        self.get_response(response_id)
 
         lcc.set_step("Get info about account and store current 'delegating_account'")
         response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
                                         self.__database_api_identifier)
-        response_options = self.get_response(response_id)["result"][0]["options"]
-        current_delegating_account = response_options["delegating_account"]
+        response_result_options = self.get_response(response_id)["result"][0]["options"]
+        current_delegating_account = response_result_options["delegating_account"]
         lcc.log_info("Current delegating account of '{}' is '{}'".format(new_account, current_delegating_account))
 
-        lcc.set_step("Add assets to a new account to pay fee")
+        lcc.set_step("Add assets to a new account to pay fee and create 'account_upgrade_operation'")
         operation = self.echo_ops.get_account_update_operation(echo=self.echo, account=new_account,
-                                                               voting_account=response_options["voting_account"],
+                                                               voting_account=response_result_options["voting_account"],
                                                                delegating_account=self.echo_acc0,
-                                                               num_committee=response_options["num_committee"],
-                                                               votes=response_options["votes"])
-
+                                                               num_committee=response_result_options["num_committee"],
+                                                               votes=response_result_options["votes"])
         fee = self.get_required_fee(operation, self.__database_api_identifier)[0].get("amount")
         self.utils.perform_transfer_operations(self, self.echo_acc0, new_account,
                                                self.__database_api_identifier, transfer_amount=fee)
         lcc.log_info("Needed amount '{}' to pay fee added to account '{}'".format(fee, new_account))
 
-        lcc.set_step("Broadcast account update operation")
+        lcc.set_step("Sign transaction of 'account_update_operation' and broadcast")
         self.broadcast_transaction(operation)
 
         response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
+        delegating_account_after_broadcast = self.get_response(response_id)["result"][0]["options"]["delegating_account"]
+
         lcc.set_step("Check that delegating_account changed after broadcast 'account_update_operation'")
-        delegating_account_after_broadcast = response["result"][0]["options"]["delegating_account"]
         check_that("delegating_account", current_delegating_account, not_equal_to(delegating_account_after_broadcast))
 
 # todo: add operation "account_whitelist"
@@ -211,25 +209,27 @@ class PositiveTesting(BaseTest):
     def broadcast_account_upgrade_operation(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
 
-        lcc.set_step("Registration an account")
+        lcc.set_step("Create new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
-        response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
+
+        lcc.set_step("Create signed transaction of 'account_upgrade_operation'")
         operation = self.echo_ops.get_account_upgrade_operation(self.echo, account_to_upgrade=new_account,
                                                                 upgrade_to_lifetime_member=True)
-        lcc.set_step("Add balance to pay fee for 'get_account_upgrade_operation'")
+
+        lcc.set_step("Add balance to pay fee for 'account_upgrade_operation'")
         self.utils.add_balance_for_operations(self, new_account, operation, self.__database_api_identifier,
-                                              log_broadcast=True)
-        lcc.set_step("Broadcast account upgrade operation")
+                                              log_broadcast=False)
+
+        lcc.set_step("Sign transaction of 'account_upgrade_operation' and broadcast")
         self.broadcast_transaction(operation)
-        lcc.log_info("{}".format(new_account))
+
+        lcc.set_step("Check that account become lifetime member")
         response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
                                         self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.log_info("фыв{}".format(response))
+        response_result_lifetime_referrer = self.get_response(response_id)["result"][0]["lifetime_referrer"]
+        check_that("'lifetime_referrer'", response_result_lifetime_referrer, equal_to(new_account))
 
 # todo: add operation "account_transfer"
 
@@ -240,17 +240,22 @@ class PositiveTesting(BaseTest):
         new_account = get_random_valid_account_name
         new_asset_name = get_random_valid_asset_name
         operation_count = 1
-        lcc.set_step("Create and get new account.")
+
+        lcc.set_step("Create new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
-        lcc.set_step("Add balance to pay fee for 'asset_create_operation'")
+        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
+
+        lcc.set_step("Create signed transaction of 'asset_create_operation'")
         operation = self.echo_ops.get_asset_create_operation(echo=self.echo, issuer=new_account,
                                                              symbol=new_asset_name)
+
+        lcc.set_step("Add balance to pay fee for 'asset_create_operation'")
         self.utils.add_balance_for_operations(self, new_account, operation,
                                               self.__database_api_identifier,
                                               operation_count=operation_count,
                                               log_broadcast=True)
-        lcc.log_info("New Echo account created, account_id='{}, balance added".format(new_account))
+        lcc.log_info("Balance added  to account: '{},".format(new_account))
 
         lcc.set_step("Broadcast asset create operation")
         self.broadcast_transaction(operation)
@@ -280,9 +285,11 @@ class PositiveTesting(BaseTest):
         asset_id = self.utils.get_asset_id(self, asset_name, self.__database_api_identifier)
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
-        lcc.set_step("Create and get new account")
+        lcc.set_step("Create new account")
         account_id = self.get_account_id(account_names, self.__database_api_identifier,
                                          self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(account_id))
+
         lcc.log_info("Account id:{}".format(account_id))
         operation = self.echo_ops.get_asset_issue_operation(echo=self.echo, issuer=self.echo_acc0,
                                                             value_amount=asset_value, value_asset_id=asset_id,
@@ -309,6 +316,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create and get new account")
         account_id = self.get_account_id(account_name, self.__database_api_identifier,
                                          self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(account_id))
 
         lcc.set_step("Add balance to pay fee for 'get_account_upgrade_operation' and update account to lifetime member")
         operation = self.echo_ops.get_account_upgrade_operation(self.echo, account_to_upgrade=account_id,
@@ -361,6 +369,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
+        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Perform vesting balance create operation")
         operation = self.echo_ops.get_vesting_balance_create_operation(echo=self.echo, creator=self.echo_acc0,
