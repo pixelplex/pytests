@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, is_, check_that, is_list, equal_to, is_true
+from lemoncheesecake.matching import check_that, equal_to, is_true, is_
 
 from common.base_test import BaseTest
 from fixtures.base_fixtures import get_random_integer_up_to_ten
@@ -20,7 +20,6 @@ class CreateContractsWithCutCode(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.echo_acc0 = None
-        # todo: move to init
         self.contract_bytecode = self.get_byte_code("piggy", "code")
         self.get_pennie = self.get_byte_code("piggy", "getPennie")
         self.greet = self.get_byte_code("piggy", "greet")
@@ -60,27 +59,44 @@ class CreateContractsWithCutCode(BaseTest):
     @lcc.test("Simple work of scenario 'create_contracts_with_cut_code'")
     def create_contracts_with_cut_code_scenario(self, get_random_integer):
         amount = get_random_integer
-        num_1 = get_random_integer_up_to_ten()
-        num_2 = get_random_integer_up_to_ten()
-
         expected_string = "Hello World!!!"
 
+        lcc.set_step("Create valid contract")
+        create_contract_operation = self.echo_ops.get_create_contract_operation(echo=self.echo,
+                                                                                registrar=self.echo_acc0,
+                                                                                value_amount=amount,
+                                                                                bytecode=self.contract_bytecode)
+        fee = self.get_required_fee(create_contract_operation, self.__database_api_identifier)[0]["amount"]
+        create_contract_operation[1]["fee"].update({"amount": fee})
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=create_contract_operation,
+                                                   log_broadcast=False)
 
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                                value_amount=amount, bytecode=self.contract_bytecode)
-        fee = self.get_required_fee(operation, self.__database_api_identifier)[0]["amount"]
-        cut_character_numbers = [num_1, -num_2]
-        for cut_character_number in cut_character_numbers:
+        lcc.set_step("Get contract id")
+        response_id = self.send_request(self.get_request("get_contract_result",
+                                                         [self.get_operation_results_ids(broadcast_result)]),
+                                        self.__database_api_identifier)
+        contract_id = self.get_contract_id(self.get_response(response_id))
 
-            lcc.set_step("Create contract with cut bytecode by '{}' character".format(cut_character_number))
-            cut_contract_bytecode = self.contract_bytecode[cut_character_number:]
-            operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
-                                                                    value_amount=amount,
-                                                                    bytecode=cut_contract_bytecode, fee_amount=fee)
-            broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=operation, log_broadcast=False)
-            lcc.log_info("Contract result id '{}'".format(broadcast_result["trx"]["operation_results"][0][1]))
+        response_id = self.send_request(self.get_request("get_contract", [contract_id]), self.__database_api_identifier)
+        contract_response = self.get_response(response_id, log_response=True)
+        valid_contract_type = contract_response["result"][0]
+        valid_field_code = contract_response["result"][1]["code"]
+        valid_field_storage_var1 = contract_response["result"][1]["storage"][0][0]
+        valid_field_storage_var2 = contract_response["result"][1]["storage"][0][1]
 
-            lcc.set_step("Get contract result")
+        lcc.set_step("Create contract with cut bytecode")
+        cut_bytecodes_of_contracts = [self.contract_bytecode[11:],
+                                      self.contract_bytecode[:-9]]
+        for cut_contract_bytecode in cut_bytecodes_of_contracts:
+            create_contract_operation = self.echo_ops.get_create_contract_operation(echo=self.echo,
+                                                                                    registrar=self.echo_acc0,
+                                                                                    value_amount=amount,
+                                                                                    bytecode=cut_contract_bytecode,
+                                                                                    fee_amount=fee)
+            broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=create_contract_operation,
+                                                       log_broadcast=False)
+
+            lcc.set_step("Call method 'get_contract_result' of cut contract")
             status = True
             contract_result = None
             try:
@@ -90,33 +106,28 @@ class CreateContractsWithCutCode(BaseTest):
                 if e == "Transaction not completed" or "StackUnderflow":
                     lcc.log_info("Wrong contract result")
                     status = False
-
-            lcc.set_step("Get contract id")
             if status:
+                lcc.set_step("Get contract id")
                 contract_id = self.get_contract_id(contract_result)
 
                 lcc.set_step("Get the contract by id")
                 response_id = self.send_request(self.get_request("get_contract", [contract_id]),
                                                 self.__database_api_identifier)
                 response = self.get_response(response_id)
-                lcc.log_info("Call method 'get_contract' with contract_id='{}' parameter".format(contract_id))
 
-                lcc.set_step("Check simple work of method 'get_contract'")
+                lcc.set_step(
+                    "Check simple work of method 'get_contract' of contract with cut code by {} characters".format(
+                        int(len(self.contract_bytecode)) - int(len(cut_contract_bytecode))))
                 contract_type = response["result"][0]
-                require_that("contract index", contract_type, is_(0))
                 contract_info = response["result"][1]
-                if not self.validator.is_hex(contract_info["code"]):
-                    lcc.log_error("Wrong format of 'code', got: {}".format(contract_info["code"]))
-                else:
-                    lcc.log_info("'code' has correct format: hex")
-                contract_storage = contract_info["storage"]
-                if check_that("''storage' length'", len(contract_storage), is_(1)):
-                    if not self.validator.is_hex(contract_storage[0][0]):
-                        lcc.log_error(
-                            "Wrong format of 'contract storage var 1', got: {}".format(contract_storage[0][0]))
-                    else:
-                        lcc.log_info("'contract storage var 1' has correct format: hex")
-                    check_that("'contract storage var 2'", contract_storage[0][1], is_list(), quiet=True)
+                check_that("'contract_type'", contract_type, equal_to(valid_contract_type))
+                check_that("'code'", contract_info["code"], equal_to(valid_field_code))
+                if check_that("storage length", len(contract_info["storage"]),
+                              equal_to(contract_response["result"][1]["storage"])):
+                    check_that("'storage variable 1'", contract_info["storage"][0][0],
+                               equal_to(valid_field_storage_var1))
+                    check_that("'storage variable 2'", contract_info["storage"][0][1],
+                               equal_to(valid_field_storage_var2))
 
                 lcc.set_step("Call contract method 'greet'")
                 contract_method_response = self.get_contract_operation_result(contract_id=contract_id,
@@ -128,8 +139,7 @@ class CreateContractsWithCutCode(BaseTest):
                 check_that("'Result of method 'greet''", contract_method_output, is_(expected_string))
 
                 lcc.set_step("Call method 'getPennie'")
-                self.get_contract_operation_result(contract_id=contract_id,
-                                                   method_bytecode=self.get_pennie)
+                self.get_contract_operation_result(contract_id=contract_id, method_bytecode=self.get_pennie)
 
                 lcc.set_step("Check implementation of method 'getPennie'")
                 created_contract_balance_amount = self.get_contract_balance_amount(contract_id=contract_id)
@@ -137,8 +147,7 @@ class CreateContractsWithCutCode(BaseTest):
                            equal_to(amount - 1))
 
                 lcc.set_step("Call method 'breakPiggy'")
-                self.get_contract_operation_result(contract_id=contract_id,
-                                                   method_bytecode=self.break_piggy)
+                self.get_contract_operation_result(contract_id=contract_id, method_bytecode=self.break_piggy)
 
                 lcc.set_step("Check result of method 'breakPiggy': contract balance")
                 created_contract_balance_amount = self.get_contract_balance_amount(contract_id=contract_id)
