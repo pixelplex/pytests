@@ -15,7 +15,7 @@ SUITE = {
 @lcc.suite("History API")
 class HistoryApi(object):
 
-    @lcc.tags("connection_to_history_api")
+    @lcc.tags("connection_to_history_api", "connection_to_apis")
     @lcc.test("Check connection to HistoryApi")
     def connection_to_history_api(self):
         base = BaseTest()
