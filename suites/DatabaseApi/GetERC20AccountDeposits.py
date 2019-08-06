@@ -2,12 +2,13 @@
 import random
 
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import require_that, greater_than
+from lemoncheesecake.matching import require_that, greater_than, has_length, this_dict, check_that_entry, check_that, \
+    is_list, equal_to, is_true
 
 from common.base_test import BaseTest
 
 SUITE = {
-    "description": "Method 'get_erc20_account_deposits(account)'"
+    "description": "Method 'get_erc20_account_deposits'"
 }
 
 
@@ -26,9 +27,11 @@ class GetERC20AccountDeposits(BaseTest):
         self.erc20_contract_code = self.get_byte_code("erc20", "code", ethereum_contract=True)
         self.erc20_abi = self.get_abi("erc20")
 
-    @staticmethod
-    def get_random_amount(_to, _from=0):
-        return random.randrange(_from, _to)
+    def get_random_amount(self, _to, _from=1):
+        amount = random.randrange(_from, _to)
+        if amount == _to:
+            return self.get_random_amount(_to=_to, _from=_from)
+        return amount
 
     def setup_suite(self):
         super().setup_suite()
@@ -40,8 +43,7 @@ class GetERC20AccountDeposits(BaseTest):
         self.__history_api_identifier = self.get_identifier("history")
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}',"
-            " history='{}'".format(self.__database_api_identifier,
-                                   self.__registration_api_identifier,
+            " history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                    self.__history_api_identifier))
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
@@ -54,12 +56,12 @@ class GetERC20AccountDeposits(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
+    @lcc.tags("Bug ECHO-1043")
     @lcc.test("Simple work of method 'get_erc20_account_deposits'")
     def method_main_check(self, get_random_string, get_random_valid_asset_name, get_random_valid_account_name):
         new_account_name = get_random_valid_account_name
         token_name = "erc20" + get_random_string
         erc20_symbol = get_random_valid_asset_name
-        sidechain_issue_operations = []
         erc20_deposit_amounts = []
 
         lcc.set_step("Create and get new account")
@@ -86,41 +88,75 @@ class GetERC20AccountDeposits(BaseTest):
 
         lcc.set_step("Get ethereum ERC20 tokens balance in the Ethereum network")
         in_ethereum_erc20_balance = self.eth_trx.get_balance_of(erc20_contract, self.eth_account.address)
-        in_ethereum_start_erc20_balance = in_ethereum_erc20_balance
         require_that("'in ethereum erc20 contact balance'", in_ethereum_erc20_balance, greater_than(0))
 
         lcc.set_step("Perform register erc20 token operation")
-        bd_result = self.utils.perform_register_erc20_token_operation(self, account=new_account_id,
-                                                                      eth_addr=erc20_contract.address,
-                                                                      name=token_name, symbol=erc20_symbol,
-                                                                      database_api_id=self.__database_api_identifier)
+        self.utils.perform_register_erc20_token_operation(self, account=new_account_id,
+                                                          eth_addr=erc20_contract.address,
+                                                          name=token_name, symbol=erc20_symbol,
+                                                          database_api_id=self.__database_api_identifier)
         # todo: uncomment. Bug ECHO-1043
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
             "1.20.x"))  # todo: echo_erc20_contract_id
 
-        lcc.set_step("Get created ERC20 token and store ")
-        response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
-                                        self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
-        erc20_token_id = result["id"]
-        erc20_contract_id = result["contract"]
-        lcc.log_info("ERC20 token has id '{}' and contract_id '{}'".format(erc20_token_id, erc20_contract_id))
-
         lcc.set_step("First transfer erc20 to ethereum of created account")
-        erc20_deposit_amounts.append(self.get_random_amount(_to=in_ethereum_start_erc20_balance))
-        self.eth_trx.transfer(self.web3, erc20_contract, eth_account_address, in_ethereum_start_erc20_balance)
+        erc20_deposit_amounts.append(self.get_random_amount(_to=in_ethereum_erc20_balance))
+        self.eth_trx.transfer(self.web3, erc20_contract, eth_account_address, erc20_deposit_amounts[0],
+                              log_transaction=False)
         lcc.log_info(
-            "Transfer '{}' erc20 tokens to {} account completed successfully".format(in_ethereum_start_erc20_balance,
-                                                                                     eth_account_address))
+            "Transfer '{}' erc20 tokens to '{}' account completed successfully".format(erc20_deposit_amounts[0],
+                                                                                       eth_account_address))
 
-        lcc.set_step("Store the first sent operation EthToEcho")
-        sidechain_issue_operation = self.echo_ops.get_operation_json("sidechain_issue_operation", example=True)
-        sidechain_issue_operations.insert(0, sidechain_issue_operation)
-        lcc.log_info("First deposit operation stored")
+        lcc.set_step("First: Get ERC20 account deposits")
+        deposits = self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier)["result"]
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
+        lcc.log_debug(str(deposits))
+        for i, deposit in enumerate(deposits):
+            require_that("'account deposit value #'{}''".format(str(i)), deposit["value"],
+                         equal_to(str(erc20_deposit_amounts[i])))
+            lcc.set_step("Check work of method 'get_erc20_account_deposits', result #'{}'".format(i))
+            check_that("'length of erc20 account deposit'", len(deposit), equal_to(7))
+            with this_dict(deposits[i]):
+                check_that("'deposit erc20 id'", self.validator.is_deposit_erc20_id(deposits[i]["id"]), is_true())
+                check_that_entry("account", equal_to(new_account_id))
+                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]))
+                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])))
+                check_that("'transaction_hash'", self.validator.is_hex(deposits[i]["transaction_hash"]), is_true())
+                check_that_entry("is_approved", is_true())
+                check_that_entry("approves", is_list())
 
-        lcc.set_step("Get account history operation")
-        operation_id = self.echo.config.operation_ids.DEPOSIT_ERC20_TOKEN
-        response = self.utils.get_account_history_operations(self, new_account_id, operation_id,
-                                                             self.__history_api_identifier,
-                                                             limit=len(sidechain_issue_operations))
-        lcc.log_info("Account history operations of 'deposit erc20 token' received")
+        lcc.set_step("Get updated ethereum ERC20 tokens balance in the Ethereum network")
+        in_ethereum_erc20_updated_balance = self.eth_trx.get_balance_of(erc20_contract, self.eth_account.address)
+        require_that("'in ethereum erc20 contact updated balance'", in_ethereum_erc20_updated_balance,
+                     equal_to(in_ethereum_erc20_balance - erc20_deposit_amounts[0]))
+
+        lcc.set_step("Second transfer erc20 to ethereum of created account")
+        erc20_deposit_amounts.append(self.get_random_amount(_to=in_ethereum_erc20_updated_balance))
+        self.eth_trx.transfer(self.web3, erc20_contract, eth_account_address, erc20_deposit_amounts[1],
+                              log_transaction=False)
+        lcc.log_info(
+            "Transfer '{}' erc20 tokens to '{}' account completed successfully".format(erc20_deposit_amounts[1],
+                                                                                       eth_account_address))
+
+        lcc.set_step("Get final ethereum ERC20 tokens balance in the Ethereum network")
+        in_ethereum_erc20_final_balance = self.eth_trx.get_balance_of(erc20_contract, self.eth_account.address)
+        require_that("'in ethereum erc20 contact final balance'", in_ethereum_erc20_final_balance,
+                     equal_to((in_ethereum_erc20_updated_balance - erc20_deposit_amounts[1])))
+
+        lcc.set_step("Second: Get ERC20 account deposits")
+        response = self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier)
+        deposits = response["result"]
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
+        for i, deposit in enumerate(deposits):
+            deposit_value = deposit["value"]
+            require_that("'account deposit value #'{}''".format(str(i)), deposit_value,
+                         equal_to(str(erc20_deposit_amounts[i])))
+            lcc.set_step("Check work of method 'get_erc20_account_deposits', result #'{}'".format(i))
+            with this_dict(deposits[i]):
+                check_that("'deposit erc20 id'", self.validator.is_deposit_erc20_id(deposits[i]["id"]), is_true())
+                check_that_entry("account", equal_to(new_account_id))
+                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]))
+                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])))
+                check_that("'transaction_hash'", self.validator.is_hex(deposits[i]["transaction_hash"]), is_true())
+                check_that_entry("is_approved", is_true())
+                check_that_entry("approves", is_list())

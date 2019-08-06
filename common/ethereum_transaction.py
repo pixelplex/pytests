@@ -90,20 +90,18 @@ class EthereumTransactions(object):
     @staticmethod
     def deploy_contract_in_ethereum_network(web3, eth_address, contract_abi, contract_bytecode, pass_phrase="pass"):
         private_key = ROPSTEN_PK if ROPSTEN else GANACHE_PK
-        # https: // web3py.readthedocs.io / en / stable / releases.html?highlight = personal  # v5-0-0-alpha-8
-        # Breaking Changes: Relocated personal RPC endpoints to Parity and Geth class - #1211
         list_eth_accounts = web3.geth.personal.listAccounts()
         if eth_address not in list_eth_accounts:
             # Import account using private key and pass phrase
-            web3.personal.importRawKey(private_key, pass_phrase)
-            list_eth_accounts = web3.personal.listAccounts
+            web3.geth.personal.importRawKey(private_key, pass_phrase)
+            list_eth_accounts = web3.geth.personal.listAccounts
         if ROPSTEN:
             for eth_account in list_eth_accounts:
                 if eth_account == eth_address:
                     eth_address = eth_account
                     break
             # Unlock account using private key and pass phrase
-            web3.personal.unlockAccount(eth_address, pass_phrase)
+            web3.geth.personal.unlockAccount(eth_address, pass_phrase)
         # Set pre-funded account as sender
         web3.eth.defaultAccount = eth_address
         # Instantiate and deploy contract
