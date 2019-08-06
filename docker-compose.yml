@@ -49,7 +49,7 @@ services:
 
 
   echo:
-    image: registry-gitlab.pixelplex.by/631_echo/echo:v0.8.2
+    image: registry-gitlab.pixelplex.by/631_echo/echo:v0.9.0-rc.1
     container_name: '631.echo.node.${ENV}'
     hostname: 'echo'
     command: '--data-dir=/echo/datadir/
