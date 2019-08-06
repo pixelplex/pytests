@@ -11,9 +11,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_asset_holders")
 @lcc.suite("Check work of method 'get_asset_holders'", rank=1)
 class GetAssetHolders(BaseTest):
@@ -55,7 +55,7 @@ class GetAssetHolders(BaseTest):
                 self.check_uint64_numbers(holders, "amount")
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("asset_api", "get_asset_holders")
 @lcc.suite("Positive testing of method 'get_asset_holders'", rank=2)
 class PositiveTesting(BaseTest):
@@ -65,9 +65,12 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__asset_api_identifier = None
-        self.echo_acc0_name = self.echo_acc0
-        self.echo_acc1_name = self.echo_acc1
-        self.echo_acc2_name = self.echo_acc2
+        self.echo_acc0_name = self.accounts[0]
+        self.echo_acc1_name = self.accounts[1]
+        self.echo_acc2_name = self.accounts[2]
+        self.echo_acc0 = None
+        self.echo_acc1 = None
+        self.echo_acc2 = None
 
     def get_asset_holders(self, asset_id, start, limit, negative=False):
         lcc.log_info("Get '{}' asset holders".format(asset_id))
@@ -100,11 +103,11 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                 self.__asset_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
+        self.echo_acc2 = self.get_account_id(self.accounts[2], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info(
             "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0, self.echo_acc1, self.echo_acc2))
@@ -171,9 +174,7 @@ class PositiveTesting(BaseTest):
                                                                 value_amount=asset_value - i, value_asset_id=asset_id,
                                                                 issue_to_account=accounts_ids[i])
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-            lcc.log_warn(str(collected_operation))
             list_operations.append(collected_operation)
-            lcc.log_warn(str(list_operations))
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=list_operations)
         if not self.is_operation_completed(broadcast_result, expected_static_variant=0):
             raise Exception("New asset holders did not added to '{}' asset_id".format(asset_id))
@@ -196,7 +197,7 @@ class PositiveTesting(BaseTest):
         self.check_start_and_limit_params(asset_id, start, limit, account_names, accounts_ids, asset_value - start)
 
 
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("asset_api", "get_asset_holders")
 @lcc.suite("Negative testing of method 'get_asset_holders'", rank=3)
 class NegativeTesting(BaseTest):
@@ -206,6 +207,7 @@ class NegativeTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__asset_api_identifier = None
+        self.echo_acc0 = None
         self.nonexistent_asset_id = None
 
     def get_asset_holders(self, asset_id, start, limit, negative=False):
@@ -223,7 +225,7 @@ class NegativeTesting(BaseTest):
         lcc.log_info("API identifiers are: database='{}', registration='{}', "
                      "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                          self.__asset_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)

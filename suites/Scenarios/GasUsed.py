@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import lemoncheesecake.api as lcc
 import math
+
+import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, equal_to
 
 from common.base_test import BaseTest
@@ -10,7 +11,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("gas_used")
 @lcc.suite("Check scenario 'GasUsed'")
 class GasUsed(BaseTest):
@@ -19,8 +20,9 @@ class GasUsed(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.enough_fee_amount = 2000
         self.create_contract_id = None
         self.call_contract_id = None
@@ -51,7 +53,7 @@ class GasUsed(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.create_contract_id = self.echo.config.operation_ids.CREATE_CONTRACT

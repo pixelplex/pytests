@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, has_entry, greater_than_or_equal_to, \
-    not_equal_to, equal_to
+    check_that_entry, is_list
 
 from common.base_test import BaseTest
-from project import BLOCK_RELEASE_INTERVAL
 
 SUITE = {
     "description": "Method 'get_dynamic_global_properties'"
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_dynamic_global_properties")
 @lcc.suite("Check work of method 'get_dynamic_global_properties'", rank=1)
 class GetDynamicGlobalProperties(BaseTest):
@@ -44,19 +43,19 @@ class GetDynamicGlobalProperties(BaseTest):
         dynamic_global_properties_time = ["time", "next_maintenance_time", "last_budget_time"]
         result = response["result"]
         with this_dict(result):
-            if check_that("dynamic global properties", result, has_length(13)):
+            if check_that("dynamic global properties", result, has_length(14)):
                 if not self.validator.is_dynamic_global_object_id(result["id"]):
-                    lcc.log_error("Wrong format of 'dynamic_global_object_id', got: {}".format(response["result"]))
+                    lcc.log_error("Wrong format of 'dynamic_global_object_id', got: {}".format(result))
                 else:
                     lcc.log_info("'id' has correct format: dynamic_global_object_id")
 
                 for i in range(len(dynamic_global_properties)):
-                    self.check_uint64_numbers(response["result"], dynamic_global_properties[i], quiet=True)
-                    value = int(response["result"][dynamic_global_properties[i]])
+                    self.check_uint64_numbers(result, dynamic_global_properties[i], quiet=True)
+                    value = int(result[dynamic_global_properties[i]])
                     check_that(dynamic_global_properties[i], value, greater_than_or_equal_to(0), quiet=True)
 
                 if not self.validator.is_hex(result["head_block_id"]):
-                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(response["result"]))
+                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(result))
                 else:
                     lcc.log_info("'head_block_id' has correct format: hex")
 
@@ -67,62 +66,13 @@ class GetDynamicGlobalProperties(BaseTest):
                                                                    result[dynamic_global_properties_time[i]]))
                     else:
                         lcc.log_info("'{}' has correct format: iso8601".format(dynamic_global_properties_time[i]))
-                self.check_uint256_numbers(response["result"], "recent_slots_filled", quiet=True)
-                value = int(response["result"]["recent_slots_filled"])
-                check_that(response["result"]["recent_slots_filled"], value, greater_than_or_equal_to(0), quiet=True)
+                self.check_uint256_numbers(result, "recent_slots_filled", quiet=True)
+                value = int(result["recent_slots_filled"])
+                check_that(result["recent_slots_filled"], value, greater_than_or_equal_to(0), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
-@lcc.tags("database_api", "get_dynamic_global_properties")
-@lcc.suite("Positive testing of method 'get_dynamic_global_properties'", rank=2)
-class PositiveTesting(BaseTest):
-
-    def __init__(self):
-        super().__init__()
-        self.__api_identifier = None
-
-    def setup_suite(self):
-        super().setup_suite()
-        lcc.set_step("Setup for {}".format(self.__class__.__name__))
-        self.__api_identifier = self.get_identifier("database")
-        lcc.log_info("Database API identifier is '{}'".format(self.__api_identifier))
-
-    @lcc.prop("type", "method")
-    @lcc.test("Check for dynamic field changes")
-    @lcc.depends_on("DatabaseApi.GetDynamicGlobalProperties.GetDynamicGlobalProperties.method_main_check")
-    def check_dynamic_fields(self):
-        lcc.set_step("Get dynamic global properties")
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), self.__api_identifier)
-        response_1 = self.get_response(response_id)["result"]
-        lcc.log_info("Call method 'get_dynamic_global_properties' first time")
-
-        lcc.set_step("Wait for the release of a new block")
-        self.set_timeout_wait(BLOCK_RELEASE_INTERVAL)
-        lcc.log_info("Wait for the release of a new block, sleep='{}' seconds".format(BLOCK_RELEASE_INTERVAL))
-
-        lcc.set_step("Get dynamic global properties")
-        response_id = self.send_request(self.get_request("get_dynamic_global_properties"), self.__api_identifier)
-        response_2 = self.get_response(response_id)["result"]
-        lcc.log_info("Call method 'get_dynamic_global_properties' second time")
-
-        lcc.set_step("Check that the dynamic fields of the first answer do not match the fields of the subsequent")
-        dynamic_properties = ["head_block_number", "head_block_id", "time", "recently_missed_count", "current_aslot",
-                              "recent_slots_filled", "last_irreversible_block_num"]
-        for i in (range(len(dynamic_properties))):
-            check_that("'{}'".format(dynamic_properties[i]),
-                       response_1[dynamic_properties[i]],
-                       not_equal_to(response_2[dynamic_properties[i]]), quiet=True)
-
-        lcc.set_step("Check matching fields")
-        same_properties = ["id", "next_maintenance_time", "last_budget_time", "committee_budget",
-                           "accounts_registered_this_interval", "dynamic_flags"]
-        for i in (range(len(same_properties))):
-            check_that("'{}'".format(same_properties[i]),
-                       response_1[same_properties[i]],
-                       equal_to(response_2[same_properties[i]]), quiet=True)
-
-
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_dynamic_global_properties")
 @lcc.suite("Negative testing of method 'get_dynamic_global_properties'", rank=3)
 class NegativeTesting(BaseTest):

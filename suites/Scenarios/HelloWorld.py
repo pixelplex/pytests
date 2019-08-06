@@ -10,7 +10,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("hello_world")
 @lcc.suite("Check scenario 'Hello World'")
 class HelloWorld(BaseTest):
@@ -19,10 +19,11 @@ class HelloWorld(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.get_pennie = self.get_byte_code("piggy", "pennieReturned()")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.value_amount = 10
 
     def setup_suite(self):
@@ -34,7 +35,7 @@ class HelloWorld(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -46,6 +47,8 @@ class HelloWorld(BaseTest):
     @lcc.test("The scenario describes the mechanism of creating, deploying, "
               "and invoking a contract on the Echo network, written in Solidity.")
     def hello_world_scenario(self):
+        expected_string = "Hello World!!!"
+
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract,
@@ -64,12 +67,9 @@ class HelloWorld(BaseTest):
         contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
 
         lcc.set_step("Check get 'Hello World!!!'")
-        contract_output = self.get_contract_output(contract_result, output_type=str)[1:]
-        check_that(
-            "return of method 'greet'",
-            contract_output,
-            is_("Hello World!!!"),
-        )
+        contract_output = self.get_contract_output(contract_result, output_type=str,
+                                                   len_output_string=len(expected_string))
+        check_that("return of method 'greet'", contract_output, is_(expected_string))
 
         lcc.set_step("Get contract balance and store")
         response_id = self.send_request(self.get_request("get_contract_balances", [contract_id]),

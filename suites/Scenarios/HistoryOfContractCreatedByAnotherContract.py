@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("history_of_contract_created_by_another_contract")
 @lcc.suite("Check scenario 'Contract history that was created using another contract'")
 class HistoryOfContractCreatedByAnotherContract(BaseTest):
@@ -19,11 +19,12 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("contract_create_contract", "code")
-        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract")
-        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["get_creator"]
+        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract()")
+        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["creator()"]
         self.tr_asset_to_creator = self.get_byte_code("contract_create_contract", "created_contract")[
-            "tr_asset_to_creator"]
+            "tr_asset_to_creator()"]
 
     def setup_suite(self):
         super().setup_suite()
@@ -35,7 +36,7 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         lcc.log_info("API identifiers are: database='{}', registration='{}', "
                      "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                            self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 
@@ -46,6 +47,8 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario describes the creation of a contract whose method creates a new contract. "
               "Getting the history of the created contract")
+    @lcc.tags("Bug ECHO-1037")
+    @lcc.disabled()
     def history_of_contract_created_by_another_contract(self):
         operations = []
         # todo: add. Bug ECHO-812

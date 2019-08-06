@@ -10,12 +10,12 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("asset_api")
 @lcc.suite("Asset API")
 class AssetApi(object):
 
-    @lcc.tags("connection_to_asset_api")
+    @lcc.tags("connection_to_asset_api", "connection_to_apis")
     @lcc.test("Check connection to AssetApi")
     def connection_to_asset_api(self):
         base = BaseTest()
@@ -27,7 +27,7 @@ class AssetApi(object):
 
         lcc.set_step("Check Asset api identifier. Call asset api method 'get_all_asset_holders'")
         response_id = base.send_request(base.get_request("get_all_asset_holders"), api_identifier)
-        response = base.get_response(response_id, log_response=True)
+        response = base.get_response(response_id)
 
         check_that(
             "'call method 'get_all_asset_holders''",

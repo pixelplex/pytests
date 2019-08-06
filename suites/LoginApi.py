@@ -10,7 +10,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("login_api")
 @lcc.suite("Login API", rank=1)
 class LoginApi(object):
@@ -31,7 +31,7 @@ class LoginApi(object):
         base.ws.close()
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("login_api")
 @lcc.suite("Positive testing of method 'login'", rank=2)
 class PositiveTesting(object):
@@ -54,7 +54,7 @@ class PositiveTesting(object):
         base.ws.close()
 
 # todo: add when will be validation on login
-# @lcc.prop("testing", "negative")
+# @lcc.prop("suite_run_option_3", "negative")
 # @lcc.tags("login_api")
 # @lcc.suite("Negative testing of method 'login'")
 # class NegativeTesting(object):

@@ -9,7 +9,7 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("asset_int")
 @lcc.suite("Check scenario 'Parameter asset is integer type'")
 class AssetInt(BaseTest):
@@ -18,8 +18,9 @@ class AssetInt(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("asset_int", "code")
-        self.asset_balance = self.get_byte_code("asset_int", "assetBalance")
+        self.asset_balance = self.get_byte_code("asset_int", "assetbalance(address,uint64)")
 
     def setup_suite(self):
         super().setup_suite()
@@ -30,7 +31,7 @@ class AssetInt(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_integer, is_str, is_dict, \
-    is_list, require_that, is_, equal_to
+    is_list, require_that, is_, equal_to, is_bool
 
 from common.base_test import BaseTest
 
@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_full_accounts")
 @lcc.suite("Check work of method 'get_full_accounts'", rank=1)
 class GetFullAccounts(BaseTest):
@@ -74,10 +74,11 @@ class GetFullAccounts(BaseTest):
                         else:
                             lcc.log_info("'name' has correct format: account_name")
                         check_that_entry("active", is_dict(), quiet=True)
-                        if not self.validator.is_echo_rand_key(account_info["ed_key"]):
-                            lcc.log_error("Wrong format of 'ed_key', got: {}".format(account_info["ed_key"]))
+                        if not self.validator.is_echorand_key(account_info["echorand_key"]):
+                            lcc.log_error(
+                                "Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
                         else:
-                            lcc.log_info("'ed_key' has correct format: echo_rand_key")
+                            lcc.log_info("'echorand_key' has correct format: echo_rand_key")
                         check_that_entry("options", is_dict(), quiet=True)
                         if not self.validator.is_account_statistics_id(account_info["statistics"]):
                             lcc.log_error("Wrong format of 'statistics', got: {}".format(account_info["statistics"]))
@@ -87,10 +88,9 @@ class GetFullAccounts(BaseTest):
                         check_that_entry("blacklisting_accounts", is_list(), quiet=True)
                         check_that_entry("whitelisted_accounts", is_list(), quiet=True)
                         check_that_entry("blacklisted_accounts", is_list(), quiet=True)
-                        # todo: remove 'owner_special_authority'. Improve: "ECHO-829"
-                        check_that_entry("owner_special_authority", is_list(), quiet=True)
                         check_that_entry("active_special_authority", is_list(), quiet=True)
                         check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+                        check_that_entry("extensions", is_list(), quiet=True)
 
                         lcc.set_step("Check 'active' field")
                         with this_dict(account_info["active"]):
@@ -101,13 +101,7 @@ class GetFullAccounts(BaseTest):
 
                         lcc.set_step("Check 'options' field")
                         with this_dict(account_info["options"]):
-                            if check_that("active", account_info["options"], has_length(6)):
-                                if not self.validator.is_public_key(account_info["options"]["memo_key"]):
-                                    lcc.log_error(
-                                        "Wrong format of 'memo_key', got: {}".format(
-                                            account_info["options"]["memo_key"]))
-                                else:
-                                    lcc.log_info("'memo_key' has correct format: public_key")
+                            if check_that("active", account_info["options"], has_length(5)):
                                 account_ids_format = ["voting_account", "delegating_account"]
                                 for k in range(len(account_ids_format)):
                                     self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
@@ -118,7 +112,7 @@ class GetFullAccounts(BaseTest):
                 lcc.set_step("Check 'statistics' field")
                 account_statistics = full_account_info.get("statistics")
                 with this_dict(account_statistics):
-                    if check_that("account_statistics", account_statistics, has_length(10)):
+                    if check_that("account_statistics", account_statistics, has_length(13)):
                         if not self.validator.is_account_statistics_id(account_statistics["id"]):
                             lcc.log_error("Wrong format of 'id', got: {}".format(account_statistics["id"]))
                         else:
@@ -136,6 +130,9 @@ class GetFullAccounts(BaseTest):
                         check_that_entry("lifetime_fees_paid", is_integer(), quiet=True)
                         check_that_entry("pending_fees", is_integer(), quiet=True)
                         check_that_entry("pending_vested_fees", is_integer(), quiet=True)
+                        check_that_entry("generated_eth_address", is_bool(), quiet=True)
+                        check_that_entry("committeeman_rating", is_integer(), quiet=True)
+                        check_that_entry("extensions", is_list(), quiet=True)
 
                 with this_dict(full_account_info):
                     lcc.set_step("Check 'registrar_name', 'referrer_name', 'lifetime_referrer_name' fields")
@@ -162,7 +159,7 @@ class GetFullAccounts(BaseTest):
                     if balance:
                         for j in range(len(balance)):
                             lcc.set_step("Check 'balance #{}' field".format(str(j)))
-                            if check_that("account_balances", balance[j], has_length(4)):
+                            if check_that("account_balances", balance[j], has_length(5)):
                                 with this_dict(balance[j]):
                                     if not self.validator.is_account_balance_id(balance[j]["id"]):
                                         lcc.log_error(
@@ -176,6 +173,7 @@ class GetFullAccounts(BaseTest):
                                     else:
                                         lcc.log_info("'asset_type' has correct format: asset_object_type")
                                     check_that_entry("balance", is_integer(), quiet=True)
+                                    check_that_entry("extensions", is_list(), quiet=True)
                     lcc.set_step("Check 'vesting_balances' field")
                     check_that_entry("vesting_balances", is_list(), quiet=True)
                     lcc.set_step("Check 'limit_orders' field")

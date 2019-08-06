@@ -15,28 +15,6 @@
             "extensions": []
         }
     ],
-    "transfer_operation_with_memo": [
-        0,
-        {
-            "fee": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "from": "1.2.0",
-            "to": "1.2.0",
-            "amount": {
-                "amount": 0,
-                "asset_id": "1.3.0"
-            },
-            "memo": {
-                "from": "ECHO6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-                "to": "ECHO6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-                "nonce": "16430576185191232340",
-                "message": "74d0e455e2e5587b7dc85380102c3291"
-            },
-            "extensions": []
-        }
-    ],
     "account_create_operation": [
         5,
         {
@@ -53,16 +31,15 @@
                 "account_auths": [],
                 "key_auths": []
             },
-            "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
+            "echorand_key": "ECHODvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
             "options": {
-                "memo_key": "ECHO1111111111111111111111111111111114T1Anm",
                 "voting_account": "1.2.5",
                 "delegating_account": "1.2.0",
                 "num_committee": 0,
                 "votes": [],
                 "extensions": []
             },
-            "extensions": {}
+            "extensions": []
         }
     ],
     "account_update_operation": [
@@ -78,16 +55,15 @@
                 "account_auths": [],
                 "key_auths": []
             },
-            "ed_key": "DETDvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
+            "echorand_key": "ECHODvHDsAfk2M8LhYcxLZTbrNJRWT3UH5zxdaWimWc6uZkH",
             "new_options": {
-                "memo_key": "ECHO1111111111111111111111111111111114T1Anm",
                 "voting_account": "1.2.5",
                 "delegating_account": "1.2.0",
                 "num_committee": 0,
                 "votes": [],
                 "extensions": []
             },
-            "extensions": {}
+            "extensions": []
         }
     ],
     "account_upgrade_operation": [
@@ -155,6 +131,58 @@
             "extensions": []
         }
     ],
+    "committee_member_create_operation": [
+        27,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "committee_member_account": "1.2.0",
+            "url": "http://example.com/",
+            "eth_address": "62bd9ce7112d42663c6293ec48a5de3b575bb356",
+            "extensions": []
+        }
+    ],
+    "vesting_balance_create_operation": [
+        30,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "creator": "1.2.0",
+            "owner": "1.2.0",
+            "amount": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "policy": [
+                0,
+                {
+                    "begin_timestamp": "1970-01-01T00:00:00",
+                    "vesting_cliff_seconds": 0,
+                    "vesting_duration_seconds": 0
+                }
+            ],
+            "extensions": []
+        }
+    ],
+    "vesting_balance_withdraw_operation": [
+        31,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "vesting_balance": "1.12.0",
+            "owner": "1.2.0",
+            "amount": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            }
+        }
+    ],
     "balance_claim_operation": [
         34,
         {
@@ -163,12 +191,13 @@
                 "asset_id": "1.3.0"
             },
             "deposit_to_account": "1.2.0",
-            "balance_to_claim": "1.15.0",
+            "balance_to_claim": "1.13.0",
             "balance_owner_key": "ECHO1111111111111111111111111111111114T1Anm",
             "total_claimed": {
                 "amount": 0,
                 "asset_id": "1.3.0"
-            }
+            },
+            "extensions": []
         }
     ],
     "create_contract_operation": [
@@ -185,7 +214,8 @@
             },
             "code": "",
             "supported_asset_id": "1.3.0",
-            "eth_accuracy": false
+            "eth_accuracy": false,
+            "extensions": []
         }
     ],
     "call_contract_operation": [
@@ -201,7 +231,8 @@
                 "asset_id": "1.3.0"
             },
             "code": "",
-            "callee": "1.14.0"
+            "callee": "1.14.0",
+            "extensions": []
         }
     ],
     "contract_transfer_operation": [
@@ -255,7 +286,7 @@
                 "amount": 0,
                 "asset_id": "1.3.0"
             },
-            "account_id": "1.2.0",
+            "account": "1.2.0",
             "extensions": []
         }
     ],
@@ -266,9 +297,115 @@
                 "amount": 0,
                 "asset_id": "1.3.0"
             },
-            "acc_id": "1.2.0",
-            "eth_addr": "",
+            "account": "1.2.0",
+            "eth_addr": "62bd9ce7112d42663c6293ec48a5de3b575bb356",
             "value": 0,
+            "extensions": []
+        }
+    ],
+    "contract_fund_pool_operation": [
+        51,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "sender": "1.2.0",
+            "contract": "1.14.0",
+            "value": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "extensions": []
+        }
+    ],
+    "contract_whitelist_operation": [
+        52,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "sender": "1.2.0",
+            "contract": "1.14.0",
+            "add_to_whitelist": [],
+            "remove_from_whitelist": [],
+            "add_to_blacklist": [],
+            "remove_from_blacklist": [],
+            "extensions": []
+        }
+    ],
+    "sidechain_issue_operation": [
+        53,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "value": {
+                "amount": 0,
+                "asset_id": "1.3.1"
+            },
+            "account": "1.2.0",
+            "deposit_id": "1.18.0",
+            "extensions": []
+        }
+    ],
+    "sidechain_burn_operation": [
+        54,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "value": {
+                "amount": 0,
+                "asset_id": "1.3.1"
+            },
+            "account": "1.2.0",
+            "withdraw_id": "1.19.0",
+            "extensions": []
+        }
+    ],
+    "register_erc20_token_operation": [
+        55,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "account": "1.2.0",
+            "eth_addr": "62bd9ce7112d42663c6293ec48a5de3b575bb356",
+            "name": "",
+            "symbol": "",
+            "decimals": 0,
+            "extensions": []
+        }
+    ],
+    "withdraw_erc20_token_operation": [
+        57,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "account": "1.2.0",
+            "to": "62bd9ce7112d42663c6293ec48a5de3b575bb356",
+            "erc20_token": "1.20.0",
+            "value": "1",
+            "extensions": []
+        }
+    ],
+    "contract_update_operation": [
+        59,
+        {
+            "fee": {
+                "amount": 0,
+                "asset_id": "1.3.0"
+            },
+            "sender": "1.2.0",
+            "contract": "1.14.0",
+            "new_owner": "1.2.0",
             "extensions": []
         }
     ]

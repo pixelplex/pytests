@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import check_that, is_none, this_dict, has_length, check_that_entry, is_integer, is_, \
-    equal_to
+    equal_to, is_list, require_that
 
 from common.base_test import BaseTest
 
@@ -10,9 +10,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "subscribe_contracts")
 @lcc.suite("Check work of method 'subscribe_contracts'", rank=1)
 class SubscribeContracts(BaseTest):
@@ -21,8 +21,9 @@ class SubscribeContracts(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
+        self.greet = self.get_byte_code("piggy", "greet()")
 
     def set_subscribe_callback(self, callback, notify_remove_create=False):
         params = [callback, notify_remove_create]
@@ -42,7 +43,7 @@ class SubscribeContracts(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
@@ -87,7 +88,7 @@ class SubscribeContracts(BaseTest):
 
         lcc.set_step("Check notice 'subscribe_contracts'")
         with this_dict(notice):
-            if check_that("global_properties", notice, has_length(5)):
+            if check_that("global_properties", notice, has_length(6)):
                 if not self.validator.is_contract_history_id(notice["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(notice["id"]))
                 else:
@@ -106,9 +107,10 @@ class SubscribeContracts(BaseTest):
                 else:
                     lcc.log_info("'next' has correct format: contract_history_object_type")
                 check_that_entry("next", is_("2.16.{}".format(str((int(notice["id"].split('.')[2]) - 1)))))
+                check_that_entry("extensions", is_list(), quiet=True)
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "subscribe_contracts")
 @lcc.suite("Positive testing of method 'subscribe_contracts'", rank=2)
 class PositiveTesting(BaseTest):
@@ -118,15 +120,16 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__history_api_identifier = None
+        self.echo_acc0 = None
         self.piggy_contract = self.get_byte_code("piggy", "code")
-        self.greet = self.get_byte_code("piggy", "greet")
-        self.get_pennie = self.get_byte_code("piggy", "getPennie")
-        self.break_piggy = self.get_byte_code("piggy", "breakPiggy")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.get_pennie = self.get_byte_code("piggy", "pennieReturned()")
+        self.break_piggy = self.get_byte_code("piggy", "breakPiggy()")
         self.create_contract = self.get_byte_code("contract_create_contract", "code")
-        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract")
-        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["get_creator"]
+        self.deploy_contract = self.get_byte_code("contract_create_contract", "deploy_contract()")
+        self.get_creator = self.get_byte_code("contract_create_contract", "created_contract")["creator()"]
         self.tr_asset_to_creator = self.get_byte_code("contract_create_contract", "created_contract")[
-            "tr_asset_to_creator"]
+            "tr_asset_to_creator()"]
 
     def set_subscribe_callback(self, callback, notify_remove_create=False):
         params = [callback, notify_remove_create]
@@ -146,12 +149,17 @@ class PositiveTesting(BaseTest):
         return response
 
     @staticmethod
-    def check_operations_ids_in_notice(response, notice, contract_id):
+    def check_contract_history_objs_in_notice(response, notice, contract_id):
         counter = 0
         for i in range(len(response)):
             operation_history_id = response[i]["id"]
             for j in range(len(response)):
                 notice_id = notice[j]["id"]
+                if "contract" not in notice[j]:
+                    if counter != len(notice):
+                        counter += 1
+                        continue
+                    lcc.log_error("No needed operation in the notice, got: '{}'".format(notice))
                 notice_contract_id = notice[j]["contract"]
                 notice_operation_history_id = notice[j]["operation_id"]
                 if notice_operation_history_id != operation_history_id:
@@ -168,6 +176,31 @@ class PositiveTesting(BaseTest):
                     notice_operation_history_id, operation_history_id))
                 break
 
+    def check_balance_and_statistic_objs_in_notice(self, notices, contract_id, contract_balance, asset_type,
+                                                   expected_statistic=True):
+        counter = 0
+        expected_objs = [
+            self.get_implementation_object_type(self.echo.config.implementation_object_types.CONTRACT_BALANCE),
+            self.get_implementation_object_type(self.echo.config.implementation_object_types.CONTRACT_STATISTICS)]
+        if not expected_statistic:
+            expected_objs = expected_objs[0]
+        for i, notice in enumerate(notices):
+            if "owner" not in notice:
+                if counter != len(notices):
+                    counter += 1
+                    continue
+            lcc.log_info("Check notice #'{}' with id='{}'".format(str(i), notice["id"]))
+            require_that("'owner'", notice["owner"], equal_to(contract_id))
+            if not notice["id"].startswith(expected_objs[i]):
+                if counter != len(notice):
+                    counter += 1
+                    continue
+                lcc.log_error("No '{}' object in the notice".format(notice["id"]))
+            if notice["id"].startswith(expected_objs[0]):
+                with this_dict(notice):
+                    check_that_entry("asset_type", equal_to(asset_type))
+                    check_that_entry("balance", equal_to(contract_balance))
+
     def setup_suite(self):
         super().setup_suite()
         self._connect_to_echopy_lib()
@@ -179,7 +212,7 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "history='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                   self.__history_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
@@ -193,13 +226,17 @@ class PositiveTesting(BaseTest):
     @lcc.test("Check notices of contract")
     @lcc.depends_on("DatabaseApi.SubscribeContracts.SubscribeContracts.method_main_check")
     def check_different_types_of_contract_notices(self, get_random_integer):
+        value_amount = 10
+        value_asset_id = self.echo_asset
+
         lcc.set_step("Set subscribe callback")
         subscription_callback_id = get_random_integer
         self.set_subscribe_callback(subscription_callback_id)
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.piggy_contract,
-                                                 self.__database_api_identifier, value_amount=10)
+                                                 self.__database_api_identifier, value_amount=value_amount,
+                                                 value_asset_id=value_asset_id)
 
         lcc.set_step("Subscribe created contract")
         response_id = self.send_request(self.get_request("subscribe_contracts", [[contract_id]]),
@@ -229,16 +266,22 @@ class PositiveTesting(BaseTest):
                                                               bytecode=self.get_pennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
+        expected_contract_balance = value_amount - 1
 
-        # todo: add info balance_obj. Improve: ECHO-815
         lcc.set_step("Get notices about updates of created contract")
-        notice = self.get_notice(subscription_callback_id, notices_list=True)
+        notice_1 = self.get_notice(subscription_callback_id, notices_list=True)
+        notice_2 = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
-        response = self.get_contract_history(contract_id, limit=2)["result"]
+        limit = 2
+        response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        self.check_operations_ids_in_notice(response, notice, contract_id)
+        self.check_contract_history_objs_in_notice(response, notice_1, contract_id)
+
+        lcc.set_step("Check notice about updated contract balance and statistics")
+        self.check_balance_and_statistic_objs_in_notice(notice_2, contract_id, expected_contract_balance,
+                                                        value_asset_id)
 
         lcc.set_step("Call 'breakPiggy' method")
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
@@ -250,10 +293,11 @@ class PositiveTesting(BaseTest):
         notice = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
-        response = self.get_contract_history(contract_id, limit=2)["result"]
+        limit = 2
+        response = self.get_contract_history(contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history")
-        self.check_operations_ids_in_notice(response, notice, contract_id)
+        self.check_contract_history_objs_in_notice(response, notice, contract_id)
 
     @lcc.prop("type", "method")
     @lcc.test("Check notices of contract created by another contract")
@@ -292,7 +336,7 @@ class PositiveTesting(BaseTest):
             self.echo.config.implementation_object_types.CONTRACT_HISTORY))
 
         lcc.set_step("Get contract history")
-        operation_history_id = self.get_contract_history(created_contract_id, log_response=True)["result"][0]["id"]
+        operation_history_id = self.get_contract_history(created_contract_id)["result"][0]["id"]
 
         lcc.set_step("Check notice about updated contract history created by another contract")
         with this_dict(notice):
@@ -306,12 +350,18 @@ class PositiveTesting(BaseTest):
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
-        # todo: add info balance_obj. Improve: ECHO-815
         lcc.set_step("Get notices about updates of contract created by another contract")
         notice = self.get_notice(subscription_callback_id, notices_list=True)
 
         lcc.set_step("Get contract history")
-        response = self.get_contract_history(created_contract_id, limit=2, log_response=True)["result"]
+        limit = 2
+        response = self.get_contract_history(created_contract_id, limit=limit)["result"]
 
         lcc.set_step("Check notice about updated contract history created by another contract")
-        self.check_operations_ids_in_notice(response, notice, created_contract_id)
+        self.check_contract_history_objs_in_notice(response, notice, created_contract_id)
+
+        lcc.set_step("Check notice about contract balance")
+        expected_contract_balance = 0
+        value_asset_id = self.echo_asset
+        self.check_balance_and_statistic_objs_in_notice(notice, created_contract_id, expected_contract_balance,
+                                                        value_asset_id, expected_statistic=False)

@@ -10,12 +10,12 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
+@lcc.prop("suite_run_option_1", "main")
 @lcc.tags("database_api")
 @lcc.suite("Database API")
 class DatabaseApi(object):
 
-    @lcc.tags("connection_to_database_api")
+    @lcc.tags("connection_to_database_api", "connection_to_apis")
     @lcc.test("Check connection to DatabaseApi")
     def connection_to_database_api(self):
         base = BaseTest()
@@ -27,7 +27,7 @@ class DatabaseApi(object):
 
         lcc.set_step("Check Database api identifier. Call database api method 'get_objects'")
         response_id = base.send_request(base.get_request("get_objects", [["1.2.0", "1.3.0"]]), api_identifier)
-        response = base.get_response(response_id, log_response=True)
+        response = base.get_response(response_id)
 
         check_that(
             "'call method 'get_objects''",
@@ -36,7 +36,7 @@ class DatabaseApi(object):
 
         lcc.set_step("Check that Database api identifier is unique")
         response_id = base.send_request(base.get_request("get_objects", [["1.2.0", "1.3.0"]]), api_identifier + 1)
-        response = base.get_response(response_id, negative=True, log_response=True)
+        response = base.get_response(response_id, negative=True)
 
         check_that(
             "'using another identifier gives an error'",

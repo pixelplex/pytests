@@ -2,7 +2,7 @@
 import lemoncheesecake.api as lcc
 from echopy.echoapi.ws.exceptions import RPCError
 from lemoncheesecake.matching import check_that, is_not_none, this_dict, check_that_entry, is_integer, is_str, \
-    has_entry, is_
+    has_entry, is_, is_dict, require_that_entry
 
 from common.base_test import BaseTest
 
@@ -11,9 +11,9 @@ SUITE = {
 }
 
 
-@lcc.prop("testing", "main")
-@lcc.prop("testing", "positive")
-@lcc.prop("testing", "negative")
+@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_required_fees")
 @lcc.suite("Check work of method 'get_required_fees'", rank=1)
 class GetRequiredFees(BaseTest):
@@ -47,7 +47,7 @@ class GetRequiredFees(BaseTest):
                 check_that_entry("asset_id", is_str(self.echo_asset))
 
 
-@lcc.prop("testing", "positive")
+@lcc.prop("suite_run_option_2", "positive")
 @lcc.tags("database_api", "get_required_fees")
 @lcc.suite("Positive testing of method 'get_required_fees'", rank=2)
 class PositiveTesting(BaseTest):
@@ -56,9 +56,14 @@ class PositiveTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
+        self.echo_acc1 = None
         self.amount = 1
         self.transfer_operation = None
         self.required_fee = None
+        self.contract = self.get_byte_code("piggy", "code")
+        self.greet = self.get_byte_code("piggy", "greet()")
+        self.valid_contract_id = None
 
     def setup_suite(self):
         super().setup_suite()
@@ -69,9 +74,9 @@ class PositiveTesting(BaseTest):
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}'".format(self.__database_api_identifier,
                                                                            self.__registration_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo accounts are: #1='{}', #2='{}'".format(self.echo_acc0, self.echo_acc1))
         self.transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
@@ -81,6 +86,9 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
         self.required_fee = self.get_required_fee(self.transfer_operation, self.__database_api_identifier)
         lcc.log_info("Required fee for transfer transaction: '{}'".format(self.required_fee))
+        lcc.log_info("Transfer operation: '{}'".format(str(self.transfer_operation)))
+        self.valid_contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract,
+                                                            self.__database_api_identifier)
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -115,8 +123,6 @@ class PositiveTesting(BaseTest):
         )
 
     @lcc.prop("type", "method")
-    # todo: add test. Bug: "ECHO-666"
-    @lcc.tags("Bug: 'ECHO-666'")
     @lcc.test("Try to get fee in eETH")
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def fee_in_eth_asset(self):
@@ -131,8 +137,29 @@ class PositiveTesting(BaseTest):
             check_that_entry("amount", is_integer(), quiet=True)
             check_that_entry("asset_id", is_(self.eth_asset), quiet=True)
 
+    @lcc.prop("type", "method")
+    @lcc.test("Required fee to call contract")
+    @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
+    def fee_to_call_contract(self):
+        lcc.set_step("Get required fee for 'call_contract_operation' with nonexistent method byte code")
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.greet,
+                                                              callee=self.valid_contract_id)
+        params = [[operation], self.echo_asset]
+        response_id = self.send_request(self.get_request("get_required_fees", params), self.__database_api_identifier)
+        result = self.get_response(response_id)["result"][0]
+        with this_dict(result):
+            require_that_entry("fee", is_dict(), quiet=True)
+            with this_dict(result["fee"]):
+                check_that_entry("amount", is_integer(), quiet=True)
+                check_that_entry("asset_id", is_(self.echo_asset), quiet=True)
+            require_that_entry("user_to_pay", is_dict(), quiet=True)
+            with this_dict(result["user_to_pay"]):
+                check_that_entry("amount", is_integer(), quiet=True)
+                check_that_entry("asset_id", is_(self.echo_asset), quiet=True)
 
-@lcc.prop("testing", "negative")
+
+@lcc.prop("suite_run_option_3", "negative")
 @lcc.tags("database_api", "get_required_fees")
 @lcc.suite("Negative testing of method 'get_required_fees'", rank=3)
 class NegativeTesting(BaseTest):
@@ -141,6 +168,8 @@ class NegativeTesting(BaseTest):
         super().__init__()
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
+        self.echo_acc0 = None
+        self.echo_acc1 = None
         self.amount = 1
         self.transfer_operation_ex = None
         self.transfer_operation = None
@@ -151,7 +180,7 @@ class NegativeTesting(BaseTest):
     def get_required_fees(self, operations, asset, negative=False):
         params = [[operations], asset]
         response_id = self.send_request(self.get_request("get_required_fees", params), self.__database_api_identifier)
-        return self.get_response(response_id, negative=negative, log_response=True)
+        return self.get_response(response_id, negative=negative)
 
     def setup_suite(self):
         super().setup_suite()
@@ -164,9 +193,9 @@ class NegativeTesting(BaseTest):
                                                                            self.__registration_api_identifier))
         self.nonexistent_asset_id = self.utils.get_nonexistent_asset_id(self, self.__database_api_identifier)
         lcc.log_info("Nonexistent asset id is '{}'".format(self.nonexistent_asset_id))
-        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info(
             "Echo accounts are: #1='{}', #2='{}''".format(self.echo_acc0, self.echo_acc1))

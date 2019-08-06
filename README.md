@@ -17,7 +17,7 @@ The project is intended for testing Echo. Includes testing:
 ## Usage
 
 ### Note:
-Before running the tests, you can specify a environment variables *BASE_URL*, *NATHAN*, *ECHO_POOL*. 
+Before running the tests, you can specify a environment variables, examples: *BASE_URL*, *NATHAN_PK*. 
 For this you need, example:
 * Linux OS: export BASE_URL=_[needed_url]()_
 * Windows OS: set BASE_URL=_[needed_url]()_
@@ -60,52 +60,62 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] [get_required_fees](https://echo-dev.io/developers/apis/database-api/#get_required_feesops-id)
 - [ ] [get_objects](https://echo-dev.io/developers/apis/database-api/#get_objectsarray-ids)  
 - [x] [set_subscribe_callback](https://echo-dev.io/developers/apis/database-api/#set_subscribe_callbackcallback-notify_remove_create)
-- [ ] [set_pending_transaction_callback](https://echo-dev.io/developers/apis/database-api/#set_pending_transaction_callbackcallback)
+- [x] [set_pending_transaction_callback](https://echo-dev.io/developers/apis/database-api/#set_pending_transaction_callbackcallback)
 - [x] [set_block_applied_callback ](https://echo-dev.io/developers/apis/database-api/#set_block_applied_callbackcallback)
 - [ ] [cancel_all_subscriptions](https://echo-dev.io/developers/apis/database-api/#cancel_all_subscriptions)
 - [x] [get_block_header](https://echo-dev.io/developers/apis/database-api/#get_block_headerblock_num)
 - [x] [get_block](https://echo-dev.io/developers/apis/database-api/#get_blockblock_num)
-- [ ] [get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)
-- [ ] [get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)
+- [x] [get_transaction](https://echo-dev.io/developers/apis/database-api/#get_transactionblock_num-trx_in_block)
+- [x] [get_recent_transaction_by_id](https://echo-dev.io/developers/apis/database-api/#get_recent_transaction_by_idid)
 - [x] [get_chain_properties](https://echo-dev.io/developers/apis/database-api/#get_chain_properties)
 - [x] [get_config](https://echo-dev.io/developers/apis/database-api/#get_config)
 - [x] [get_chain_id](https://echo-dev.io/developers/apis/database-api/#get_chain_id)
 - [x] [get_dynamic_global_properties](https://echo-dev.io/developers/apis/database-api/#get_dynamic_global_properties)
-- [ ] [get_key_references](https://echo-dev.io/developers/apis/database-api/#get_key_referenceskeys)
+- [x] [get_key_references](https://echo-dev.io/developers/apis/database-api/#get_key_referenceskeys)
 - [x] [get_accounts](https://echo-dev.io/developers/apis/database-api/#get_accountsaccount_ids)
-- [ ] [get_full_accounts](https://echo-dev.io/developers/apis/database-api/#get_full_accountsnames_or_ids-subscribe)
+- [x] [get_full_accounts](https://echo-dev.io/developers/apis/database-api/#get_full_accountsnames_or_ids-subscribe)
 - [x] [get_account_by_name](https://echo-dev.io/developers/apis/database-api/#get_account_by_namename)
-- [ ] [get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)
-- [ ] [lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)
-- [ ] [lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)
+- [x] [get_account_references](https://echo-dev.io/developers/apis/database-api/#get_account_referencesaccount_id)
+- [x] [lookup_account_names](https://echo-dev.io/developers/apis/database-api/#lookup_account_namesaccount_names)
+- [x] [lookup_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_accountslower_bound_name-limit)
 - [x] [get_account_count](https://echo-dev.io/developers/apis/database-api/#get_account_count)
-- [ ] [get_account_balances](https://echo-dev.io/developers/apis/database-api/#get_account_balancesid-assets)
-- [ ] [get_named_account_balances](https://echo-dev.io/developers/apis/database-api/#get_named_account_balancesname-assets)
-- [ ] [get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)
-- [ ] [get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)
-- [ ] [get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)
-- [ ] [get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)
-- [ ] [list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)
-- [ ] [lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)
-- [ ] [get_limit_orders](https://echo-dev.io/developers/apis/database-api/#get_limit_ordersa-b-limit)
+- [x] [get_account_balances](https://echo-dev.io/developers/apis/database-api/#get_account_balancesid-assets)
+- [x] get_account_addresses
+- [x] get_account_by_address
+- [x] [get_named_account_balances](https://echo-dev.io/developers/apis/database-api/#get_named_account_balancesname-assets)
+- [x] [get_balance_objects](https://echo-dev.io/developers/apis/database-api/#get_balance_objectsaddrs)
+- [x] [get_vested_balances](https://echo-dev.io/developers/apis/database-api/#parameters_16)
+- [x] [get_vesting_balances](https://echo-dev.io/developers/apis/database-api/#get_vesting_balancesaccount_id)
+- [x] [get_assets](https://echo-dev.io/developers/apis/database-api/#get_assetsasset_ids)
+- [x] [list_assets](https://echo-dev.io/developers/apis/database-api/#list_assetslower_bound_symbol-limit)
+- [x] [lookup_asset_symbols](https://echo-dev.io/developers/apis/database-api/#lookup_asset_symbolssymbols_or_ids)
 - [ ] [get_committee_members](https://echo-dev.io/developers/apis/database-api/#get_committee_memberscommittee_member_ids)
 - [ ] [get_committee_member_by_account](https://echo-dev.io/developers/apis/database-api/#get_committee_member_by_accountaccount)
 - [ ] [lookup_committee_member_accounts](https://echo-dev.io/developers/apis/database-api/#lookup_committee_member_accountslower_bound_name-limit)
 - [ ] [lookup_vote_ids](https://echo-dev.io/developers/apis/database-api/#lookup_vote_idsvotes)
-- [ ] [get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)
+- [x] [get_transaction_hex](https://echo-dev.io/developers/apis/database-api/#get_transaction_hextrx)
 - [ ] [get_required_signatures](https://echo-dev.io/developers/apis/database-api/#get_required_signaturestrx-available_keys)
-- [ ] [get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)
-- [ ] [verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)
+- [x] [get_potential_signatures](https://echo-dev.io/developers/apis/database-api/#get_potential_signaturestrx)
+- [x] [verify_authority](https://echo-dev.io/developers/apis/database-api/#verify_authoritytrx)
 - [ ] [verify_account_authority](https://echo-dev.io/developers/apis/database-api/#verify_account_authorityname_or_id-signers)
-- [ ] [validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)
+- [x] [validate_transaction](https://echo-dev.io/developers/apis/database-api/#validate_transactiontrx)
 - [ ] [get_proposed_transactions](https://echo-dev.io/developers/apis/database-api/#get_proposed_transactionsid)
-- [ ] [get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)
-- [ ] [subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)
-- [ ] [get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)
-- [ ] [get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)
-- [ ] [call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)
+- [x] [get_contract_logs](https://echo-dev.io/developers/apis/database-api/#get_contract_logscontract_id-from-to)
+- [x] [subscribe_contract_logs](https://echo-dev.io/developers/apis/database-api/#subscribe_contract_logscallback-contract_id-from-to)
+- [x] [get_contract_result](https://echo-dev.io/developers/apis/database-api/#get_contract_resultresult_contract_id)
+- [x] [get_contract](https://echo-dev.io/developers/apis/database-api/#get_contractcontract_id)
+- [x] [call_contract_no_changing_state](https://echo-dev.io/developers/apis/database-api/#call_contract_no_changing_statecontract_id-registrar_account-asset_type-code)
 - [x] [get_contracts](https://echo-dev.io/developers/apis/database-api/#get_contractscontract_ids)
-- [ ] [get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)
+- [x] [get_contract_balances](https://echo-dev.io/developers/apis/database-api/#get_contract_balances-contract_id)
+- [x] get_eth_address
+- [x] subscribe_contracts
+- [x] get_account_deposits
+- [x] get_account_withdrawals
+- [x] get_contract_fee_pool_balance
+- [x] get_contract_pool_whitelist
+- [x] get_erc20_token
+- [ ] get_erc20_account_deposits
+- [ ] get_erc20_account_withdrawals
 
 #### [History API](https://echo-dev.io/developers/apis/history-api/#history-api)
 

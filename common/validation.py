@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
 
+from project import BASE_ASSET_SYMBOL
+
 NAME_MIN_LENGTH = 1
 NAME_MAX_LENGTH = 63
 
@@ -19,11 +21,14 @@ class Validator(object):
     operation_history_id_regex = re.compile(r"^1\.10\.(0|[1-9]\d*)$")
     withdraw_permission_id_regex = re.compile(r"^1\.11\.(0|[1-9]\d*)$")
     vesting_balance_id_regex = re.compile(r"^1\.12\.(0|[1-9]\d*)$")
-    balance_id_regex = re.compile(r"^1\.13\.(0|[1-9]\d)*$")
+    balance_id_regex = re.compile(r"^1\.13\.(0|[1-9]\d*)$")
     contract_id_regex = re.compile(r"^1\.14\.(0|[1-9]\d*)$")
     contract_result_id_regex = re.compile(r"^1\.15\.(0|[1-9]\d*)$")
     block_id_regex = re.compile(r"^1\.16\.(0|[1-9]\d*)$")
     eth_address_id_regex = re.compile(r"^1\.17\.(0|[1-9]\d*)$")
+    deposit_eth_id_regex = re.compile(r"^1\.18\.(0|[1-9]\d*)$")
+    withdraw_eth_id_regex = re.compile(r"^1\.19\.(0|[1-9]\d*)$")
+    erc20_object_id_regex = re.compile(r"^1\.20\.(0|[1-9]\d*)$")
     global_object_id_regex = re.compile(r"^2.0.0$")
     dynamic_global_object_id_regex = re.compile(r"^2.1.0$")
     dynamic_asset_data_id_regex = re.compile(r"^2\.3\.(0|[1-9]\d*)$")
@@ -42,6 +47,8 @@ class Validator(object):
     vote_id_type_regex = re.compile(r"^[0-3]:[0-9]+")
     iso8601_regex = re.compile(r"^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01]"
                                r"[0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$")
+    base58_regex = re.compile(r"^[1-9A-HJ-NP-Za-km-z]+$")
+    wif_regex = re.compile(r"^5[HJK][1-9A-Za-z][^OIl]{48}$")
 
     def __init__(self):
         super().__init__()
@@ -155,6 +162,18 @@ class Validator(object):
     def is_eth_address_id(self, value):
         if self.is_string(value):
             return bool(self.eth_address_id_regex.match(value))
+
+    def is_deposit_eth_id(self, value):
+        if self.is_string(value):
+            return bool(self.deposit_eth_id_regex.match(value))
+
+    def is_withdraw_eth_id(self, value):
+        if self.is_string(value):
+            return bool(self.withdraw_eth_id_regex.match(value))
+
+    def is_erc20_object_id(self, value):
+        if self.is_string(value):
+            return bool(self.erc20_object_id_regex.match(value))
 
     def is_global_object_id(self, value):
         if self.is_string(value):
@@ -275,28 +294,28 @@ class Validator(object):
     def is_operation_id(self, value):
         return self.is_uint8(value) and value < 49
 
-    def is_echo_rand_key(self, value, echo_rand_prefix="DET"):
-        if not self.is_hex(value) or len(value) != 44 + len(echo_rand_prefix):
-            return False
-        prefix = value[0:len(echo_rand_prefix)]
-        return echo_rand_prefix == prefix
+    def is_base58(self, value):
+        return bool(self.base58_regex.match(value))
 
-    def is_private_key(self, value):
-        if not self.is_hex(value) or len(value) != 51:
+    def is_wif(self, value):
+        return bool(self.wif_regex.match(value))
+
+    def is_echorand_key(self, value, address_prefix=BASE_ASSET_SYMBOL):
+        if value[:len(address_prefix)] != address_prefix:
+            return False
+        key = value[len(address_prefix):]
+        if not self.is_base58(key) or 44 + len(address_prefix) < len(value) or len(value) < 43 + len(address_prefix):
             return False
         return True
-
-    def is_public_key(self, value, address_prefix="ECHO"):
-        if not self.is_hex(value) or len(value) != 39 + len(address_prefix):
-            return False
-        prefix = value[0:len(address_prefix)]
-        return address_prefix == prefix
 
     def is_iso8601(self, value):
         if self.is_string(value):
             return bool(self.iso8601_regex.match(value))
 
     def is_eth_address(self, value):
-        if not self.is_hex(value) or len(value) != 44 or value[:2] != "0x" and len(value) != 42:
+        if not self.is_hex(value):
             return False
-        return True
+        if value[:2] == "0x":
+            return len(value) == 42
+        else:
+            return len(value) == 40
