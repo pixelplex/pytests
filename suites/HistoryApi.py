@@ -10,12 +10,12 @@ SUITE = {
 }
 
 
-@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("testing", "main")
 @lcc.tags("history_api")
 @lcc.suite("History API")
 class HistoryApi(object):
 
-    @lcc.tags("connection_to_history_api", "connection_to_apis")
+    @lcc.tags("connection_to_history_api")
     @lcc.test("Check connection to HistoryApi")
     def connection_to_history_api(self):
         base = BaseTest()

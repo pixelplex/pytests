@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("suite_run_option_1", "main")
-@lcc.prop("suite_run_option_2", "positive")
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "main")
+@lcc.prop("testing", "positive")
+@lcc.prop("testing", "negative")
 @lcc.tags("database_api", "set_block_applied_callback")
 @lcc.suite("Check work of method 'set_block_applied_callback'", rank=1)
 class SetBlockAppliedCallback(BaseTest):

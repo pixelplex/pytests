@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_dict, is_integer, \
-    has_entry, is_list
+from lemoncheesecake.matching import this_dict, check_that, has_length, check_that_entry, is_dict, is_integer, has_entry
 
 from common.base_test import BaseTest
 
@@ -10,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("suite_run_option_1", "main")
-@lcc.prop("suite_run_option_2", "positive")
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "main")
+@lcc.prop("testing", "positive")
+@lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_chain_properties")
 @lcc.suite("Check work of method 'get_chain_properties'", rank=1)
 class GetChainProperties(BaseTest):
@@ -37,7 +36,7 @@ class GetChainProperties(BaseTest):
 
         lcc.set_step("Check main fields")
         with this_dict(response["result"]):
-            if check_that("chain_properties", response["result"], has_length(4)):
+            if check_that("chain_properties", response["result"], has_length(3)):
                 if not self.validator.is_chain_property_object_id(response["result"]["id"]):
                     lcc.log_error("Wrong format of 'id', got: {}".format(response["result"]["id"]))
                 else:
@@ -47,7 +46,6 @@ class GetChainProperties(BaseTest):
                 else:
                     lcc.log_info("'chain_id' has correct format: hex")
                 check_that_entry("immutable_parameters", is_dict(), quiet=True)
-                check_that_entry("extensions", is_list(), quiet=True)
 
         lcc.set_step("Check 'immutable_parameters'")
         immutable_parameters = response["result"]["immutable_parameters"]
@@ -58,7 +56,7 @@ class GetChainProperties(BaseTest):
                 check_that_entry("num_special_assets", is_integer(), quiet=True)
 
 
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_chain_properties")
 @lcc.suite("Negative testing of method 'get_chain_properties'", rank=2)
 class NegativeTesting(BaseTest):

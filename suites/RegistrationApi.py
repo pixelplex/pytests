@@ -13,12 +13,12 @@ SUITE = {
 }
 
 
-@lcc.prop("suite_run_option_1", "main")
+@lcc.prop("testing", "main")
 @lcc.tags("registration_api")
 @lcc.suite("Registration API", rank=1)
 class RegistrationApi(object):
 
-    @lcc.tags("connection_to_registration_api", "connection_to_apis")
+    @lcc.tags("connection_to_registration_api")
     @lcc.test("Check connection to RegistrationApi")
     def connection_to_registration_api(self, get_random_valid_account_name, get_random_integer):
         base = BaseTest()
@@ -34,8 +34,9 @@ class RegistrationApi(object):
         lcc.set_step("Check Registration api identifier. Call registration api method 'register_account'")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
+        memo_key = generate_keys[2]
         callback = get_random_integer
-        account_params = [callback, get_random_valid_account_name, public_key, public_key]
+        account_params = [callback, get_random_valid_account_name, public_key, public_key, memo_key, public_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier)
         response = base.get_response(response_id)
         base.get_notice(callback)
@@ -48,7 +49,8 @@ class RegistrationApi(object):
         lcc.set_step("Check that Registration api identifier is unique")
         generate_keys = base.generate_keys()
         public_key = generate_keys[1]
-        account_params = [callback, get_random_valid_account_name, public_key, public_key]
+        memo_key = generate_keys[2]
+        account_params = [callback, get_random_valid_account_name, public_key, public_key, memo_key, public_key]
         response_id = base.send_request(base.get_request("register_account", account_params), api_identifier + 1)
         response = base.get_response(response_id, negative=True)
 
@@ -60,7 +62,7 @@ class RegistrationApi(object):
         base.ws.close()
 
 
-@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("testing", "positive")
 @lcc.tags("registration_api")
 @lcc.suite("Positive testing of method 'register_account'", rank=2)
 class PositiveTesting(BaseTest):
@@ -88,7 +90,8 @@ class PositiveTesting(BaseTest):
         callback = get_random_integer
         generate_keys = self.generate_keys()
         public_key = generate_keys[1]
-        account_params = [callback, new_account, public_key, public_key]
+        memo_key = generate_keys[2]
+        account_params = [callback, new_account, public_key, public_key, memo_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         response = self.get_response(response_id)
@@ -109,7 +112,7 @@ class PositiveTesting(BaseTest):
         )
 
 
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "negative")
 @lcc.tags("registration_api")
 @lcc.suite("Negative testing of method 'register_account'", rank=3)
 class NegativeTesting(BaseTest):
@@ -126,9 +129,9 @@ class NegativeTesting(BaseTest):
             "Registration API identifiers is '{}'".format(self.__registration_api_identifier))
 
     @staticmethod
-    def get_random_character(random_def, not_hyphen_or_point=False):
+    def get_random_character(random_def, not_hyphen=False):
         character = random_def
-        if not_hyphen_or_point and character == "-" and character == ".":
+        if not_hyphen and character == "-":
             return "*"
         return character
 
@@ -139,11 +142,13 @@ class NegativeTesting(BaseTest):
             random.SystemRandom().choice(string.ascii_lowercase) for _ in range(random_num))
         return random_string
 
-    def _register_account(self, callback, new_account, public_key=None):
+    def _register_account(self, callback, new_account, public_key=None, memo_key=None):
         generate_keys = self.generate_keys()
         if public_key is None:
             public_key = generate_keys[1]
-        account_params = [callback, new_account, public_key, public_key]
+        if memo_key is None:
+            memo_key = generate_keys[2]
+        account_params = [callback, new_account, public_key, public_key, memo_key, public_key]
         response_id = self.send_request(self.get_request("register_account", account_params),
                                         self.__registration_api_identifier)
         return self.get_response(response_id, negative=True)
@@ -212,7 +217,7 @@ class NegativeTesting(BaseTest):
         callback = get_random_integer
         part1 = self.get_account_name(_to=4)
         part2 = self.get_account_name(_to=4)
-        new_account = part1 + self.get_random_character(get_random_character, not_hyphen_or_point=True) + part2
+        new_account = part1 + self.get_random_character(get_random_character, not_hyphen=True) + part2
         response = self._register_account(callback, new_account)
 
         check_that(
@@ -248,4 +253,4 @@ class NegativeTesting(BaseTest):
             response, has_entry("error"), quiet=True
         )
 
-    # todo: add check for: callback, active ECDSA key, ed25519 key for echorand
+    # todo: add check for: callback, owner ECDSA key, active ECDSA key, memo ECDSA key, ed25519 key for echorand

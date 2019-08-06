@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("suite_run_option_1", "main")
-@lcc.prop("suite_run_option_2", "positive")
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "main")
+@lcc.prop("testing", "positive")
+@lcc.prop("testing", "negative")
 @lcc.tags("database_api", "get_block_header")
 @lcc.suite("Check work of method 'get_block_header'", rank=1)
 class GetBlockHeader(BaseTest):

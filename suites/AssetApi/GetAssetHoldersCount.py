@@ -9,9 +9,9 @@ SUITE = {
 }
 
 
-@lcc.prop("suite_run_option_1", "main")
-@lcc.prop("suite_run_option_2", "positive")
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "main")
+@lcc.prop("testing", "positive")
+@lcc.prop("testing", "negative")
 @lcc.tags("asset_api", "get_asset_holders_count")
 @lcc.suite("Check work of method 'get_asset_holders_count'", rank=1)
 class GetAssetHoldersCount(BaseTest):
@@ -43,7 +43,7 @@ class GetAssetHoldersCount(BaseTest):
         )
 
 
-@lcc.prop("suite_run_option_2", "positive")
+@lcc.prop("testing", "positive")
 @lcc.tags("asset_api", "get_asset_holders_count")
 @lcc.suite("Positive testing of method 'get_asset_holders_count'", rank=2)
 class PositiveTesting(BaseTest):
@@ -53,9 +53,6 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = None
         self.__registration_api_identifier = None
         self.__asset_api_identifier = None
-        self.echo_acc0 = None
-        self.echo_acc1 = None
-        self.echo_acc2 = None
 
     def get_asset_holders_count(self, asset_id, negative=False):
         lcc.log_info("Get '{}' asset holders count".format(asset_id))
@@ -74,11 +71,11 @@ class PositiveTesting(BaseTest):
             "API identifiers are: database='{}', registration='{}', "
             "asset='{}'".format(self.__database_api_identifier, self.__registration_api_identifier,
                                 self.__asset_api_identifier))
-        self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
+        self.echo_acc0 = self.get_account_id(self.echo_acc0, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
+        self.echo_acc1 = self.get_account_id(self.echo_acc1, self.__database_api_identifier,
                                              self.__registration_api_identifier)
-        self.echo_acc2 = self.get_account_id(self.accounts[2], self.__database_api_identifier,
+        self.echo_acc2 = self.get_account_id(self.echo_acc2, self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info(
             "Echo accounts are: #1='{}', #2='{}', #3='{}'".format(self.echo_acc0, self.echo_acc1, self.echo_acc2))
@@ -121,7 +118,7 @@ class PositiveTesting(BaseTest):
         )
 
 
-@lcc.prop("suite_run_option_3", "negative")
+@lcc.prop("testing", "negative")
 @lcc.tags("asset_api", "get_asset_holders_count")
 @lcc.suite("Negative testing of method 'get_asset_holders_count'", rank=3)
 class NegativeTesting(BaseTest):
