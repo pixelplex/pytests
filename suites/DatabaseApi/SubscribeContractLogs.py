@@ -54,6 +54,8 @@ class SubscribeContractLogs(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.test("Simple work of method 'subscribe_contract_logs'")
     def method_main_check(self, get_random_integer, get_random_integer_up_to_ten):
         subscription_callback_id = get_random_integer
@@ -173,6 +175,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs in notices two identical contract calls")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_in_notices_two_identical_contract_calls(self, get_random_integer):
         subscription_callback_id = value_amount = get_random_integer
@@ -217,6 +221,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs in notices contract call that make two different logs")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_in_notice_contract_call_that_make_two_different_logs(self, get_random_integer,
                                                                                  get_random_string):
@@ -287,6 +293,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs in notices from 'first block' to more than 'head_block_number'")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_in_notice_from_first_block_to_more_than_head_block_number(self, get_random_integer):
         subscription_callback_id = value_amount = get_random_integer
@@ -324,7 +332,8 @@ class PositiveTesting(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test(
         "Check contract logs in notices from 'random block in [first block, head_block_number]' to 'head_block_number'")
-    @lcc.tags("Bug ECHO-1055")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'", "Bug ECHO-1055")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_in_notice_from_random_block_to_head_block_number(self, get_random_integer):
         subscription_callback_id = value_amount = get_random_integer
@@ -363,7 +372,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs in notices from 'negative block number' to 'head_block_number'")
-    @lcc.tags("Bug ECHO-1055")
+    @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'", "Bug ECHO-1055")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_in_notice_from_negative_block_number_to_head_block_number(self, get_random_integer):
         subscription_callback_id = value_amount = get_random_integer
@@ -439,8 +449,8 @@ class NegativeTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with negative parameter 'to'")
-    @lcc.tags("Bug: 'ECHO-1034'", "Bug ECHO-1055")
     @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'", "Bug ECHO-1055")
     @lcc.depends_on("DatabaseApi.SubscribeContractLogs.SubscribeContractLogs.method_main_check")
     def check_contract_logs_in_notice_with_negative_parameter_to(self, get_random_integer):
         subscription_callback_id = value_amount = get_random_integer
