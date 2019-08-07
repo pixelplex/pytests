@@ -26,6 +26,7 @@ class GetERC20AccountDeposits(BaseTest):
         self.eth_account = None
         self.erc20_contract_code = self.get_byte_code("erc20", "code", ethereum_contract=True)
         self.erc20_abi = self.get_abi("erc20")
+        self.erc20_balanceOf = self.get_byte_code("erc20", "balanceOf(address)", ethereum_contract=True)
 
     def get_random_amount(self, _to, _from=1):
         amount = random.randrange(_from, _to)
@@ -88,7 +89,7 @@ class GetERC20AccountDeposits(BaseTest):
 
         lcc.set_step("Get ethereum ERC20 tokens balance in the Ethereum network")
         in_ethereum_erc20_balance = self.eth_trx.get_balance_of(erc20_contract, self.eth_account.address)
-        require_that("'in ethereum erc20 contact balance'", in_ethereum_erc20_balance, greater_than(0))
+        require_that("'in ethereum erc20 contact balance'", in_ethereum_erc20_balance, greater_than(0), quiet=True)
 
         lcc.set_step("Perform register erc20 token operation")
         self.utils.perform_register_erc20_token_operation(self, account=new_account_id,
@@ -99,7 +100,15 @@ class GetERC20AccountDeposits(BaseTest):
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
             "1.20.x"))  # todo: echo_erc20_contract_id
 
-        lcc.set_step("First transfer erc20 to ethereum of created account")
+        lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
+        response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
+                                        self.__database_api_identifier)
+        result = self.get_response(response_id)["result"]
+        erc20_token_id = result["id"]
+        erc20_contract_id = result["contract"]
+        lcc.log_info("ERC20 token has id '{}' and contract_id '{}'".format(erc20_token_id, erc20_contract_id))
+
+        lcc.set_step("First transfer erc20 to ethereum address of created account")
         erc20_deposit_amounts.append(self.get_random_amount(_to=in_ethereum_erc20_balance))
         self.eth_trx.transfer(self.web3, erc20_contract, eth_account_address, erc20_deposit_amounts[0],
                               log_transaction=False)
@@ -109,54 +118,119 @@ class GetERC20AccountDeposits(BaseTest):
 
         lcc.set_step("First: Get ERC20 account deposits")
         deposits = self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier)["result"]
-        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
-        lcc.log_debug(str(deposits))
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)), quiet=True)
         for i, deposit in enumerate(deposits):
-            require_that("'account deposit value #'{}''".format(str(i)), deposit["value"],
-                         equal_to(str(erc20_deposit_amounts[i])))
-            lcc.set_step("Check work of method 'get_erc20_account_deposits', result #'{}'".format(i))
-            check_that("'length of erc20 account deposit'", len(deposit), equal_to(7))
+
+            lcc.set_step("Check work of method 'get_erc20_account_deposits', deposit #'{}'".format(i))
+            check_that("'length of erc20 account deposit'", len(deposit), equal_to(7), quiet=True)
             with this_dict(deposits[i]):
-                check_that("'deposit erc20 id'", self.validator.is_deposit_erc20_id(deposits[i]["id"]), is_true())
-                check_that_entry("account", equal_to(new_account_id))
-                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]))
-                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])))
-                check_that("'transaction_hash'", self.validator.is_hex(deposits[i]["transaction_hash"]), is_true())
-                check_that_entry("is_approved", is_true())
-                check_that_entry("approves", is_list())
+                if not self.validator.is_deposit_erc20_id(deposits[i]["id"]):
+                    lcc.log_error("Wrong format of 'deposit_erc20_id', got: {}".format(deposits[i]["id"]))
+                else:
+                    lcc.log_info("'deposit_erc20_id' has correct format: {}".format(deposits[i]["id"]))
+                check_that_entry("account", equal_to(new_account_id), quiet=True)
+                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]), quiet=True)
+                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])), quiet=True)
+                if not self.validator.is_hex(deposits[i]["transaction_hash"]):
+                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(deposits[i]["transaction_hash"]))
+                else:
+                    lcc.log_info("'head_block_id' has correct format: hex")
+                check_that_entry("is_approved", is_true(), quiet=True)
+                check_that_entry("approves", is_list(), quiet=True)
 
-        lcc.set_step("Get updated ethereum ERC20 tokens balance in the Ethereum network")
-        in_ethereum_erc20_updated_balance = self.eth_trx.get_balance_of(erc20_contract, self.eth_account.address)
-        require_that("'in ethereum erc20 contact updated balance'", in_ethereum_erc20_updated_balance,
-                     equal_to(in_ethereum_erc20_balance - erc20_deposit_amounts[0]))
+        lcc.set_step("Get ethereum ERC20 tokens balance after first transfer in the Ethereum network")
+        in_ethereum_erc20_balance_after_first_transfer = self.eth_trx.get_balance_of(erc20_contract,
+                                                                                     self.eth_account.address)
+        require_that("'in ethereum erc20 contact balance after first transfer'",
+                     in_ethereum_erc20_balance_after_first_transfer,
+                     equal_to(in_ethereum_erc20_balance - erc20_deposit_amounts[0]), quiet=True)
 
-        lcc.set_step("Second transfer erc20 to ethereum of created account")
-        erc20_deposit_amounts.append(self.get_random_amount(_to=in_ethereum_erc20_updated_balance))
+        lcc.set_step("Second transfer erc20 to ethereum address of created account")
+        erc20_deposit_amounts.append(self.get_random_amount(_to=in_ethereum_erc20_balance_after_first_transfer))
         self.eth_trx.transfer(self.web3, erc20_contract, eth_account_address, erc20_deposit_amounts[1],
                               log_transaction=False)
         lcc.log_info(
             "Transfer '{}' erc20 tokens to '{}' account completed successfully".format(erc20_deposit_amounts[1],
                                                                                        eth_account_address))
 
-        lcc.set_step("Get final ethereum ERC20 tokens balance in the Ethereum network")
-        in_ethereum_erc20_final_balance = self.eth_trx.get_balance_of(erc20_contract, self.eth_account.address)
-        require_that("'in ethereum erc20 contact final balance'", in_ethereum_erc20_final_balance,
-                     equal_to((in_ethereum_erc20_updated_balance - erc20_deposit_amounts[1])))
+        lcc.set_step("Get ethereum ERC20 tokens balance after second transfer in the Ethereum network")
+        in_ethereum_erc20_balance_after_second_transfer = self.eth_trx.get_balance_of(erc20_contract,
+                                                                                      self.eth_account.address)
+        require_that("'in ethereum erc20 contact balance after second transfer'",
+                     in_ethereum_erc20_balance_after_second_transfer,
+                     equal_to((in_ethereum_erc20_balance_after_first_transfer - erc20_deposit_amounts[1])), quiet=True)
 
         lcc.set_step("Second: Get ERC20 account deposits")
-        response = self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier)
-        deposits = response["result"]
-        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
+        deposits = self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier,
+                                                         previous_account_deposits=deposits[0])["result"]
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)), quiet=True)
         for i, deposit in enumerate(deposits):
-            deposit_value = deposit["value"]
-            require_that("'account deposit value #'{}''".format(str(i)), deposit_value,
-                         equal_to(str(erc20_deposit_amounts[i])))
-            lcc.set_step("Check work of method 'get_erc20_account_deposits', result #'{}'".format(i))
+
+            lcc.set_step("Check work of method 'get_erc20_account_deposits', deposit #'{}'".format(i))
+            check_that("'length of erc20 account deposit'", len(deposit), equal_to(7), quiet=True)
             with this_dict(deposits[i]):
-                check_that("'deposit erc20 id'", self.validator.is_deposit_erc20_id(deposits[i]["id"]), is_true())
-                check_that_entry("account", equal_to(new_account_id))
-                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]))
-                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])))
-                check_that("'transaction_hash'", self.validator.is_hex(deposits[i]["transaction_hash"]), is_true())
-                check_that_entry("is_approved", is_true())
-                check_that_entry("approves", is_list())
+                if not self.validator.is_deposit_erc20_id(deposits[i]["id"]):
+                    lcc.log_error("Wrong format of 'deposit_erc20_id', got: {}".format(deposits[i]["id"]))
+                else:
+                    lcc.log_info("'deposit_erc20_id' has correct format: {}".format(deposits[i]["id"]))
+                check_that_entry("account", equal_to(new_account_id), quiet=True)
+                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]), quiet=True)
+                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])), quiet=True)
+                if not self.validator.is_hex(deposits[i]["transaction_hash"]):
+                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(deposits[i]["transaction_hash"]))
+                else:
+                    lcc.log_info("'head_block_id' has correct format: hex")
+                check_that_entry("is_approved", is_true(), quiet=True)
+                check_that_entry("approves", is_list(), quiet=True)
+
+        lcc.set_step("Third transfer erc20 to ethereum address of created account")
+        erc20_deposit_amounts.append(in_ethereum_erc20_balance_after_second_transfer)
+        self.eth_trx.transfer(self.web3, erc20_contract, eth_account_address,
+                              erc20_deposit_amounts[2], log_transaction=False)
+        lcc.log_info("Transfer '{}' erc20 tokens to '{}' account completed successfully".format(
+            in_ethereum_erc20_balance_after_first_transfer, eth_account_address))
+
+        lcc.set_step("Get ethereum ERC20 tokens balance after third transfer in the Ethereum network")
+        in_ethereum_erc20_balance_after_third_transfer = self.eth_trx.get_balance_of(erc20_contract,
+                                                                                     self.eth_account.address)
+        require_that("'in ethereum erc20 contact balance after third transfer'",
+                     in_ethereum_erc20_balance_after_third_transfer, equal_to(0), quiet=True)
+
+        lcc.set_step("Third: Get ERC20 account deposits")
+        deposits = self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier,
+                                                         previous_account_deposits=deposits[1])["result"]
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)), quiet=True)
+        for i, deposit in enumerate(deposits):
+
+            lcc.set_step("Check work of method 'get_erc20_account_deposits', deposit #'{}'".format(i))
+            check_that("'length of erc20 account deposit'", len(deposit), equal_to(7), quiet=True)
+            with this_dict(deposits[i]):
+                if not self.validator.is_deposit_erc20_id(deposits[i]["id"]):
+                    lcc.log_error("Wrong format of 'deposit_erc20_id', got: {}".format(deposits[i]["id"]))
+                else:
+                    lcc.log_info("'deposit_erc20_id' has correct format: {}".format(deposits[i]["id"]))
+                check_that_entry("account", equal_to(new_account_id), quiet=True)
+                check_that_entry("erc20_addr", equal_to(erc20_contract.address[2:]), quiet=True)
+                check_that_entry("value", equal_to(str(erc20_deposit_amounts[i])), quiet=True)
+                if not self.validator.is_hex(deposits[i]["transaction_hash"]):
+                    lcc.log_error("Wrong format of 'head_block_id', got: {}".format(deposits[i]["transaction_hash"]))
+                else:
+                    lcc.log_info("'head_block_id' has correct format: hex")
+                check_that_entry("is_approved", is_true(), quiet=True)
+                check_that_entry("approves", is_list(), quiet=True)
+
+        lcc.set_step("Call method 'balanceOf' ERC20 account of ECHO network")
+        argument = self.get_byte_code_param(new_account_id)
+        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+                                                              bytecode=self.erc20_balanceOf + argument,
+                                                              callee=erc20_contract_id)
+        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
+        broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
+                                                   log_broadcast=False)
+        lcc.log_info("Call method 'balanceOf' '{}' contract completed successfully".format(erc20_contract_id))
+
+        lcc.set_step("Get ERC20 account balance of ECHO network")
+        contract_result = self.get_contract_result(broadcast_result, self.__database_api_identifier)
+        in_echo_erc20_balance = self.get_contract_output(contract_result, output_type=int)
+        require_that("'in echo account's erc20 balance'", in_echo_erc20_balance, equal_to(in_ethereum_erc20_balance),
+                     quiet=True)
