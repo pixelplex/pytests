@@ -534,25 +534,6 @@ class Utils(object):
                 "Error: fund pool from '{}' account is not performed, response:\n{}".format(sender, broadcast_result))
         return broadcast_result
 
-    # def perform_account_upgrade_operation(self, base_test, account_id, database_api_id, lifetime=True,
-    #                                       log_broadcast=False):
-    #     operation = base_test.echo_ops.get_account_upgrade_operation(base_test.echo, account_to_upgrade=account_id,
-    #                                                                  upgrade_to_lifetime_member=lifetime)
-    #     if account_id != base_test.echo_acc0:
-    #         temp_operation = deepcopy(operation)
-    #         broadcast_result = self.add_balance_for_operations(base_test, account_id, temp_operation, database_api_id,
-    #                                                            log_broadcast=log_broadcast)
-    #         if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-    #             raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
-    #     collected_operation = base_test.collect_operations(operation, database_api_id)
-    #     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-    #                                                     log_broadcast=log_broadcast)
-    #     if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
-    #         raise Exception(
-    #             "Error: '{}' account did not become lifetime member, response:\n{}".format(account_id,
-    #                                                                                        broadcast_result))
-    #     return broadcast_result
-
     def perform_committee_member_create_operation(self, base_test, account_id, eth_address, database_api_id,
                                                   log_broadcast=False):
         operation = base_test.echo_ops.get_committee_member_create_operation(echo=base_test.echo,
