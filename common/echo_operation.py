@@ -22,7 +22,7 @@ class EchoOperations(object):
             return signer
         wallets = json.load(open(WALLETS))
         if self.validator.is_account_name(signer):
-            return wallets[signer]["WIF"]
+            return wallets[signer]["private_key"]
         if self.validator.is_account_id(signer):
             wallets_keys = list(wallets.keys())
             for key in range(len(wallets_keys)):
