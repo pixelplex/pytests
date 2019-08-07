@@ -59,7 +59,7 @@ class EthereumTransactions(object):
 
     def replenish_balance_of_committee_member(self, web3, from_address, to_address, currency="ether", percent=5):
         balance_to_transfer = self.get_part_from_address_balance(web3, from_address, currency=currency, percent=percent)
-        transaction = self.get_transfer_transaction(web3, to_address, value=balance_to_transfer)
+        transaction = self.get_transfer_transaction(web3, from_address, to_address, value=balance_to_transfer)
         self.broadcast(web3=web3, transaction=transaction)
 
     @staticmethod

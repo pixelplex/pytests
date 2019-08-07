@@ -52,11 +52,11 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
     def history_of_contract_created_by_another_contract(self):
         operations = []
         # todo: add. Bug ECHO-812
-        # create_contract_operation = self.echo_ops.get_operation_json("create_contract_operation", example=True)
+        # contract_create_operation = self.echo_ops.get_operation_json("contract_create_operation", example=True)
         contract_transfer_operation = self.echo_ops.get_operation_json("contract_transfer_operation", example=True)
 
-        lcc.set_step("Create 'contract_create_contract' contract in the Echo network")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        lcc.set_step("Create 'contract_contract_create' contract in the Echo network")
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -64,7 +64,7 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'deploy_contract' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.deploy_contract, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -72,14 +72,14 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
 
         lcc.set_step("Add contract create operation")
         # todo: add. Bug ECHO-812
-        # create_contract_operation.update()
+        # contract_create_operation.update()
 
         lcc.set_step("Get output with address of deployed contract")
         created_contract_id = self.get_contract_output(contract_result, output_type="contract_address")
         lcc.log_info("Output is '{}'".format(created_contract_id))
 
         lcc.set_step("Call 'get_creator' method of created contract")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_creator, callee=created_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -99,7 +99,7 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
 
         lcc.set_step("Call 'tr_asset_to_creator' method of created contract")
         value_amount = 1
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.tr_asset_to_creator,
                                                               callee=created_contract_id, value_amount=value_amount)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -128,7 +128,7 @@ class HistoryOfContractCreatedByAnotherContract(BaseTest):
         )
 
         lcc.set_step("Get contract history of created contract by another contract")
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         limit = 100
         params = [created_contract_id, stop, limit, start]
         response_id = self.send_request(self.get_request("get_contract_history", params), self.__history_api_identifier)

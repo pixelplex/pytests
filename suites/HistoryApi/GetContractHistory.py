@@ -49,7 +49,7 @@ class GetContractHistory(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_contract_history'")
     def method_main_check(self):
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         limit = 1
 
         lcc.set_step("Perform create contract operation")
@@ -133,7 +133,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("HistoryApi.GetContractHistory.GetContractHistory.method_main_check")
     def new_contract_history(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         limit = 100
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -153,7 +153,7 @@ class PositiveTesting(BaseTest):
         )
         check_that(
             "'operation id'",
-            response["result"][0]["op"][0], is_integer(self.echo.config.operation_ids.CREATE_CONTRACT)
+            response["result"][0]["op"][0], is_integer(self.echo.config.operation_ids.CONTRACT_CREATE)
         )
 
     @lcc.prop("type", "method")
@@ -163,11 +163,11 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("HistoryApi.GetContractHistory.GetContractHistory.method_main_check")
     def limit_operations_to_retrieve(self, get_random_valid_account_name, get_random_integer_up_to_fifty):
         new_account = get_random_valid_account_name
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         min_limit = 1
         max_limit = 100
-        create_contract_op_count = 1
-        call_contract_op_count = transfer_op_count = get_random_integer_up_to_fifty
+        contract_create_op_count = 1
+        contract_call_op_count = transfer_op_count = get_random_integer_up_to_fifty
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
                                           self.__registration_api_identifier)
@@ -182,12 +182,12 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Fill contract history with '{}' number of contract transfer operations".format(transfer_op_count))
 
         lcc.set_step(
-            "Check that count of new contract history with the maximum limit is equal to call_contract_count")
+            "Check that count of new contract history with the maximum limit is equal to contract_call_count")
         response = self.get_contract_history(contract_id, stop, max_limit, start)
-        operations_count = call_contract_op_count + transfer_op_count
+        operations_count = contract_call_op_count + transfer_op_count
         check_that(
             "'number of history results'",
-            len(response["result"]), is_(operations_count + create_contract_op_count)
+            len(response["result"]), is_(operations_count + contract_create_op_count)
         )
 
         lcc.set_step("Check minimum list length contract history")
@@ -198,7 +198,7 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Perform operations using a new account to create max_limit operations")
-        limit = math.ceil((max_limit - operations_count - create_contract_op_count) / 2)
+        limit = math.ceil((max_limit - operations_count - contract_create_op_count) / 2)
         self.utils.perform_contract_transfer_operation(self, new_account, self.get_pennie,
                                                        self.__database_api_identifier, contract_id, limit)
         lcc.log_info("Fill contract history with '{}' number of contract transfer operations".format(limit))
@@ -216,8 +216,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("HistoryApi.GetContractHistory.GetContractHistory.method_main_check")
     def stop_and_start_operations(self, get_random_integer, get_random_integer_up_to_fifty):
         value_amount = get_random_integer
-        stop = "1.10.0"
-        start = "1.10.0"
+        start, stop = "1.6.0", "1.6.0"
         contract_transfer_operation = self.echo_ops.get_operation_json("contract_transfer_operation", example=True)
         operations = []
         operation_ids = []
@@ -226,23 +225,23 @@ class PositiveTesting(BaseTest):
         bd_result = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier,
                                                value_amount=value_amount, need_broadcast_result=True)
         contract_id = bd_result.get("contract_id")
-        create_contract_operation = bd_result.get("broadcast_result")["trx"]["operations"][0]
+        contract_create_operation = bd_result.get("broadcast_result")["trx"]["operations"][0]
 
         lcc.set_step("Perform one call contract operation")
-        create_contract_op_count = call_contract_op_count = transfer_op_count = 1
+        contract_create_op_count = contract_call_op_count = transfer_op_count = 1
         bd_result = self.utils.perform_contract_transfer_operation(self, self.echo_acc0, self.get_pennie,
                                                                    self.__database_api_identifier, contract_id,
                                                                    transfer_op_count)
         lcc.log_info("Fill contract history with '{}' number of contract transfer operations".format(transfer_op_count))
 
-        call_contract_operation = bd_result["trx"]["operations"][0]
+        contract_call_operation = bd_result["trx"]["operations"][0]
         contract_transfer_operation[1].update({"from": contract_id, "to": self.echo_acc0})
         contract_transfer_operation[1]["amount"].update({"amount": 1})
         operations.append(contract_transfer_operation)
-        operations.append(call_contract_operation)
-        operations.append(create_contract_operation)
+        operations.append(contract_call_operation)
+        operations.append(contract_create_operation)
 
-        limit = call_contract_op_count + transfer_op_count + create_contract_op_count
+        limit = contract_call_op_count + transfer_op_count + contract_create_op_count
         lcc.set_step("Get contract history. Limit: '{}'".format(limit))
         response = self.get_contract_history(contract_id, stop, limit, start)
 
@@ -259,21 +258,21 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Stop operation id is '{}'".format(operation_id))
 
         lcc.set_step("Perform another operations")
-        call_contract_op_count = transfer_op_count = get_random_integer_up_to_fifty
+        contract_call_op_count = transfer_op_count = get_random_integer_up_to_fifty
         bd_result = self.utils.perform_contract_transfer_operation(self, self.echo_acc0, self.get_pennie,
                                                                    self.__database_api_identifier, contract_id,
                                                                    transfer_op_count)
         lcc.log_info("Fill contract history with '{}' number of contract transfer operations".format(transfer_op_count))
 
-        operations.remove(create_contract_operation)
+        operations.remove(contract_create_operation)
         for i in range(transfer_op_count):
-            call_contract_operation = bd_result["trx"]["operations"][0]
+            contract_call_operation = bd_result["trx"]["operations"][0]
             contract_transfer_operation[1].update({"from": contract_id, "to": self.echo_acc0})
             contract_transfer_operation[1]["amount"].update({"amount": 1})
             operations.append(contract_transfer_operation)
-            operations.append(call_contract_operation)
+            operations.append(contract_call_operation)
 
-        limit = call_contract_op_count + transfer_op_count + limit - create_contract_op_count
+        limit = contract_call_op_count + transfer_op_count + limit - contract_create_op_count
         stop = operation_id
         lcc.set_step("Get contract history. Stop: '{}', limit: '{}'".format(stop, limit))
         response = self.get_contract_history(contract_id, stop, limit, start)

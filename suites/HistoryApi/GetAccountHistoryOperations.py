@@ -42,7 +42,7 @@ class GetAccountHistoryOperations(BaseTest):
     @lcc.test("Simple work of method 'get_account_history_operations'")
     def method_main_check(self):
         operation_id = self.echo.config.operation_ids.ACCOUNT_CREATE
-        start = stop = "1.10.0"
+        start, stop = "1.6.0", "1.6.0"
         limit = 1
         lcc.set_step("Get account history operations")
         params = [self.echo_acc0, operation_id, start, stop, limit]
@@ -127,7 +127,7 @@ class PositiveTesting(BaseTest):
     def new_account_history(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
         operation_id = 0
-        start = stop = "1.10.0"
+        start, stop = "1.6.0", "1.6.0"
         limit = 100
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -153,7 +153,7 @@ class PositiveTesting(BaseTest):
         operation_count = 1
         transfer_operation_id = self.echo.config.operation_ids.TRANSFER
         create_asset_operation_id = self.echo.config.operation_ids.ASSET_CREATE
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         # todo: change '1' to '100' . Bug: "ECHO-700"
         limit = 1
         lcc.set_step("Create and get new account. Add balance to pay for asset_create_operation fee")
@@ -196,7 +196,7 @@ class PositiveTesting(BaseTest):
     def limit_operations_to_retrieve(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
         operation_id = 0
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         min_limit = 1
         # todo: change '6' to '100'. Bug: "ECHO-700"
         max_limit = 6
@@ -248,8 +248,7 @@ class PositiveTesting(BaseTest):
     def stop_and_start_operations(self, get_random_integer, get_random_integer_up_to_hundred):
         transfer_amount_1 = get_random_integer
         transfer_amount_2 = get_random_integer_up_to_hundred
-        stop = "1.10.0"
-        start = "1.10.0"
+        start, stop = "1.6.0", "1.6.0"
         operation_identifier = 0
         operations = []
         operation_ids = []

@@ -171,7 +171,7 @@ class PositiveTesting(BaseTest):
         )
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -201,7 +201,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("New asset created, asset_id is '{}'".format(asset_id))
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 value_asset_id=asset_id, bytecode=self.contract_1,
                                                                 supported_asset_id=asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)

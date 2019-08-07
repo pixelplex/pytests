@@ -46,18 +46,11 @@ class GetAccountByName(BaseTest):
         lcc.set_step("Checking committee-account")
         account_info = response["result"]
         with this_dict(account_info):
-            if check_that("account_info", account_info, has_length(20)):
-                if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
-                    lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
-                        account_info["membership_expiration_date"]))
-                else:
-                    lcc.log_info("'membership_expiration_date' has correct format: iso8601")
-                account_ids_format = ["id", "registrar", "referrer", "lifetime_referrer"]
+            if check_that("account_info", account_info, has_length(15)):
+                account_ids_format = ["id", "registrar"]
                 for j in range(len(account_ids_format)):
                     self.check_fields_account_ids_format(account_info, account_ids_format[j])
                 check_that_entry("network_fee_percentage", is_integer(), quiet=True)
-                check_that_entry("lifetime_referrer_fee_percentage", is_integer(), quiet=True)
-                check_that_entry("referrer_rewards_percentage", is_integer(), quiet=True)
                 if not self.validator.is_account_name(account_info["name"]):
                     lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
                 else:
@@ -155,8 +148,6 @@ class PositiveTesting(BaseTest):
         account_info = response["result"]
         with this_dict(account_info):
             check_that_entry("registrar", equal_to(performed_operations["registrar"]))
-            check_that_entry("referrer", equal_to(performed_operations["referrer"]))
-            check_that_entry("referrer_rewards_percentage", equal_to(performed_operations["referrer_percent"]))
             check_that_entry("name", equal_to(performed_operations["name"]))
             check_that_entry("active", equal_to(performed_operations["active"]))
             check_that_entry("echorand_key", equal_to(performed_operations["echorand_key"]))

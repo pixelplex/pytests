@@ -74,7 +74,8 @@ class ERC20(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(self.new_account))
 
         lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, self.new_account, self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_create_address_operation(self, self.new_account,
+                                                                  self.__database_api_identifier)
         lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get updated ethereum address of created account in the ECHO network")
@@ -96,14 +97,15 @@ class ERC20(BaseTest):
         require_that("'in ethereum owner's erc20 balance'", self.in_ethereum_erc20_balance, greater_than(0))
 
         lcc.set_step("Perform register erc20 token operation")
-        bd_result = self.utils.perform_register_erc20_token_operation(self, account=self.new_account,
-                                                                      eth_addr=self.erc20_contract.address,
-                                                                      name=name, symbol=symbol,
-                                                                      database_api_id=self.__database_api_identifier)
+        bd_result = \
+            self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.new_account,
+                                                                        eth_addr=self.erc20_contract.address,
+                                                                        name=name, symbol=symbol,
+                                                                        database_api_id=self.__database_api_identifier)
         # todo: uncomment. Bug ECHO-1043
         # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            "1.20.x"))  # todo: echo_erc20_contract_id
+            "1.15.x"))  # todo: echo_erc20_contract_id
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [self.erc20_contract.address[2:]]),
@@ -137,7 +139,7 @@ class ERC20(BaseTest):
 
         lcc.set_step("Call method 'balanceOf' with account that receive erc20 tokens in the ECHO network")
         argument = self.get_byte_code_param(self.new_account)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=self.erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -174,7 +176,7 @@ class ERC20(BaseTest):
 
         lcc.set_step("Call method 'balanceOf' with account that receive erc20 tokens in the ECHO network")
         argument = self.get_byte_code_param(self.new_account)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=self.erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -210,11 +212,12 @@ class ERC20(BaseTest):
 
         lcc.set_step("Perform first withdraw ERC20 token operation")
         erc20_withdraw_amounts.append(str(self.get_random_amount(_to=self.in_echo_erc20_balance)))
-        bd_result = self.utils.perform_withdraw_erc20_token_operation(self, account=self.new_account,
-                                                                      to=self.eth_account.address,
-                                                                      erc20_token=self.erc20_token_id,
-                                                                      value=erc20_withdraw_amounts[0],
-                                                                      database_api_id=self.__database_api_identifier)
+        bd_result = \
+            self.utils.perform_sidechain_erc20_withdraw_token_operation(self, account=self.new_account,
+                                                                        to=self.eth_account.address,
+                                                                        erc20_token=self.erc20_token_id,
+                                                                        value=erc20_withdraw_amounts[0],
+                                                                        database_api_id=self.__database_api_identifier)
         withdraw_erc20_token_ids.append(self.get_operation_results_ids(bd_result))
         lcc.log_info("Withdraw ERC20 token completed successfully, Withdraw ERC20 token object is '{}'".format(
             withdraw_erc20_token_ids[0]))
@@ -231,7 +234,7 @@ class ERC20(BaseTest):
 
         lcc.set_step("Call method 'balanceOf' with account that withdraw erc20 tokens out of ECHO network")
         argument = self.get_byte_code_param(self.new_account)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=self.erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -255,11 +258,12 @@ class ERC20(BaseTest):
 
         lcc.set_step("Perform second withdraw ERC20 token operation to withdraw all ERC20 balance")
         erc20_withdraw_amounts.append(str(in_echo_erc20_balance))
-        bd_result = self.utils.perform_withdraw_erc20_token_operation(self, account=self.new_account,
-                                                                      to=self.eth_account.address,
-                                                                      erc20_token=self.erc20_token_id,
-                                                                      value=erc20_withdraw_amounts[1],
-                                                                      database_api_id=self.__database_api_identifier)
+        bd_result = \
+            self.utils.perform_sidechain_erc20_withdraw_token_operation(self, account=self.new_account,
+                                                                        to=self.eth_account.address,
+                                                                        erc20_token=self.erc20_token_id,
+                                                                        value=erc20_withdraw_amounts[1],
+                                                                        database_api_id=self.__database_api_identifier)
         withdraw_erc20_token_ids.append(self.get_operation_results_ids(bd_result))
         lcc.log_info("Withdraw ERC20 token completed successfully, Withdraw ERC20 token object is '{}'".format(
             withdraw_erc20_token_ids[1]))
@@ -276,7 +280,7 @@ class ERC20(BaseTest):
 
         lcc.set_step("Call method 'balanceOf' with account that withdraw all erc20 tokens out of ECHO network")
         argument = self.get_byte_code_param(self.new_account)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=self.erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)

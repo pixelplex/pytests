@@ -40,7 +40,7 @@ class GetBlock(BaseTest):
         block_header = response["result"]
         require_that(
             "'the first full block'",
-            block_header, has_length(11)
+            block_header, has_length(12)
         )
         with this_dict(block_header):
             check_that_entry("previous", is_str("0000000000000000000000000000000000000000"), quiet=True)
@@ -53,7 +53,8 @@ class GetBlock(BaseTest):
             else:
                 lcc.log_info("'id' has correct format: account_id")
             check_that_entry("transaction_merkle_root", is_str("0000000000000000000000000000000000000000"), quiet=True)
-            check_that_entry("vm_root", is_str(), quiet=True)
+            check_that_entry("vm_root", is_list(), quiet=True)
+            check_that_entry("prev_signatures", is_list(), quiet=True)
             check_that_entry("extensions", is_list(), quiet=True)
             check_that_entry("ed_signature", is_str(), quiet=True)
             check_that_entry("round", is_integer(), quiet=True)
@@ -134,8 +135,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("DatabaseApi.GetBlock.GetBlock.method_main_check")
     def check_transaction_info_in_block(self):
         lcc.set_step("Collect 'get_transaction' operation")
-        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo,
-                                                                  from_account_id=self.echo_acc0,
+        transfer_operation = self.echo_ops.get_transfer_operation(echo=self.echo, from_account_id=self.echo_acc0,
                                                                   to_account_id=self.echo_acc1)
         lcc.log_info("Transfer operation: '{}'".format(str(transfer_operation)))
 

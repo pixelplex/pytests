@@ -161,7 +161,6 @@ class PositiveTesting(BaseTest):
             "time", not_equal_to(response["time"]),
             "recently_missed_count", not_equal_to(response["recently_missed_count"]),
             "current_aslot", not_equal_to(response["current_aslot"]),
-            "recent_slots_filled", not_equal_to(response["recent_slots_filled"]),
             "last_irreversible_block_num", not_equal_to(response["last_irreversible_block_num"]),
         )
 
@@ -188,7 +187,7 @@ class PositiveTesting(BaseTest):
                    equal_to(notice_about_created_contract.get("trx")), quiet=True)
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy,
                                                               callee=contract_id.get("contract_id"))
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -197,11 +196,11 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Contract method 'breakPiggy' is called successfully")
 
         lcc.set_step("Get notice about call contract")
-        notice_about_call_contract = self.get_notice(subscription_callback_id,
+        notice_about_contract_call = self.get_notice(subscription_callback_id,
                                                      object_id=self.get_implementation_object_type(
                                                          self.echo.config.implementation_object_types.TRANSACTION))
 
         lcc.set_step("Check notice about call contract")
         del broadcast_result.get("trx")["operation_results"]
         check_that("'received notice'", broadcast_result.get("trx"),
-                   equal_to(notice_about_call_contract.get("trx")), quiet=True)
+                   equal_to(notice_about_contract_call.get("trx")), quiet=True)

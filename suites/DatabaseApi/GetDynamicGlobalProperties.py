@@ -43,7 +43,7 @@ class GetDynamicGlobalProperties(BaseTest):
         dynamic_global_properties_time = ["time", "next_maintenance_time", "last_budget_time"]
         result = response["result"]
         with this_dict(result):
-            if check_that("dynamic global properties", result, has_length(14)):
+            if check_that("dynamic global properties", result, has_length(13)):
                 if not self.validator.is_dynamic_global_object_id(result["id"]):
                     lcc.log_error("Wrong format of 'dynamic_global_object_id', got: {}".format(result))
                 else:
@@ -66,9 +66,6 @@ class GetDynamicGlobalProperties(BaseTest):
                                                                    result[dynamic_global_properties_time[i]]))
                     else:
                         lcc.log_info("'{}' has correct format: iso8601".format(dynamic_global_properties_time[i]))
-                self.check_uint256_numbers(result, "recent_slots_filled", quiet=True)
-                value = int(result["recent_slots_filled"])
-                check_that(result["recent_slots_filled"], value, greater_than_or_equal_to(0), quiet=True)
                 check_that_entry("extensions", is_list(), quiet=True)
 
 

@@ -156,7 +156,7 @@ class PositiveTesting(BaseTest):
         self.subscribe_pending_transactions(subscription_callback_id)
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.piggy_contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -176,7 +176,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Created 'piggy' contract id: '{}'".format(contract_id))
 
         lcc.set_step("Call contract method greet")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,

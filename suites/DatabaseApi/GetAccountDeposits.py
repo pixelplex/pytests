@@ -60,7 +60,7 @@ class GetAccountDeposits(BaseTest):
         eth_amount = 0.01
         deposit_ids = []
         deposit_values = []
-        sidechain_issue_operations = []
+        sidechain_eth_issue_operations = []
 
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -68,7 +68,7 @@ class GetAccountDeposits(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_create_address_operation(self, new_account, self.__database_api_identifier)
         lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the network")
@@ -89,30 +89,30 @@ class GetAccountDeposits(BaseTest):
         deposit_values.append(self.utils.convert_ethereum_to_eeth(eth_amount))
 
         lcc.set_step("Store the first sent operation EthToEcho")
-        sidechain_issue_operation = self.echo_ops.get_operation_json("sidechain_issue_operation", example=True)
-        sidechain_issue_operation[1]["value"].update({"amount": deposit_values[0]})
-        sidechain_issue_operation[1].update({"account": new_account})
-        sidechain_issue_operations.insert(0, sidechain_issue_operation)
+        sidechain_eth_issue_operation = self.echo_ops.get_operation_json("sidechain_eth_issue_operation", example=True)
+        sidechain_eth_issue_operation[1]["value"].update({"amount": deposit_values[0]})
+        sidechain_eth_issue_operation[1].update({"account": new_account})
+        sidechain_eth_issue_operations.insert(0, sidechain_eth_issue_operation)
         lcc.log_info("First deposit operation stored")
 
         lcc.set_step("Get account history operations")
-        operation_id = self.echo.config.operation_ids.SIDECHAIN_ISSUE
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_ETH_ISSUE
         response = self.utils.get_account_history_operations(self, new_account, operation_id,
                                                              self.__history_api_identifier,
-                                                             limit=len(sidechain_issue_operations))
-        lcc.log_info("Account history operations of 'sidechain_issue_operation' received")
+                                                             limit=len(sidechain_eth_issue_operations))
+        lcc.log_info("Account history operations of 'sidechain_eth_issue_operation' received")
 
         lcc.set_step("Check response from method 'get_account_history_operations'")
         for i in range(len(response["result"])):
             operation_in_history = response["result"][i]["op"]
-            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            lcc.set_step("Check operation #{} in account history operations".format(i))
             check_that("operation_id", operation_in_history[0], equal_to(operation_id))
             with this_dict(operation_in_history[1]):
-                check_that_entry("fee", equal_to(sidechain_issue_operations[i][1]["fee"]))
+                check_that_entry("fee", equal_to(sidechain_eth_issue_operations[i][1]["fee"]))
                 with this_dict(operation_in_history[1]["value"]):
                     self.check_uint256_numbers(operation_in_history[1]["value"], "amount")
-                    check_that_entry("asset_id", equal_to(sidechain_issue_operations[i][1]["value"]["asset_id"]))
-                check_that_entry("account", equal_to(sidechain_issue_operations[i][1]["account"]))
+                    check_that_entry("asset_id", equal_to(sidechain_eth_issue_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_eth_issue_operations[i][1]["account"]))
                 check_that_entry("deposit_id",
                                  starts_with(self.get_object_type(self.echo.config.object_types.DEPOSIT_ETH)))
 
@@ -124,30 +124,30 @@ class GetAccountDeposits(BaseTest):
         deposit_values.append(self.utils.convert_ethereum_to_eeth(eth_amount))
 
         lcc.set_step("Store the second sent operation EthToEcho")
-        sidechain_issue_operation = self.echo_ops.get_operation_json("sidechain_issue_operation", example=True)
-        sidechain_issue_operation[1]["value"].update({"amount": deposit_values[1]})
-        sidechain_issue_operation[1].update({"account": new_account})
-        sidechain_issue_operations.insert(0, sidechain_issue_operation)
+        sidechain_eth_issue_operation = self.echo_ops.get_operation_json("sidechain_eth_issue_operation", example=True)
+        sidechain_eth_issue_operation[1]["value"].update({"amount": deposit_values[1]})
+        sidechain_eth_issue_operation[1].update({"account": new_account})
+        sidechain_eth_issue_operations.insert(0, sidechain_eth_issue_operation)
         lcc.log_info("Second deposit operation stored")
 
         lcc.set_step("Get account history operations")
-        operation_id = self.echo.config.operation_ids.SIDECHAIN_ISSUE
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_ETH_ISSUE
         response = self.utils.get_account_history_operations(self, new_account, operation_id,
                                                              self.__history_api_identifier,
-                                                             limit=len(sidechain_issue_operations))
-        lcc.log_info("Account history operations of 'sidechain_issue_operation' received")
+                                                             limit=len(sidechain_eth_issue_operations))
+        lcc.log_info("Account history operations of 'sidechain_eth_issue_operation' received")
 
         lcc.set_step("Check response from method 'get_account_history_operations'")
         for i in range(len(response["result"])):
             operation_in_history = response["result"][i]["op"]
-            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            lcc.set_step("Check operation #{} in account history operations".format(i))
             check_that("operation_id", operation_in_history[0], equal_to(operation_id))
             with this_dict(operation_in_history[1]):
-                check_that_entry("fee", equal_to(sidechain_issue_operations[i][1]["fee"]))
+                check_that_entry("fee", equal_to(sidechain_eth_issue_operations[i][1]["fee"]))
                 with this_dict(operation_in_history[1]["value"]):
                     self.check_uint256_numbers(operation_in_history[1]["value"], "amount")
-                    check_that_entry("asset_id", equal_to(sidechain_issue_operations[i][1]["value"]["asset_id"]))
-                check_that_entry("account", equal_to(sidechain_issue_operations[i][1]["account"]))
+                    check_that_entry("asset_id", equal_to(sidechain_eth_issue_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_eth_issue_operations[i][1]["account"]))
                 check_that_entry("deposit_id",
                                  starts_with(self.get_object_type(self.echo.config.object_types.DEPOSIT_ETH)))
 
@@ -161,7 +161,7 @@ class GetAccountDeposits(BaseTest):
         lcc.set_step("Check simple work of method 'get_account_deposits'")
         deposit = response["result"]
         for i in range(len(deposit)):
-            lcc.set_step("Check account deposit #{}".format(str(i)))
+            lcc.set_step("Check account deposit #{}".format(i))
             require_that(
                 "'first deposit of created account'",
                 deposit[i], has_length(7)
@@ -187,7 +187,7 @@ class GetAccountDeposits(BaseTest):
 
         lcc.set_step("Compare deposits in 'get_account_deposits' with method 'get_objects'")
         for i in range(len(deposit)):
-            lcc.set_step("Compare #{}, deposit in 'get_account_deposits' with method 'get_objects'".format(str(i)))
+            lcc.set_step("Compare #{}, deposit in 'get_account_deposits' with method 'get_objects'".format(i))
             with this_dict(deposit[i]):
                 check_that_entry("id", is_(response[i]["id"]), quiet=True)
                 check_that_entry("deposit_id", is_(response[i]["deposit_id"]), quiet=True)

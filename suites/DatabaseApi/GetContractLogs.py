@@ -54,7 +54,7 @@ class GetContractLogs(BaseTest):
                                                  value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie and get trx block number")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -149,7 +149,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Call contract method getPennie two times and get trx block number")
         for i in range(call_count):
-            operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+            operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                   bytecode=self.getPennie, callee=contract_id)
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -187,7 +187,7 @@ class PositiveTesting(BaseTest):
         int_param_code = self.get_byte_code_param(int_param, param_type=int)
         string_param_code = self.get_byte_code_param(string_param, param_type=str, offset="40")
         method_params = int_param_code + string_param_code
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.set_all_values + method_params,
                                                               callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -223,7 +223,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -256,7 +256,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -288,7 +288,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -324,7 +324,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -366,7 +366,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -407,7 +407,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -482,7 +482,7 @@ class NegativeTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)

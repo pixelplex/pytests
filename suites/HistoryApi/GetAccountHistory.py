@@ -41,7 +41,7 @@ class GetAccountHistory(BaseTest):
     @lcc.prop("type", "method")
     @lcc.test("Simple work of method 'get_account_history'")
     def method_main_check(self):
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         limit = 1
         lcc.set_step("Get account history")
         params = [self.echo_acc0, stop, limit, start]
@@ -119,7 +119,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("HistoryApi.GetAccountHistory.GetAccountHistory.method_main_check")
     def new_account_history(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         limit = 100
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -148,7 +148,7 @@ class PositiveTesting(BaseTest):
     @lcc.depends_on("HistoryApi.GetAccountHistory.GetAccountHistory.method_main_check")
     def limit_operations_to_retrieve(self, get_random_valid_account_name, get_random_integer_up_to_hundred):
         new_account = get_random_valid_account_name
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         min_limit = 1
         max_limit = 100
         default_account_create_operation, default_get_assets_operation = 1, 1
@@ -201,8 +201,7 @@ class PositiveTesting(BaseTest):
     def stop_and_start_operations(self, get_random_integer, get_random_integer_up_to_hundred):
         transfer_amount_1 = get_random_integer
         transfer_amount_2 = get_random_integer_up_to_hundred
-        stop = "1.10.0"
-        start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         operations = []
         operation_ids = []
 

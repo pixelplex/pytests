@@ -3,7 +3,7 @@ import json
 
 from project import ECHO_INITIAL_BALANCE, NATHAN_PK, INITIAL_ACCOUNTS_COUNT, INITIAL_ACCOUNTS_NAMES, \
     ACCOUNT_PREFIX, DEFAULT_ACCOUNTS_COUNT, MAIN_TEST_ACCOUNT_COUNT, WALLETS, INITIAL_COMMITTEE_ETH_ADDRESSES, \
-    ETH_ASSET_SYMBOL, ROPSTEN
+    ROPSTEN
 
 BALANCE_TO_ACCOUNT = ECHO_INITIAL_BALANCE / (INITIAL_ACCOUNTS_COUNT + MAIN_TEST_ACCOUNT_COUNT)
 
@@ -26,16 +26,6 @@ def add_balance_to_main_test_account(base_test, nathan_id, database_api):
     operation = base_test.echo_ops.get_transfer_operation(base_test.echo, nathan_id, to_account_id,
                                                           BALANCE_TO_ACCOUNT,
                                                           signer=NATHAN_PK)
-    collected_operation = base_test.collect_operations(operation, database_api)
-    broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-                                                    log_broadcast=False)
-    return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
-
-
-def upgrade_main_test_account_to_lifetime_member(base_test, database_api):
-    to_account_id = get_account_id(get_account(base_test, base_test.accounts[0], database_api))
-    operation = base_test.echo_ops.get_account_upgrade_operation(base_test.echo, to_account_id,
-                                                                 upgrade_to_lifetime_member=True)
     collected_operation = base_test.collect_operations(operation, database_api)
     broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
                                                     log_broadcast=False)
@@ -125,15 +115,6 @@ def import_balance_to_nathan(base_test, nathan_id, nathan_public_key, database_a
     return base_test.is_operation_completed(broadcast_result, expected_static_variant=0)
 
 
-def create_eth_asset_id(base_test, nathan_id, database_api):
-    operation = base_test.echo_ops.get_asset_create_operation(base_test.echo, nathan_id, ETH_ASSET_SYMBOL,
-                                                              signer=NATHAN_PK)
-    collected_operation = base_test.collect_operations(operation, database_api)
-    broadcast_result = base_test.echo_ops.broadcast(echo=base_test.echo, list_operations=collected_operation,
-                                                    log_broadcast=False)
-    return base_test.get_operation_results_ids(broadcast_result)
-
-
 def pre_deploy_echo(base_test, database_api, lcc):
     nathan = get_account(base_test, "nathan", database_api)
     nathan_id = get_account_id(nathan)
@@ -148,18 +129,12 @@ def pre_deploy_echo(base_test, database_api, lcc):
         if not distribute_balance_between_main_accounts(base_test, nathan_id, database_api):
             raise Exception("Balance is not distributed")
         lcc.log_info("Balance distributed between main accounts successfully")
-        if create_eth_asset_id(base_test, nathan_id, database_api) != base_test.eth_asset:
-            raise Exception("Ethereum asset did not created in echo network")
-        lcc.log_info("Ethereum asset created in echo network successfully")
     if not register_default_accounts(base_test, database_api):
         raise Exception("Default accounts are not created")
     lcc.log_info("Default accounts created successfully. Accounts count: '{}'".format(DEFAULT_ACCOUNTS_COUNT))
     if not add_balance_to_main_test_account(base_test, nathan_id, database_api):
         raise Exception("Balance to main test account is not credited")
     lcc.log_info("Balance added to main test account ({}) successfully".format(base_test.accounts[0]))
-    if not upgrade_main_test_account_to_lifetime_member(base_test, database_api):
-        raise Exception("The main test account is not upgraded to the lifetime member")
-    lcc.log_info("The main test account upgraded to the lifetime member")
     if not make_all_default_accounts_echo_holders(base_test, nathan_id, database_api):
         raise Exception("Default accounts did not become asset echo holders")
     lcc.log_info("All default accounts became echo holders successfully")
