@@ -18,7 +18,7 @@ else:
     ROPSTEN = False
 
 if "DEBUG" in os.environ and os.environ["DEBUG"].lower() != "false":
-    DEBUG = True sd
+    DEBUG = True
 else:
     DEBUG = False
 
