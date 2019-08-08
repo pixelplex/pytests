@@ -157,7 +157,7 @@ class GetERC20AccountWithdrawals(BaseTest):
             "result"]
         require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdrawal_amounts)), quiet=True)
         for i, withdrawal in enumerate(withdrawals):
-            lcc.log_info("Check account withdrawal #'{}'".format(str(i)))
+            lcc.log_info("Check account withdrawal #'{}'".format(i))
             with this_dict(withdrawal):
                 check_that_entry("id", equal_to(withdrawal_erc20_token_ids[i]), quiet=True)
                 check_that_entry("account", equal_to(new_account_id), quiet=True)
@@ -213,7 +213,7 @@ class GetERC20AccountWithdrawals(BaseTest):
             "result"]
         require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdrawal_amounts)), quiet=True)
         for i, withdrawal in enumerate(withdrawals):
-            lcc.log_info("Check account withdrawal #'{}'".format(str(i)))
+            lcc.log_info("Check account withdrawal #'{}'".format(i))
             with this_dict(withdrawal):
                 check_that_entry("id", equal_to(withdrawal_erc20_token_ids[i]), quiet=True)
                 check_that_entry("account", equal_to(new_account_id), quiet=True)
