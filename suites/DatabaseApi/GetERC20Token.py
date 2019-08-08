@@ -61,11 +61,12 @@ class GetERC20Token(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
-        bd_result = self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
-                                                                                eth_addr=erc20_contract.address,
-                                                                                name=contract_name,
-                                                                                symbol=erc20_symbol,
-                                                                                database_api_id=self.__database_api_identifier)
+        bd_result = \
+            self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
+                                                                        eth_addr=erc20_contract.address,
+                                                                        name=contract_name,
+                                                                        symbol=erc20_symbol,
+                                                                        database_api_id=self.__database_api_identifier)
         # todo: uncomment. Bug ECHO-1043
         # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
@@ -155,12 +156,13 @@ class PositiveTesting(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
-        bd_result = self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
-                                                                                eth_addr=erc20_contract.address,
-                                                                                name=contract_name,
-                                                                                symbol=erc20_symbol,
-                                                                                decimals=erc20_token_decimals,
-                                                                                database_api_id=self.__database_api_identifier)
+        bd_result = \
+            self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
+                                                                        eth_addr=erc20_contract.address,
+                                                                        name=contract_name,
+                                                                        symbol=erc20_symbol,
+                                                                        decimals=erc20_token_decimals,
+                                                                        database_api_id=self.__database_api_identifier)
         # todo: uncomment. Bug ECHO-1043
         # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
@@ -200,11 +202,12 @@ class PositiveTesting(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
-        bd_result = self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
-                                                                                eth_addr=erc20_contract.address,
-                                                                                name=contract_name,
-                                                                                symbol=erc20_symbol,
-                                                                                database_api_id=self.__database_api_identifier)
+        bd_result = \
+            self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
+                                                                        eth_addr=erc20_contract.address,
+                                                                        name=contract_name,
+                                                                        symbol=erc20_symbol,
+                                                                        database_api_id=self.__database_api_identifier)
         # todo: Bug ECHO-1043
         echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
