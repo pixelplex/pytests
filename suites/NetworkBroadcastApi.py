@@ -50,7 +50,7 @@ class NetworkBroadcastApi(object):
                                                      no_broadcast=True)
 
         lcc.set_step(
-            "Check Network Broadcast api identifier. Call network broadcast api method 'broadcast_transaction'")
+            "Check Network broadcast api identifier. Call network broadcast api method 'broadcast_transaction'")
         response_id = base.send_request(base.get_request("broadcast_transaction", [transaction_object]),
                                         api_identifier)
         response = base.get_response(response_id)
