@@ -3,7 +3,7 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, equal_to, greater_than, has_length, this_dict, require_that_entry, \
-    is_true
+    is_true, check_that_entry
 
 from common.base_test import BaseTest
 
@@ -129,7 +129,7 @@ class ERC20(BaseTest):
         lcc.set_step("First: Get ERC20 account deposits")
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier)
         deposits = response["result"]
-        require_that("'account deposits'", deposits, has_length(1))
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
         for i, deposit in enumerate(deposits):
             deposit_value = deposit["value"]
             require_that("'account deposit value #'{}''".format(str(i)), deposit_value,
@@ -166,7 +166,7 @@ class ERC20(BaseTest):
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier,
                                                          previous_account_deposits=deposits)
         deposits = response["result"]
-        require_that("'account deposits'", deposits, has_length(2))
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
         for i, deposit in enumerate(deposits):
             deposit_value = deposit["value"]
             require_that("'account deposit value #'{}''".format(str(i)), deposit_value,
@@ -222,12 +222,13 @@ class ERC20(BaseTest):
         lcc.set_step("Get ERC20 account withdrawals")
         response = self.utils.get_erc20_account_withdrawals(self, self.new_account, self.__database_api_identifier)
         withdrawals = response["result"]
-        require_that("'account withdrawals'", withdrawals, has_length(1))
+        require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdraw_amounts)))
         for i, withdraw in enumerate(withdrawals):
             lcc.log_info("Check account withdraw #'{}'".format(str(i)))
             with this_dict(withdraw):
                 require_that_entry("id", equal_to(withdraw_erc20_token_ids[i]))
                 require_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
+                check_that_entry("is_approved", is_true(), quiet=True)
 
         lcc.set_step("Call method 'balanceOf' with account that withdraw erc20 tokens out of ECHO network")
         argument = self.get_byte_code_param(self.new_account)
@@ -267,13 +268,14 @@ class ERC20(BaseTest):
         lcc.set_step("Get ERC20 account withdrawals")
         response = self.utils.get_erc20_account_withdrawals(self, self.new_account, self.__database_api_identifier)
         withdrawals = response["result"]
-        require_that("'account withdrawals'", withdrawals, has_length(2))
+        require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdraw_amounts)))
         for i, withdraw in enumerate(withdrawals):
             lcc.log_info("Check account withdraw #'{}'".format(str(i)))
             with this_dict(withdraw):
                 require_that_entry("id", equal_to(withdraw_erc20_token_ids[i]))
-                require_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
-
+                check_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
+                check_that_entry("is_approved", is_true(), quiet=True)
+                
         lcc.set_step("Call method 'balanceOf' with account that withdraw all erc20 tokens out of ECHO network")
         argument = self.get_byte_code_param(self.new_account)
         operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
