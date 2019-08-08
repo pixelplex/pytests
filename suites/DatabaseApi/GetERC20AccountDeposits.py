@@ -73,7 +73,7 @@ class GetERC20AccountDeposits(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account_id))
 
         lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, new_account_id, self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_create_address_operation(self, new_account_id, self.__database_api_identifier)
         lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the ECHO network")
@@ -94,10 +94,10 @@ class GetERC20AccountDeposits(BaseTest):
         require_that("'in ethereum erc20 contact balance'", in_ethereum_erc20_balance, greater_than(0), quiet=True)
 
         lcc.set_step("Perform register erc20 token operation")
-        self.utils.perform_register_erc20_token_operation(self, account=new_account_id,
-                                                          eth_addr=erc20_contract.address,
-                                                          name=token_name, symbol=erc20_symbol,
-                                                          database_api_id=self.__database_api_identifier)
+        self.utils.perform_sidechain_erc20_register_token_operation(self, account=new_account_id,
+                                                                    eth_addr=erc20_contract.address,
+                                                                    name=token_name, symbol=erc20_symbol,
+                                                                    database_api_id=self.__database_api_identifier)
         # todo: uncomment. Bug ECHO-1043
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
             "1.20.x"))  # todo: echo_erc20_contract_id
@@ -223,7 +223,7 @@ class GetERC20AccountDeposits(BaseTest):
 
         lcc.set_step("Call method 'balanceOf' ERC20 account of ECHO network")
         argument = self.get_byte_code_param(new_account_id)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.erc20_balanceOf + argument,
                                                               callee=erc20_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
