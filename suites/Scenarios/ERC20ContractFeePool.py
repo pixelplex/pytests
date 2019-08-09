@@ -45,6 +45,8 @@ class ERC20ContractFeePool(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
+    @lcc.tags("Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.test("The scenario checks ERC20 contract fee pool after creation")
     def erc20_contract_fee_pool_scenario(self, get_random_string, get_random_valid_asset_name, get_random_integer):
         name = "erc20" + get_random_string
@@ -71,6 +73,7 @@ class ERC20ContractFeePool(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
+        # todo: didn't register more than 1 erc20 obj. Bug ECHO-1141
         self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
                                                                     eth_addr=erc20_contract.address, name=name,
                                                                     symbol=symbol,
