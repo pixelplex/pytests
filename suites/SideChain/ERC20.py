@@ -60,7 +60,8 @@ class ERC20(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
-    @lcc.tags("Bug ECHO-1043")
+    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.test("The scenario checks the main parts before testing the ERC20 sidechain functionality")
     def erc20_sidechain_pre_run_scenario(self, get_random_valid_account_name, get_random_string,
                                          get_random_valid_asset_name):
@@ -97,6 +98,7 @@ class ERC20(BaseTest):
         require_that("'in ethereum owner's erc20 balance'", self.in_ethereum_erc20_balance, greater_than(0))
 
         lcc.set_step("Perform register erc20 token operation")
+        # todo: didn't register more than 1 erc20 obj. Bug ECHO-1141
         bd_result = \
             self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.new_account,
                                                                         eth_addr=self.erc20_contract.address,
@@ -117,6 +119,8 @@ class ERC20(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario entering erc20 tokens to the echo account")
+    @lcc.tags("Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.depends_on("SideChain.ERC20.ERC20.erc20_sidechain_pre_run_scenario")
     def erc20_in_scenario(self):
         erc20_deposit_amounts = []
@@ -199,6 +203,8 @@ class ERC20(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("The scenario withdrawing erc20 tokens from the echo account")
+    @lcc.tags("Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.depends_on("SideChain.ERC20.ERC20.erc20_in_scenario")
     def erc20_out_scenario(self):
         erc20_withdraw_amounts = []
