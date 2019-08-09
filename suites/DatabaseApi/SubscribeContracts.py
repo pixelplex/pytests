@@ -46,8 +46,17 @@ class SubscribeContracts(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def setup_test(self, test):
+        lcc.set_step("Setup for '{}'".format(str(test).split(".")[-1]))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
         lcc.log_info("Canceled all subscriptions successfully")
+
+    def teardown_test(self, test, status):
+        lcc.set_step("Teardown for '{}'".format(str(test).split(".")[-1]))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
+        lcc.log_info("Test {}".format(status))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -217,8 +226,17 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = self.get_account_id(self.accounts[0], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc0))
+
+    def setup_test(self, test):
+        lcc.set_step("Setup for '{}'".format(str(test).split(".")[-1]))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
         lcc.log_info("Canceled all subscriptions successfully")
+
+    def teardown_test(self, test, status):
+        lcc.set_step("Teardown for '{}'".format(str(test).split(".")[-1]))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
+        lcc.log_info("Test {}".format(status))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
