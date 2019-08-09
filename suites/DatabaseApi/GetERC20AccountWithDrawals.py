@@ -57,8 +57,9 @@ class GetERC20AccountWithdrawals(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043")
+    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
     @lcc.test("Simple work of method 'get_erc20_account_deposits'")
+    @lcc.disabled()
     def method_main_check(self, get_random_string, get_random_valid_asset_name, get_random_valid_account_name):
         new_account_name = get_random_valid_account_name
         token_name = "erc20" + get_random_string
@@ -95,11 +96,13 @@ class GetERC20AccountWithdrawals(BaseTest):
         lcc.set_step("Perform register erc20 token operation")
         self.utils.perform_sidechain_erc20_register_token_operation(self, account=new_account_id,
                                                                     eth_addr=erc20_contract.address,
-                                                                    name=token_name, symbol=erc20_symbol,
+                                                                    name=token_name,
+                                                                    symbol=erc20_symbol,
                                                                     database_api_id=self.__database_api_identifier)
+
         # todo: uncomment. Bug ECHO-1043
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            "1.20.x"))  # todo: echo_erc20_contract_id
+            "1.15.x"))  # todo: echo_erc20_contract_id
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
@@ -121,9 +124,6 @@ class GetERC20AccountWithdrawals(BaseTest):
                                                                                self.eth_account.address)
         require_that("'in ethereum erc20 contact balance after transfer'",
                      in_ethereum_erc20_balance_after_transfer, equal_to(0), quiet=True)
-
-        lcc.set_step("Get ERC20 account deposit")
-        self.utils.get_erc20_account_deposits(self, new_account_id, self.__database_api_identifier)
 
         lcc.set_step("Call method 'balanceOf' ERC20 account of ECHO network")
         argument = self.get_byte_code_param(new_account_id)
@@ -154,20 +154,20 @@ class GetERC20AccountWithdrawals(BaseTest):
             withdrawal_erc20_token_ids[0]))
 
         lcc.set_step("First: Get ERC20 account withdrawals")
-        withdrawals = self.utils.get_erc20_account_withdrawals(self, new_account_id, self.__database_api_identifier)[
-            "result"]
-        require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdrawal_amounts)), quiet=True)
-        for i, withdrawal in enumerate(withdrawals):
+        first_withdrawals = self.utils.get_erc20_account_withdrawals(self, new_account_id,
+                                                                     self.__database_api_identifier)["result"]
+        require_that("'account withdrawals'", first_withdrawals, has_length(len(erc20_withdrawal_amounts)), quiet=True)
+        for i, withdrawal in enumerate(first_withdrawals):
             lcc.log_info("Check account withdrawal #'{}'".format(i))
             with this_dict(withdrawal):
                 check_that_entry("id", equal_to(withdrawal_erc20_token_ids[i]), quiet=True)
                 check_that_entry("account", equal_to(new_account_id), quiet=True)
-                if not self.validator.is_hex(withdrawals[i]["to"]):
-                    lcc.log_error("Wrong format of 'to', got: {}".format(withdrawals[i]["to"]))
+                if not self.validator.is_hex(first_withdrawals[i]["to"]):
+                    lcc.log_error("Wrong format of 'to', got: {}".format(first_withdrawals[i]["to"]))
                 else:
-                    lcc.log_info("'erc20_token' has correct format: hex")
-                if not self.validator.is_erc20_object_id(withdrawals[i]["erc20_token"]):
-                    lcc.log_error("Wrong format of 'erc20_token', got: {}".format(withdrawals[i]["to"]))
+                    lcc.log_info("'to' has correct format: hex")
+                if not self.validator.is_erc20_object_id(first_withdrawals[i]["erc20_token"]):
+                    lcc.log_error("Wrong format of 'erc20_token', got: {}".format(first_withdrawals[i]["to"]))
                 else:
                     lcc.log_info("'erc20_token' has correct format: hex")
                 check_that_entry("value", equal_to(str(erc20_withdrawal_amounts[i])), quiet=True)
@@ -208,23 +208,24 @@ class GetERC20AccountWithdrawals(BaseTest):
                                                                                 __database_api_identifier)
         withdrawal_erc20_token_ids.append(self.get_operation_results_ids(bd_result))
         lcc.log_info("withdrawal ERC20 token completed successfully, withdrawal ERC20 token object is '{}'".format(
-            withdrawal_erc20_token_ids[0]))
+            withdrawal_erc20_token_ids[1]))
 
         lcc.set_step("Second: Get ERC20 account withdrawals")
-        withdrawals = self.utils.get_erc20_account_withdrawals(self, new_account_id, self.__database_api_identifier)[
-            "result"]
-        require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdrawal_amounts)), quiet=True)
-        for i, withdrawal in enumerate(withdrawals):
+        second_withdrawals = \
+            self.utils.get_erc20_account_withdrawals(self, new_account_id, self.__database_api_identifier,
+                                                     previous_account_withdrawals=first_withdrawals)["result"]
+        require_that("'account withdrawals'", second_withdrawals, has_length(len(erc20_withdrawal_amounts)), quiet=True)
+        for i, withdrawal in enumerate(second_withdrawals):
             lcc.log_info("Check account withdrawal #'{}'".format(i))
             with this_dict(withdrawal):
                 check_that_entry("id", equal_to(withdrawal_erc20_token_ids[i]), quiet=True)
                 check_that_entry("account", equal_to(new_account_id), quiet=True)
-                if not self.validator.is_hex(withdrawals[i]["to"]):
-                    lcc.log_error("Wrong format of 'to', got: {}".format(withdrawals[i]["to"]))
+                if not self.validator.is_hex(second_withdrawals[i]["to"]):
+                    lcc.log_error("Wrong format of 'to', got: {}".format(second_withdrawals[i]["to"]))
                 else:
-                    lcc.log_info("'erc20_token' has correct format: hex")
-                if not self.validator.is_erc20_object_id(withdrawals[i]["erc20_token"]):
-                    lcc.log_error("Wrong format of 'erc20_token', got: {}".format(withdrawals[i]["to"]))
+                    lcc.log_info("'to' has correct format: hex")
+                if not self.validator.is_erc20_object_id(second_withdrawals[i]["erc20_token"]):
+                    lcc.log_error("Wrong format of 'erc20_token', got: {}".format(second_withdrawals[i]["to"]))
                 else:
                     lcc.log_info("'erc20_token' has correct format: hex")
                 check_that_entry("value", equal_to(str(erc20_withdrawal_amounts[i])), quiet=True)
@@ -250,4 +251,4 @@ class GetERC20AccountWithdrawals(BaseTest):
         in_ethereum_erc20_balance_after_second_withdrawal = self.eth_trx.get_balance_of(erc20_contract,
                                                                                         self.eth_account.address)
         require_that("'in ethereum erc20 contact balance'", in_ethereum_erc20_balance_after_second_withdrawal,
-                     equal_to(in_echo_erc20_balance), quiet=False)
+                     equal_to(in_echo_erc20_balance), quiet=True)
