@@ -60,6 +60,8 @@ class GetERC20AccountDeposits(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.tags("Bug ECHO-1043")
+    @lcc.tags("Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.test("Simple work of method 'get_erc20_account_deposits'")
     def method_main_check(self, get_random_string, get_random_valid_asset_name, get_random_valid_account_name):
         new_account_name = get_random_valid_account_name
