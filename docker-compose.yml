@@ -37,6 +37,7 @@ services:
 
   pytests:
     environment:
+      - DEBUG=True
       - BASE_URL=ws://echo:6311/ws
       - ETHEREUM_URL=http://ganache:8545
       - NATHAN_PK=5JkYKpRDWeY3DN4qjZRKpEfxCqmTX17fsBJhupE9DJVVmJoGh6C
