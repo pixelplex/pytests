@@ -126,8 +126,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 
 #### [Network broadcast API](https://echo-dev.io/developers/apis/network-broadcast-api/#network-broadcast-api)
 
-- [x] [broadcast_transaction](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transactionsigned_transaction)
-- [ ] [broadcast_block](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_blocksigned_block)
+- [ ] [broadcast_transaction](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transactionsigned_transaction)
 - [ ] [broadcast_transaction_with_callback](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_with_callbackcallback-trx)
 - [ ] [broadcast_transaction_synchronous ](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_synchronous-trx)
 
@@ -176,8 +175,8 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
     
 #### [List of Contract Operations](https://echo-dev.io/developers/operations/#contract-operations)
 
-- [ ] [create_contract_operation](https://echo-dev.io/developers/operations/contracts/_create_contract_operation/)
-- [ ] [call_contract_operation](https://echo-dev.io/developers/operations/contracts/_call_contract_operation/)
+- [ ] [contract_create_operation](https://echo-dev.io/developers/operations/contracts/_create_contract_operation/)
+- [ ] [contract_call_operation](https://echo-dev.io/developers/operations/contracts/_call_contract_operation/)
 - [ ] [contract_transfer_operation [VIRTUAL]](https://echo-dev.io/developers/operations/contracts/_contract_transfer_operation/)
     
 #### [List of Custom Extension Operations](https://echo-dev.io/developers/operations/#custom-extension)

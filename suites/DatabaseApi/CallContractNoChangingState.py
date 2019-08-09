@@ -111,14 +111,14 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Call method 'set_string' to add uint field in contract")
         method_bytecode = self.set_string + self.get_byte_code_param(string_param, param_type=str)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=method_bytecode, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
         lcc.log_info("Method 'set_string' performed successfully")
 
         lcc.set_step("Call method 'get_string'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_string, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -144,14 +144,14 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Call method 'set_uint' to add uint field in contract")
         method_bytecode = self.set_uint + self.get_byte_code_param(int_param, param_type=int)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=method_bytecode, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
         lcc.log_info("Method 'set_uint' performed successfully")
 
         lcc.set_step("Call method 'get_uint'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_uint, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -199,7 +199,7 @@ class PositiveTesting(BaseTest):
                                                  value_amount=value_amount, supported_asset_id=new_asset_id)
 
         lcc.set_step("Call method of piggy contract: 'getPennie'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id,
                                                               value_asset_id=new_asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)

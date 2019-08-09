@@ -26,7 +26,7 @@ class HistoryApi(object):
         check_that("'history api identifier'", api_identifier, is_integer())
 
         lcc.set_step("Check History api identifier. Call history api method 'get_account_history'")
-        params = ["1.2.0", "1.10.0", 3, "1.10.0"]
+        params = ["1.2.0", "1.6.0", 3, "1.6.0"]
         response_id = base.send_request(base.get_request("get_account_history", params), api_identifier)
         response = base.get_response(response_id, log_response=True)
 

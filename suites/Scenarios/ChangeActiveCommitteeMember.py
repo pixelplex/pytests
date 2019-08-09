@@ -96,12 +96,8 @@ class ChangeActiveCommitteeMember(BaseTest):
                                               self.__registration_api_identifier)
             lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
-            lcc.set_step("Make new account lifetime member")
-            self.utils.perform_account_upgrade_operation(self, new_account, self.__database_api_identifier)
-            lcc.log_info("New '{}' account became lifetime member".format(new_account))
-
             lcc.set_step("Generate ethereum address for new account")
-            self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
+            self.utils.perform_sidechain_eth_create_address_operation(self, new_account, self.__database_api_identifier)
             lcc.log_info("Ethereum address for '{}' account generated successfully".format(new_account))
 
             lcc.set_step("Get ethereum address of created account in the Echo network")

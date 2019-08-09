@@ -40,7 +40,7 @@ class GetBlockHeader(BaseTest):
         block_header = response["result"]
         require_that(
             "'the block header of the first block'",
-            len(block_header), is_(7)
+            len(block_header), is_(8)
         )
         with this_dict(block_header):
             check_that_entry("previous", is_str("0000000000000000000000000000000000000000"), quiet=True)
@@ -53,6 +53,7 @@ class GetBlockHeader(BaseTest):
             else:
                 lcc.log_info("'id' has correct format: account_id")
             check_that_entry("transaction_merkle_root", is_str("0000000000000000000000000000000000000000"), quiet=True)
-            check_that_entry("vm_root", is_str(), quiet=True)
+            check_that_entry("vm_root", is_list(), quiet=True)
+            check_that_entry("prev_signatures", is_list(), quiet=True)
             check_that_entry("round", is_integer(), quiet=True)
             check_that_entry("extensions", is_list(), quiet=True)

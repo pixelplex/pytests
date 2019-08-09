@@ -47,7 +47,7 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
     @lcc.disabled()
     @lcc.tags("Bug ECHO-1036", "Bug ECHO-1037")
     def get_history_of_first_contract_scenario(self):
-        stop = start = "1.10.0"
+        stop, start = "1.6.0", "1.6.0"
         # todo: change limit to 100. Bug ECHO-1037
         limit = 1
 

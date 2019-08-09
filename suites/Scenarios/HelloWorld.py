@@ -50,7 +50,7 @@ class HelloWorld(BaseTest):
         expected_string = "Hello World!!!"
 
         lcc.set_step("Create 'Piggy' contract in the Echo network")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract,
                                                                 value_amount=self.value_amount,
                                                                 value_asset_id=self.echo_asset)
@@ -60,7 +60,7 @@ class HelloWorld(BaseTest):
         contract_id = self.get_contract_id(contract_result)
 
         lcc.set_step("Call 'greet' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -93,7 +93,7 @@ class HelloWorld(BaseTest):
         owner_balance = response["result"][0]["amount"]
 
         lcc.set_step("Call 'getPennie' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_pennie, callee=contract_id)
         fee = self.get_required_fee(operation, self.__database_api_identifier)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -125,7 +125,7 @@ class HelloWorld(BaseTest):
         )
 
         lcc.set_step("Destroy the contract. Call 'breakPiggy' method")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.break_piggy, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)

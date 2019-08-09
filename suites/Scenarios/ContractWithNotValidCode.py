@@ -44,7 +44,7 @@ class ContractWithNotValidCode(BaseTest):
 
         lcc.set_step("Create contract in the Echo network with not hex format of contract code")
         try:
-            operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+            operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                     bytecode=not_hex_format_contract_code)
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
             self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)

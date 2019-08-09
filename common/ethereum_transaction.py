@@ -59,7 +59,7 @@ class EthereumTransactions(object):
 
     def replenish_balance_of_committee_member(self, web3, from_address, to_address, currency="ether", percent=5):
         balance_to_transfer = self.get_part_from_address_balance(web3, from_address, currency=currency, percent=percent)
-        transaction = self.get_transfer_transaction(web3, to_address, value=balance_to_transfer)
+        transaction = self.get_transfer_transaction(web3, from_address, to_address, value=balance_to_transfer)
         self.broadcast(web3=web3, transaction=transaction)
 
     @staticmethod
@@ -90,18 +90,18 @@ class EthereumTransactions(object):
     @staticmethod
     def deploy_contract_in_ethereum_network(web3, eth_address, contract_abi, contract_bytecode, pass_phrase="pass"):
         private_key = ROPSTEN_PK if ROPSTEN else GANACHE_PK
-        list_eth_accounts = web3.personal.listAccounts
+        list_eth_accounts = web3.geth.personal.listAccounts()
         if eth_address not in list_eth_accounts:
             # Import account using private key and pass phrase
-            web3.personal.importRawKey(private_key, pass_phrase)
-            list_eth_accounts = web3.personal.listAccounts
+            web3.geth.personal.importRawKey(private_key, pass_phrase)
+            list_eth_accounts = web3.geth.personal.listAccounts
         if ROPSTEN:
             for eth_account in list_eth_accounts:
                 if eth_account == eth_address:
                     eth_address = eth_account
                     break
             # Unlock account using private key and pass phrase
-            web3.personal.unlockAccount(eth_address, pass_phrase)
+            web3.geth.personal.unlockAccount(eth_address, pass_phrase)
         # Set pre-funded account as sender
         web3.eth.defaultAccount = eth_address
         # Instantiate and deploy contract

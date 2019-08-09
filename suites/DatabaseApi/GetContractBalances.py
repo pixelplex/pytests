@@ -133,7 +133,7 @@ class PositiveTesting(BaseTest):
             check_that_entry("asset_id", equal_to(new_asset_id))
 
         lcc.set_step("Call 'getPennie' method to contract balance change check")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_pennie, callee=contract_id,
                                                               value_asset_id=new_asset_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -171,7 +171,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Call 'setGreeting' method to add several assets to contract balance")
         argument = self.get_byte_code_param(get_random_string, str)
         for i, asset_id in enumerate(new_asset_ids):
-            operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+            operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                   bytecode=self.storage_setGreeting + argument,
                                                                   callee=contract_id, value_amount=value_amounts[i],
                                                                   value_asset_id=asset_id)

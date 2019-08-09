@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import is_integer, check_that_entry, this_dict, check_that, is_list, \
-    require_that, is_, has_length, is_bool, is_dict, has_entry
+from lemoncheesecake.matching import is_integer, check_that_entry, this_dict, check_that, is_list, require_that, is_, \
+    has_length, is_dict, has_entry
 
 from common.base_test import BaseTest
 
@@ -25,7 +25,6 @@ class GetGlobalProperties(BaseTest):
         self.only_fee_count = 0
         self.fee_with_price_per_kbyte_count = 0
         self.account_create_fee_count = 0
-        self.account_update_fee_count = 0
         self.asset_create_count = 0
         self.pool_fee_count = 0
 
@@ -53,13 +52,6 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("basic_fee", is_integer(), quiet=True)
                 check_that_entry("premium_fee", is_integer(), quiet=True)
                 check_that_entry("price_per_kbyte", is_integer(), quiet=True)
-
-    @staticmethod
-    def account_update_fee(actual_fee):
-        with this_dict(actual_fee):
-            if check_that("fee", actual_fee, has_length(2)):
-                check_that_entry("membership_annual_fee", is_integer(), quiet=True)
-                check_that_entry("membership_lifetime_fee", is_integer(), quiet=True)
 
     @staticmethod
     def asset_create_fee(actual_fee):
@@ -154,26 +146,23 @@ class GetGlobalProperties(BaseTest):
     def method_main_check(self):
         all_checking_operations = []
         fee_with_price_per_kbyte_operations = ["account_update", "asset_update", "proposal_create", "proposal_update",
-                                               "custom", "account_address_create"]
-        only_fee_operations = ["transfer", "limit_order_create", "limit_order_cancel", "call_order_update",
-                               "account_whitelist", "account_transfer", "asset_update_bitasset",
+                                               "account_address_create"]
+        only_fee_operations = ["transfer", "account_whitelist", "account_transfer", "asset_update_bitasset",
                                "asset_update_feed_producers", "asset_issue", "asset_reserve", "asset_fund_fee_pool",
-                               "asset_settle", "asset_global_settle", "asset_publish_feed", "proposal_delete",
-                               "withdraw_permission_create", "withdraw_permission_update", "withdraw_permission_claim",
-                               "withdraw_permission_delete", "committee_member_create", "committee_member_update",
-                               "committee_member_update_global_parameters", "vesting_balance_create",
-                               "vesting_balance_withdraw", "assert", "override_transfer", "asset_claim_fees",
-                               "bid_collateral", "create_contract", "call_contract", "contract_transfer",
-                               "change_sidechain_config", "transfer_to_address_operation",
-                               "generate_eth_address_operation", "create_eth_address_operation", "deposit_eth_address",
-                               "withdraw_eth", "approve_widthdraw_eth", "contract_fund_pool", "contract_whitelist",
-                               "sidechain_issue", "sidechain_burn", "deposit_erc20_token", "withdraw_erc20_token",
-                               "approve_erc20_token_withdraw", "contract_update"]
-        no_fee_operations = ["fill_order", "asset_settle_cancel", "balance_claim", "execute_bid"]
+                               "asset_publish_feed", "proposal_delete", "committee_member_create",
+                               "committee_member_update", "committee_member_update_global_parameters",
+                               "vesting_balance_create", "vesting_balance_withdraw", "override_transfer",
+                               "asset_claim_fees", "contract_create", "contract_call", "contract_transfer",
+                               "sidechain_change_config", "transfer_to_address", "generate_eth_address_operation",
+                               "sidechain_eth_create_address", "sidechain_eth_deposit", "sidechain_eth_withdraw",
+                               "sidechain_eth_approve_withdraw", "contract_fund_pool", "contract_whitelist",
+                               "sidechain_eth_issue", " sidechain_eth_burn", "sidechain_erc20_deposit_token",
+                               "sidechain_erc20_withdraw_token", "sidechain_erc20_approve_token_withdraw",
+                               "contract_update"]
+        no_fee_operations = ["balance_claim"]
         account_create_fee_operations = ["account_create"]
-        account_update_fee_operations = ["account_upgrade"]
         asset_create_fee_operations = ["asset_create"]
-        pool_fee_operations = ["register_erc20_token"]
+        pool_fee_operations = ["sidechain_erc20_register_token"]
 
         lcc.set_step("Get global properties")
         response_id = self.send_request(self.get_request("get_global_properties"), self.__api_identifier)
@@ -194,7 +183,7 @@ class GetGlobalProperties(BaseTest):
         lcc.set_step("Check global parameters: 'current_fees' field")
         parameters = response["result"]["parameters"]
         with this_dict(parameters):
-            if check_that("parameters", parameters, has_length(30)):
+            if check_that("parameters", parameters, has_length(24)):
                 check_that_entry("current_fees", is_dict(), quiet=True)
                 check_that_entry("block_interval", is_integer(), quiet=True)
                 check_that_entry("maintenance_interval", is_integer(), quiet=True)
@@ -210,13 +199,7 @@ class GetGlobalProperties(BaseTest):
                 check_that_entry("maximum_authority_membership", is_integer(), quiet=True)
                 check_that_entry("reserve_percent_of_fee", is_integer(), quiet=True)
                 check_that_entry("network_percent_of_fee", is_integer(), quiet=True)
-                check_that_entry("lifetime_referrer_percent_of_fee", is_integer(), quiet=True)
-                check_that_entry("cashback_vesting_period_seconds", is_integer(), quiet=True)
-                check_that_entry("cashback_vesting_threshold", is_integer(), quiet=True)
-                check_that_entry("count_non_member_votes", is_bool(), quiet=True)
-                check_that_entry("allow_non_member_whitelists", is_bool(), quiet=True)
                 check_that_entry("max_predicate_opcode", is_integer(), quiet=True)
-                check_that_entry("fee_liquidation_threshold", is_integer(), quiet=True)
                 check_that_entry("accounts_per_fee_scale", is_integer(), quiet=True)
                 check_that_entry("account_fee_scale_bitshifts", is_integer(), quiet=True)
                 check_that_entry("max_authority_depth", is_integer(), quiet=True)
@@ -242,8 +225,8 @@ class GetGlobalProperties(BaseTest):
 
         lcc.set_step("Check that count of checking fees fields equal to all operations")
         checking_operations_fee_types = [fee_with_price_per_kbyte_operations, only_fee_operations, no_fee_operations,
-                                         account_create_fee_operations, account_update_fee_operations,
-                                         asset_create_fee_operations, pool_fee_operations]
+                                         account_create_fee_operations, asset_create_fee_operations,
+                                         pool_fee_operations]
         for fee_type in checking_operations_fee_types:
             all_checking_operations.extend(fee_type)
         check_that("'length of checking fees fields equal to all operations'", all_checking_operations,
@@ -296,11 +279,6 @@ class GetGlobalProperties(BaseTest):
         check_that("'account_create_fee' operation count", account_create_fee_operations,
                    has_length(self.account_create_fee_count))
         self.check_default_fee_for_operation(fee_parameters, account_create_fee_operations, self.account_create_fee)
-
-        lcc.set_step("Check 'account_update_fee' for operations")
-        check_that("'account_update_fee' operation count", account_update_fee_operations,
-                   has_length(self.account_update_fee_count))
-        self.check_default_fee_for_operation(fee_parameters, account_update_fee_operations, self.account_update_fee)
 
         lcc.set_step("Check 'asset_create_fee' for operations")
         check_that("'asset_create_fee' operation count", asset_create_fee_operations,

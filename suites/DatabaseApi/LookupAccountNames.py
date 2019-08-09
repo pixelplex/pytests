@@ -29,65 +29,56 @@ class LookupAccountNames(BaseTest):
 
     def check_account_structure(self, account_info):
         with this_dict(account_info):
-            if not (19 < len(account_info) < 22):
-                raise Exception(
-                    "Account object has wrong structure. Need len=[20, 21], got len={}, response: {}".format(
-                        str(len(account_info)), str(account_info)))
-            self.check_fields_account_ids_format(account_info, "id")
-            if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
-                lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
-                    account_info["membership_expiration_date"]))
-            else:
-                lcc.log_info("'membership_expiration_date' has correct format: iso8601")
-            account_ids_format = ["registrar", "referrer", "lifetime_referrer"]
-            for j in range(len(account_ids_format)):
-                self.check_fields_account_ids_format(account_info, account_ids_format[j])
-            check_that_entry("network_fee_percentage", is_integer(), quiet=True)
-            check_that_entry("lifetime_referrer_fee_percentage", is_integer(), quiet=True)
-            check_that_entry("referrer_rewards_percentage", is_integer(), quiet=True)
-            if not self.validator.is_account_name(account_info["name"]):
-                lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
-            else:
-                lcc.log_info("'name' has correct format: account_name")
-            check_that_entry("active", is_dict(), quiet=True)
-            if not self.validator.is_echorand_key(account_info["echorand_key"]):
-                lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
-            else:
-                lcc.log_info("'echorand_key' has correct format: echo_rand_key")
-            check_that_entry("options", is_dict(), quiet=True)
-            if not self.validator.is_account_statistics_id(account_info["statistics"]):
-                lcc.log_error("Wrong format of 'statistics', got: {}".format(account_info["statistics"]))
-            else:
-                lcc.log_info("'statistics' has correct format: account_statistics_object_type")
-            check_that_entry("whitelisting_accounts", is_list(), quiet=True)
-            check_that_entry("blacklisting_accounts", is_list(), quiet=True)
-            check_that_entry("whitelisted_accounts", is_list(), quiet=True)
-            check_that_entry("blacklisted_accounts", is_list(), quiet=True)
-            if len(account_info) == 21:
-                if not self.validator.is_vesting_balance_id(account_info["cashback_vb"]):
-                    lcc.log_error("Wrong format of 'cashback_vb', got: {}".format(account_info["cashback_vb"]))
+            if check_that("account_info", account_info, has_length(15)):
+                self.check_fields_account_ids_format(account_info, "id")
+                if not self.validator.is_account_id(account_info["registrar"]):
+                    lcc.log_error("Wrong format of 'registrar', got: {}".format(account_info["registrar"]))
                 else:
-                    lcc.log_info("'cashback_vb' has correct format: vesting_balance_object_type")
-            check_that_entry("active_special_authority", is_list(), quiet=True)
-            check_that_entry("top_n_control_flags", is_integer(), quiet=True)
-            check_that_entry("extensions", is_list(), quiet=True)
+                    lcc.log_info("'registrar' has correct format: account_object_type")
+                check_that_entry("network_fee_percentage", is_integer(), quiet=True)
+                if not self.validator.is_account_name(account_info["name"]):
+                    lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
+                else:
+                    lcc.log_info("'name' has correct format: account_name")
+                check_that_entry("active", is_dict(), quiet=True)
+                if not self.validator.is_echorand_key(account_info["echorand_key"]):
+                    lcc.log_error("Wrong format of 'echorand_key', got: {}".format(account_info["echorand_key"]))
+                else:
+                    lcc.log_info("'echorand_key' has correct format: echo_rand_key")
+                check_that_entry("options", is_dict(), quiet=True)
+                if not self.validator.is_account_statistics_id(account_info["statistics"]):
+                    lcc.log_error("Wrong format of 'statistics', got: {}".format(account_info["statistics"]))
+                else:
+                    lcc.log_info("'statistics' has correct format: account_statistics_object_type")
+                check_that_entry("whitelisting_accounts", is_list(), quiet=True)
+                check_that_entry("blacklisting_accounts", is_list(), quiet=True)
+                check_that_entry("whitelisted_accounts", is_list(), quiet=True)
+                check_that_entry("blacklisted_accounts", is_list(), quiet=True)
+                if len(account_info) == 21:
+                    if not self.validator.is_vesting_balance_id(account_info["cashback_vb"]):
+                        lcc.log_error("Wrong format of 'cashback_vb', got: {}".format(account_info["cashback_vb"]))
+                    else:
+                        lcc.log_info("'cashback_vb' has correct format: vesting_balance_object_type")
+                check_that_entry("active_special_authority", is_list(), quiet=True)
+                check_that_entry("top_n_control_flags", is_integer(), quiet=True)
+                check_that_entry("extensions", is_list(), quiet=True)
 
-            lcc.set_step("Check 'active' field")
-            with this_dict(account_info["active"]):
-                if check_that("active", account_info["active"], has_length(3)):
-                    check_that_entry("weight_threshold", is_integer(), quiet=True)
-                    check_that_entry("account_auths", is_list(), quiet=True)
-                    check_that_entry("key_auths", is_list(), quiet=True)
+                lcc.set_step("Check 'active' field")
+                with this_dict(account_info["active"]):
+                    if check_that("active", account_info["active"], has_length(3)):
+                        check_that_entry("weight_threshold", is_integer(), quiet=True)
+                        check_that_entry("account_auths", is_list(), quiet=True)
+                        check_that_entry("key_auths", is_list(), quiet=True)
 
-            lcc.set_step("Check 'options' field")
-            with this_dict(account_info["options"]):
-                if check_that("active", account_info["options"], has_length(5)):
-                    account_ids_format = ["voting_account", "delegating_account"]
-                    for k in range(len(account_ids_format)):
-                        self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
-                    check_that_entry("num_committee", is_integer(), quiet=True)
-                    check_that_entry("votes", is_list(), quiet=True)
-                    check_that_entry("extensions", is_list(), quiet=True)
+                lcc.set_step("Check 'options' field")
+                with this_dict(account_info["options"]):
+                    if check_that("active", account_info["options"], has_length(5)):
+                        account_ids_format = ["voting_account", "delegating_account"]
+                        for k in range(len(account_ids_format)):
+                            self.check_fields_account_ids_format(account_info["options"], account_ids_format[k])
+                        check_that_entry("num_committee", is_integer(), quiet=True)
+                        check_that_entry("votes", is_list(), quiet=True)
+                        check_that_entry("extensions", is_list(), quiet=True)
 
     def setup_suite(self):
         super().setup_suite()
@@ -128,14 +119,9 @@ class PositiveTesting(BaseTest):
         self.echo_acc0 = None
 
     @staticmethod
-    def compare_accounts(account, performed_account, account_is_created=False):
+    def compare_accounts(account, performed_account):
         with this_dict(account):
             check_that_entry("registrar", equal_to(performed_account["registrar"]))
-            check_that_entry("referrer", equal_to(performed_account["referrer"]))
-            referrer_percent_field_name = "referrer_percent"
-            if account_is_created:
-                referrer_percent_field_name = "referrer_rewards_percentage"
-            check_that_entry("referrer_rewards_percentage", equal_to(performed_account[referrer_percent_field_name]))
             check_that_entry("name", equal_to(performed_account["name"]))
             check_that_entry("active", equal_to(performed_account["active"]))
             check_that_entry("echorand_key", equal_to(performed_account["echorand_key"]))
@@ -205,19 +191,16 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Get account by name")
         response_id = self.send_request(self.get_request("lookup_account_names", [[account_name]]),
                                         self.__database_api_identifier)
-        response_1 = self.get_response(response_id)
+        account_info_1 = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_account_by_name' with param: {}".format(account_name))
 
         lcc.set_step("Get account by id")
         account_id = self.get_account_by_name(account_name, self.__database_api_identifier).get("result").get("id")
         response_id = self.send_request(self.get_request("get_objects", [[account_id]]),
                                         self.__database_api_identifier)
-        response_2 = self.get_response(response_id)
+        account_info_2 = self.get_response(response_id)["result"]
         lcc.log_info("Call method 'get_objects' with param: {}".format(account_id))
 
         lcc.set_step("Checking created account")
-        account_info_1 = response_1["result"]
-        account_info_2 = response_2["result"]
         for account_num in range(len(account_info_1)):
-            self.compare_accounts(account_info_1[account_num], account_info_2[account_num],
-                                  account_is_created=True)
+            self.compare_accounts(account_info_1[account_num], account_info_2[account_num])

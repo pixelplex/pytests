@@ -53,22 +53,16 @@ class GetFullAccounts(BaseTest):
             lcc.set_step("Checking account #{} - '{}'".format(i, params[i]))
             check_that("account_id", response["result"][i][0], equal_to(params[i]))
             full_account_info = response["result"][i][1]
-            if check_that("full_account_info", full_account_info, has_length(14)):
+            if check_that("full_account_info", full_account_info, has_length(8)):
                 account_info = full_account_info.get("account")
                 with this_dict(account_info):
-                    if check_that("account_info", account_info, has_length(20)):
+                    if check_that("account_info", account_info, has_length(15)):
                         check_that_entry("id", is_str(params[i]))
-                        if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
-                            lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
-                                account_info["membership_expiration_date"]))
+                        if not self.validator.is_account_id(account_info["registrar"]):
+                            lcc.log_error("Wrong format of 'registrar', got: {}".format(account_info["registrar"]))
                         else:
-                            lcc.log_info("'membership_expiration_date' has correct format: iso8601")
-                        account_ids_format = ["registrar", "referrer", "lifetime_referrer"]
-                        for j in range(len(account_ids_format)):
-                            self.check_fields_account_ids_format(account_info, account_ids_format[j])
+                            lcc.log_info("'registrar' has correct format: account_object_type")
                         check_that_entry("network_fee_percentage", is_integer(), quiet=True)
-                        check_that_entry("lifetime_referrer_fee_percentage", is_integer(), quiet=True)
-                        check_that_entry("referrer_rewards_percentage", is_integer(), quiet=True)
                         if not self.validator.is_account_name(account_info["name"]):
                             lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
                         else:
@@ -112,7 +106,7 @@ class GetFullAccounts(BaseTest):
                 lcc.set_step("Check 'statistics' field")
                 account_statistics = full_account_info.get("statistics")
                 with this_dict(account_statistics):
-                    if check_that("account_statistics", account_statistics, has_length(13)):
+                    if check_that("account_statistics", account_statistics, has_length(11)):
                         if not self.validator.is_account_statistics_id(account_statistics["id"]):
                             lcc.log_error("Wrong format of 'id', got: {}".format(account_statistics["id"]))
                         else:
@@ -127,30 +121,18 @@ class GetFullAccounts(BaseTest):
                         check_that_entry("removed_ops", is_integer(), quiet=True)
                         check_that_entry("total_blocks", is_integer(), quiet=True)
                         check_that_entry("total_core_in_orders", is_integer(), quiet=True)
-                        check_that_entry("lifetime_fees_paid", is_integer(), quiet=True)
                         check_that_entry("pending_fees", is_integer(), quiet=True)
-                        check_that_entry("pending_vested_fees", is_integer(), quiet=True)
                         check_that_entry("generated_eth_address", is_bool(), quiet=True)
                         check_that_entry("committeeman_rating", is_integer(), quiet=True)
                         check_that_entry("extensions", is_list(), quiet=True)
 
                 with this_dict(full_account_info):
-                    lcc.set_step("Check 'registrar_name', 'referrer_name', 'lifetime_referrer_name' fields")
+                    lcc.set_step("Check 'registrar_name' field")
                     if not self.validator.is_account_name(full_account_info["registrar_name"]):
                         lcc.log_error(
                             "Wrong format of 'registrar_name', got: {}".format(full_account_info["registrar_name"]))
                     else:
                         lcc.log_info("'registrar_name' has correct format: account_name")
-                    if not self.validator.is_account_name(full_account_info["referrer_name"]):
-                        lcc.log_error(
-                            "Wrong format of 'referrer_name', got: {}".format(full_account_info["referrer_name"]))
-                    else:
-                        lcc.log_info("'referrer_name' has correct format: account_name")
-                    if not self.validator.is_account_name(full_account_info["lifetime_referrer_name"]):
-                        lcc.log_error("Wrong format of 'lifetime_referrer_name', got: {}".format(
-                            full_account_info["lifetime_referrer_name"]))
-                    else:
-                        lcc.log_info("'lifetime_referrer_name' has correct format: account_name")
                     lcc.set_step("Check 'votes' field")
                     check_that_entry("votes", is_list(), quiet=True)
                     lcc.set_step("Check 'balances' field")
@@ -176,15 +158,8 @@ class GetFullAccounts(BaseTest):
                                     check_that_entry("extensions", is_list(), quiet=True)
                     lcc.set_step("Check 'vesting_balances' field")
                     check_that_entry("vesting_balances", is_list(), quiet=True)
-                    lcc.set_step("Check 'limit_orders' field")
-                    check_that_entry("limit_orders", is_list(), quiet=True)
-                    lcc.set_step("Check 'call_orders' field")
-                    check_that_entry("call_orders", is_list(), quiet=True)
-                    lcc.set_step("Check 'settle_orders' field")
-                    check_that_entry("settle_orders", is_list(), quiet=True)
                     lcc.set_step("Check 'proposals' field")
                     check_that_entry("proposals", is_list(), quiet=True)
                     lcc.set_step("Check 'assets' field")
                     check_that_entry("assets", is_list(), quiet=True)
                     lcc.set_step("Check 'withdraws' field")
-                    check_that_entry("withdraws", is_list(), quiet=True)

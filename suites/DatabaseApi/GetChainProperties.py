@@ -52,10 +52,8 @@ class GetChainProperties(BaseTest):
         lcc.set_step("Check 'immutable_parameters'")
         immutable_parameters = response["result"]["immutable_parameters"]
         with this_dict(immutable_parameters):
-            if check_that("immutable_parameters", immutable_parameters, has_length(3)):
+            if check_that("immutable_parameters", immutable_parameters, has_length(1)):
                 check_that_entry("min_committee_member_count", is_integer(), quiet=True)
-                check_that_entry("num_special_accounts", is_integer(), quiet=True)
-                check_that_entry("num_special_assets", is_integer(), quiet=True)
 
 
 @lcc.prop("suite_run_option_3", "negative")

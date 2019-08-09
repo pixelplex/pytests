@@ -130,7 +130,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Store contract storage before call 'greet' method")
 
         lcc.set_step("Call contract method that nothing do with contract fields")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -168,7 +168,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Call method 'get_contract' with contract_id='{}' parameter".format(contract_id))
 
         lcc.set_step("Call method 'breakPiggy' to destroy contract")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.breakPiggy, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -210,14 +210,14 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Call method 'set_uint' to add uint field in contract")
         bytecode = self.set_uint + self.get_byte_code_param(int_param, param_type=int)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=bytecode,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
         lcc.set_step("Check that uint field created in contract. Call method 'get_uint'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_uint,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -245,14 +245,14 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Call method 'set_string' to add string field in contract")
         bytecode = self.set_string + self.get_byte_code_param(string_param, param_type=str)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=bytecode,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
 
         lcc.set_step("Check that string field created in contract. Call method 'get_string'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.get_string,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -281,7 +281,7 @@ class PositiveTesting(BaseTest):
             check_that("'contract storage var 2'", contract_storage_with_string[i][1], is_list(), quiet=True)
 
         lcc.set_step("Call method 'delete_string' to delete string field in contract")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.delete_string,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -299,7 +299,7 @@ class PositiveTesting(BaseTest):
         require_that("'contract storage'", contract_storage, equal_to(contract_storage_with_int))
 
         lcc.set_step("Call method 'delete_uint' to delete uint field in contract")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.delete_uint,
                                                               callee=contract_dynamic_fields_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
