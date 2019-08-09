@@ -135,7 +135,7 @@ class ERC20(BaseTest):
         lcc.set_step("First: Get ERC20 account deposits")
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier)
         deposits = response["result"]
-        require_that("'account deposits'", deposits, has_length(1))
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
         for i, deposit in enumerate(deposits):
             deposit_value = deposit["value"]
             require_that("'account deposit value #'{}''".format(str(i)), deposit_value,
@@ -172,7 +172,7 @@ class ERC20(BaseTest):
         response = self.utils.get_erc20_account_deposits(self, self.new_account, self.__database_api_identifier,
                                                          previous_account_deposits=deposits)
         deposits = response["result"]
-        require_that("'account deposits'", deposits, has_length(2))
+        require_that("'account deposits'", deposits, has_length(len(erc20_deposit_amounts)))
         for i, deposit in enumerate(deposits):
             deposit_value = deposit["value"]
             require_that("'account deposit value #'{}''".format(str(i)), deposit_value,
@@ -231,7 +231,7 @@ class ERC20(BaseTest):
         lcc.set_step("Get ERC20 account withdrawals")
         response = self.utils.get_erc20_account_withdrawals(self, self.new_account, self.__database_api_identifier)
         withdrawals = response["result"]
-        require_that("'account withdrawals'", withdrawals, has_length(1))
+        require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdraw_amounts)))
         for i, withdraw in enumerate(withdrawals):
             lcc.log_info("Check account withdraw #'{}'".format(str(i)))
             with this_dict(withdraw):
@@ -277,7 +277,7 @@ class ERC20(BaseTest):
         lcc.set_step("Get ERC20 account withdrawals")
         response = self.utils.get_erc20_account_withdrawals(self, self.new_account, self.__database_api_identifier)
         withdrawals = response["result"]
-        require_that("'account withdrawals'", withdrawals, has_length(2))
+        require_that("'account withdrawals'", withdrawals, has_length(len(erc20_withdraw_amounts)))
         for i, withdraw in enumerate(withdrawals):
             lcc.log_info("Check account withdraw #'{}'".format(str(i)))
             with this_dict(withdraw):
