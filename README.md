@@ -114,7 +114,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] get_contract_fee_pool_balance
 - [x] get_contract_pool_whitelist
 - [x] get_erc20_token
-- [ ] get_erc20_account_deposits
+- [x] get_erc20_account_deposits
 - [ ] get_erc20_account_withdrawals
 - [x] check_erc20_token
 
