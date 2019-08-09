@@ -3,7 +3,7 @@ import random
 
 import lemoncheesecake.api as lcc
 from lemoncheesecake.matching import require_that, equal_to, greater_than, has_length, this_dict, require_that_entry, \
-    is_true, check_that_entry
+    is_true
 
 from common.base_test import BaseTest
 
@@ -237,7 +237,6 @@ class ERC20(BaseTest):
             with this_dict(withdraw):
                 require_that_entry("id", equal_to(withdraw_erc20_token_ids[i]))
                 require_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
-                check_that_entry("is_approved", is_true(), quiet=True)
 
         lcc.set_step("Call method 'balanceOf' with account that withdraw erc20 tokens out of ECHO network")
         argument = self.get_byte_code_param(self.new_account)
@@ -283,9 +282,8 @@ class ERC20(BaseTest):
             lcc.log_info("Check account withdraw #'{}'".format(str(i)))
             with this_dict(withdraw):
                 require_that_entry("id", equal_to(withdraw_erc20_token_ids[i]))
-                check_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
-                check_that_entry("is_approved", is_true(), quiet=True)
-                
+                require_that_entry("value", equal_to(str(erc20_withdraw_amounts[i])))
+
         lcc.set_step("Call method 'balanceOf' with account that withdraw all erc20 tokens out of ECHO network")
         argument = self.get_byte_code_param(self.new_account)
         operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
