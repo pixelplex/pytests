@@ -665,7 +665,8 @@ class Utils(object):
                                              database_api_id)
         response = base_test.get_response(response_id)
         if response["result"] and response["result"] != previous_account_withdrawals:
-            return response
+            if False not in [False for withdrawal in response["result"] if not withdrawal["is_approved"]]:
+                return response
         if temp_count <= BLOCKS_NUM_TO_WAIT:
             base_test.set_timeout_wait(wait_block_count=1, print_log=False)
             self.waiting_time_result = self.waiting_time_result + BLOCK_RELEASE_INTERVAL
