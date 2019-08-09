@@ -47,7 +47,8 @@ class GetERC20Token(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043")
+    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.test("Simple work of method 'get_erc20_token'")
     def method_main_check(self, get_random_string, get_random_valid_asset_name):
         contract_name = get_random_string
@@ -61,6 +62,7 @@ class GetERC20Token(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
+        # todo: didn't register more than 1 erc20 obj. Bug ECHO-1141
         bd_result = \
             self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
                                                                         eth_addr=erc20_contract.address,
@@ -139,7 +141,8 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043")
+    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.test("Create contract using register_erc20_token operation and get info about it")
     @lcc.depends_on("DatabaseApi.GetERC20Token.GetERC20Token.method_main_check")
     def get_info_about_created_erc20_contract(self, get_random_string, get_random_valid_asset_name,
@@ -156,6 +159,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
+        # todo: didn't register more than 1 erc20 obj. Bug ECHO-1141
         bd_result = \
             self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
                                                                         eth_addr=erc20_contract.address,
@@ -185,7 +189,7 @@ class PositiveTesting(BaseTest):
             check_that_entry("decimals", equal_to(erc20_token_decimals))
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043")
+    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
     @lcc.disabled()
     @lcc.test("Create contract using register_erc20_token operation and compare response from 'get_erc20_token' "
               "and 'get_objects'")
@@ -202,6 +206,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
+        # todo: didn't register more than 1 erc20 obj. Bug ECHO-1141
         bd_result = \
             self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
                                                                         eth_addr=erc20_contract.address,
