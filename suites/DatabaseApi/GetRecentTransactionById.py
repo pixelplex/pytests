@@ -7,8 +7,6 @@ from lemoncheesecake.matching import require_that, check_that, has_length, is_tr
 
 from common.base_test import BaseTest
 
-from project import BLOCKS_NUM_TO_WAIT
-
 SUITE = {
     "description": "Method 'get_recent_transaction_by_id'"
 }
@@ -129,7 +127,6 @@ class GetRecentTransactionById(BaseTest):
                 break
 
         lcc.set_step("Get recent transaction by id (after it expire)")
-
         while True:
             last_block_time = self.get_last_block_time()
             if self.compare_datetimes(last_block_time, expiration):
