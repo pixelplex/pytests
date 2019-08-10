@@ -435,7 +435,7 @@ class EchoOperations(object):
         return [operation_id, contract_update_props, signer]
 
     def broadcast(self, echo, list_operations, expiration=None, no_broadcast=False, get_signed_tx=False,
-                  log_broadcast=True, debug_mode=False):
+                  callback=None, log_broadcast=True, debug_mode=False):
         tx = echo.create_transaction()
         if debug_mode:
             lcc.log_debug("List operations:\n{}".format(json.dumps(list_operations, indent=4)))
@@ -452,7 +452,7 @@ class EchoOperations(object):
         tx.sign()
         if no_broadcast:
             return tx.transaction_object.json()
-        broadcast_result = tx.broadcast()
+        broadcast_result = tx.broadcast(callback=callback)
         if log_broadcast:
             lcc.log_info("Broadcast result: \n{}".format(json.dumps(broadcast_result, indent=4)))
         if get_signed_tx:

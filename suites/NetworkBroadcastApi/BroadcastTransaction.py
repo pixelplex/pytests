@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+import json
+import os
+
 import lemoncheesecake.api as lcc
-from lemoncheesecake.matching import check_that, equal_to, is_none, is_not_none, not_equal_to, is_true
+from lemoncheesecake.matching import check_that, equal_to, is_none, is_not_none, not_equal_to, is_true, is_
 
 from common.base_test import BaseTest
+from project import EXECUTION_STATUS_PATH, INIT4_PK
 
 SUITE = {
     "description": "Method 'broadcast_transaction'"
@@ -23,6 +27,22 @@ class BroadcastTransaction(BaseTest):
         self.__network_broadcast_identifier = None
         self.echo_acc0 = None
         self.echo_acc1 = None
+        self.state = None
+
+
+    def check_status_file(self):
+        self.state = True
+        if not os.path.exists(EXECUTION_STATUS_PATH):
+            with open(EXECUTION_STATUS_PATH, "w") as file:
+                file.write(json.dumps({"broadcast_transaction_get_balance_objects": {"state": True, "passed": False}}))
+        else:
+            file = json.load(open(EXECUTION_STATUS_PATH, 'r'))
+            if "broadcast_transaction_get_balance_objects" not in file.keys():
+                f = open(EXECUTION_STATUS_PATH, 'w')
+                file.update({"broadcast_transaction_get_balance_objects": {"state": True, "passed": False}})
+                f.write(json.dumps(file))
+                f.close()
+            self.state = False
 
     def setup_suite(self):
         super().setup_suite()
@@ -31,6 +51,7 @@ class BroadcastTransaction(BaseTest):
         self.__database_api_identifier = self.get_identifier("database")
         self.__registration_api_identifier = self.get_identifier("registration")
         self.__network_broadcast_identifier = self.get_identifier("network_broadcast")
+        self.check_status_file()
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}', network_broadcast='{}'".format(
                 self.__database_api_identifier, self.__registration_api_identifier,
@@ -96,6 +117,30 @@ class PositiveTesting(BaseTest):
         self.__registration_api_identifier = None
         self.echo_acc0 = None
         self.echo_acc1 = None
+        self.init4_account_name = "init4"
+        self.state = None
+
+    def read_execution_status(self):
+        execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
+        self.state = execution_status["broadcast_transaction_get_balance_objects"]["state"]
+
+    def change_test_status(self):
+        execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
+        if execution_status["broadcast_transaction_get_balance_objects"]:
+            execution_status["broadcast_transaction_get_balance_objects"]["state"] = False
+            self.state = False
+            with open(EXECUTION_STATUS_PATH, "w") as file:
+                file.write(json.dumps(execution_status))
+        else:
+            self.state = False
+
+    @staticmethod
+    def add_log_info(log):
+        execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))
+        execution_status["broadcast_transaction_get_balance_objects"]["state"] = False
+        with open(EXECUTION_STATUS_PATH, "w") as file:
+            execution_status["broadcast_transaction_get_balance_objects"].update({"passed": log})
+            file.write(json.dumps(execution_status))
 
     def setup_suite(self):
         super().setup_suite()
@@ -104,6 +149,7 @@ class PositiveTesting(BaseTest):
         self.__database_api_identifier = self.get_identifier("database")
         self.__registration_api_identifier = self.get_identifier("registration")
         self.__network_broadcast_identifier = self.get_identifier("network_broadcast")
+        self.read_execution_status()
         lcc.log_info(
             "API identifiers are: database='{}', registration='{}', network_broadcast='{}'".format(
                 self.__database_api_identifier, self.__registration_api_identifier,
@@ -152,8 +198,6 @@ class PositiveTesting(BaseTest):
         response_result = self.get_response(response_id)["result"]
         check_that("'get_account_by_name' response", response_result, is_not_none(), quiet=True)
 
-# todo: add operations "limit_order_create", "limit_order_cancel", "call_order_update", "fill_order",
-
     @lcc.prop("type", "method")
     @lcc.test("Check method broadcast_transaction with account_update_operation")
     @lcc.depends_on("NetworkBroadcastApi.BroadcastTransaction.BroadcastTransaction.method_main_check")
@@ -195,37 +239,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check that delegating_account changed after broadcast 'account_update_operation'")
         check_that("delegating_account", current_delegating_account, not_equal_to(delegating_account_after_broadcast))
 
-# todo: add operation "account_whitelist"
-
-    @lcc.prop("type", "method")
-    @lcc.test("Check method broadcast_transaction with account_upgrade_operation")
-    @lcc.depends_on("NetworkBroadcastApi.BroadcastTransaction.BroadcastTransaction.method_main_check")
-    def broadcast_account_upgrade_operation(self, get_random_valid_account_name):
-        new_account = get_random_valid_account_name
-
-        lcc.set_step("Create new account")
-        new_account = self.get_account_id(new_account, self.__database_api_identifier,
-                                          self.__registration_api_identifier)
-        lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
-
-        lcc.set_step("Create 'account_upgrade_operation'")
-        operation = self.echo_ops.get_account_upgrade_operation(self.echo, account_to_upgrade=new_account,
-                                                                upgrade_to_lifetime_member=True)
-
-        lcc.set_step("Add balance to pay fee for 'account_upgrade_operation'")
-        self.utils.add_balance_for_operations(self, new_account, operation, self.__database_api_identifier,
-                                              log_broadcast=False)
-
-        lcc.set_step("Sign transaction of 'account_upgrade_operation' and broadcast")
-        self.broadcast_transaction(operation)
-
-        lcc.set_step("Check that account become lifetime member")
-        response_id = self.send_request(self.get_request("get_accounts", [[new_account]]),
-                                        self.__database_api_identifier)
-        response_result_lifetime_referrer = self.get_response(response_id)["result"][0]["lifetime_referrer"]
-        check_that("'lifetime_referrer'", response_result_lifetime_referrer, equal_to(new_account))
-
-# todo: add operation "account_transfer"
+# todo: add operations "account_whitelist", "account_transfer"
 
     @lcc.prop("type", "method")
     @lcc.test("Check method broadcast_transaction with asset_create_operation")
@@ -297,7 +311,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Check that account: {} get assets".format(account_id))
         check_that("amount", response["amount"], equal_to(asset_value))
 
-# todo: add operations "asset_reserve", "asset_fund_fee_pool", "asset_settle", "asset_global_settle", "asset_publish_feed", "proposal_create", "proposal_update", "proposal_delete", "withdraw_permission_create", "withdraw_permission_update", "withdraw_permission_claim", "withdraw_permission_delete",
+# todo: add operations "asset_reserve", "asset_fund_fee_pool", "asset_publish_feed", "proposal_create", "proposal_update", "proposal_delete"
 
     @lcc.prop("type", "method")
     @lcc.test("Check method broadcast_transaction with committee_member_create_operation")
@@ -310,16 +324,8 @@ class PositiveTesting(BaseTest):
                                          self.__registration_api_identifier)
         lcc.log_info("New Echo account created, account_id='{}'".format(account_id))
 
-        lcc.set_step("Add balance to pay fee for 'get_account_upgrade_operation' and broadcast 'account_upgrade_operation'")
-        operation = self.echo_ops.get_account_upgrade_operation(self.echo, account_to_upgrade=account_id,
-                                                                upgrade_to_lifetime_member=True)
-        self.utils.add_balance_for_operations(self, account_id, operation, self.__database_api_identifier,
-                                              log_broadcast=True)
-        collected_operation = self.collect_operations(operation, self.__database_api_identifier)
-        self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
-
         lcc.set_step("Get eth address")
-        self.utils.perform_generate_eth_address_operation(self, account_id, self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_create_address_operation(self, account_id, self.__database_api_identifier)
         eth_account_address = self.utils.get_eth_address(self, account_id,
                                                          self.__database_api_identifier)["result"]["eth_addr"]
 
@@ -342,7 +348,7 @@ class PositiveTesting(BaseTest):
         response = self.get_response(response_id)["result"][0][0]
         check_that("account_name", account_name, equal_to(response))
 
-# todo: add operations "committee_member_update", "committee_member_update_global_parameters", "vesting_balance_create",
+# todo: add operations "committee_member_update", "committee_member_update_global_parameters"
 
     @lcc.prop("type", "method")
     @lcc.test("Check method broadcast_transaction with vesting_balance_create_operation")
@@ -444,3 +450,88 @@ class PositiveTesting(BaseTest):
                                         self.__database_api_identifier)
         vesting_balances_amount = self.get_response(response_id)["result"][0]["balance"]["amount"]
         check_that("vesting_balances_amount", vesting_balances_amount, equal_to(0))
+
+    @lcc.prop("type", "method")
+    @lcc.test("Check method broadcast_transaction with balance_claim_operation")
+    @lcc.depends_on("NetworkBroadcastApi.BroadcastTransaction.BroadcastTransaction.method_main_check")
+    def broadcast_balance_claim_operation(self, get_random_valid_account_name):
+        if self.state:
+            lcc.set_step("Get account id and public key and store")
+            account_info = self.get_account_by_name(self.init4_account_name, self.__database_api_identifier)
+            account_id = account_info["result"]["id"]
+            public_key = account_info["result"]["echorand_key"]
+            lcc.log_info(
+                "'{}' account has id='{}' and public_key='{}'".format(self.init4_account_name, account_id,
+                                                                      public_key))
+
+            lcc.set_step("Get balance objects before balance claim operation and store balance id and amount")
+            response_id = self.send_request(self.get_request("get_balance_objects", [[public_key]]),
+                                            self.__database_api_identifier)
+            result = self.get_response(response_id)["result"][0]
+            balance_id = result["id"]
+            balance_amount = int(result["balance"]["amount"])
+            lcc.log_info(
+                "'{}' account has balance with id='{}' and amount='{}'".format(self.init4_account_name, balance_id,
+                                                                               balance_amount))
+
+            lcc.set_step("Create 'balance_claim_operation'")
+            operation = self.echo_ops.get_balance_claim_operation(echo=self.echo, deposit_to_account=account_id,
+                                                                  balance_owner_public_key=public_key,
+                                                                  value_amount=balance_amount,
+                                                                  balance_owner_private_key=INIT4_PK,
+                                                                  balance_to_claim=balance_id)
+
+            lcc.set_step("Sign transaction of 'balance_claim_operation' and broadcast")
+            self.broadcast_transaction(operation)
+            self.change_test_status()
+
+            lcc.set_step("Get balance objects after balance claim operation")
+            response_id = self.send_request(self.get_request("get_balance_objects", [[public_key]]),
+                                            self.__database_api_identifier)
+            lcc.log_info("update execution_status parameter ")
+            self.add_log_info(False)
+            result = self.get_response(response_id)["result"]
+
+            lcc.set_step("Check response from 'get_balance_objects' method after balance claim operation")
+            if check_that("balance", result, is_([])):
+                self.add_log_info(True)
+        else:
+            execution_status = json.load(open(EXECUTION_STATUS_PATH, "r"))["get_balance_objects"]
+            if execution_status["passed"]:
+                lcc.log_info("Testing of the 'balance_claim_operation' method was successfully completed earlier")
+            else:
+                lcc.log_error("Test of method 'balance_claim_operation' failed during the previous run. "
+                              "Can not claim initial balance again. To run test again please run a clean node.")
+
+
+
+# # todo: add operations: "override_transfer", "asset_claim_fees"
+
+# contract_create_operation
+# contract_call_operation
+# contract_transfer_operation
+# # todo: add operations: "sidechain_change_config",
+# account_address_create_operation
+# # todo: add operations: "transfer_to_address",
+
+# sidechain_eth_create_address_operation
+# # todo: add operations: "sidechain_eth_approve_address",
+# # todo: add operations: "sidechain_eth_deposit",
+# sidechain_eth_withdraw_operation
+# # todo: add operations: "sidechain_eth_approve_withdraw",
+
+# contract_fund_pool_operation
+# contract_whitelist_operation
+# sidechain_eth_issue_operation
+# sidechain_eth_burn_operation
+# sidechain_erc20_register_token_operation
+# # todo: add operations: "sidechain_erc20_deposit_token",
+
+# sidechain_erc20_withdraw_token_operation
+# # todo: add operations: "sidechain_erc20_approve_token_withdraw2",
+
+# contract_update_operation
+# # todo: add operations: "balance_claim",
+
+
+

@@ -31,8 +31,14 @@ class GetBalanceObjects(BaseTest):
         self.state = True
         if not os.path.exists(EXECUTION_STATUS_PATH):
             with open(EXECUTION_STATUS_PATH, "w") as file:
-                file.write(json.dumps({"get_balance_objects": {"state": True}}))
+                file.write(json.dumps({"get_balance_objects": {"state": True, "passed": False}}))
         else:
+            file = json.load(open(EXECUTION_STATUS_PATH, 'r'))
+            if "get_balance_objects" not in file.keys():
+                f = open(EXECUTION_STATUS_PATH, 'w')
+                file.update({"get_balance_objects": {"state": True, "passed": False}})
+                f.write(json.dumps(file))
+                f.close()
             self.state = False
 
     def setup_suite(self):
@@ -192,7 +198,9 @@ class PositiveTesting(BaseTest):
                 lcc.set_step("Get balance objects before balance claim operation. Store balance id and amount")
                 response_id = self.send_request(self.get_request("get_balance_objects", [[public_key]]),
                                                 self.__database_api_identifier)
-                result = self.get_response(response_id)["result"][0]
+                result = self.get_response(response_id)
+                lcc.log_info("{}".format(result))
+                result = result["result"][0]
                 lcc.log_info("Call method 'get_balance_objects' with param: '{}'".format(public_key))
                 balance_id = result["id"]
                 balance_amount = int(result["balance"]["amount"])

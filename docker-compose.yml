@@ -41,6 +41,7 @@ services:
       - ETHEREUM_URL=http://ganache:8545
       - NATHAN_PK=5JkYKpRDWeY3DN4qjZRKpEfxCqmTX17fsBJhupE9DJVVmJoGh6C
       - INIT0_PK=5J6azg8iUcQEbxEaLAFrJbcdBjgKqewLF81A63NE4T2aeHCsKiE
+      - INIT4_PK=5JMgujU9Zmz85buhkPQyEMXLvK7FZ6giSLjRT25uf1tpV6uPULS
     build: .
     command: ["python3", "test_runner.py"]
     container_name: '631.echo.pytests.${ENV}'
