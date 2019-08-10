@@ -21,7 +21,7 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
         self.__history_api_identifier = None
         self.echo_acc0 = None
         self.contract = self.get_byte_code("piggy", "code")
-        self.contract_id = "1.14.0"
+        self.contract_id = "{}0".format(self.get_object_type(self.echo.config.object_types.CONTRACT))
 
     def setup_suite(self):
         super().setup_suite()
@@ -44,32 +44,30 @@ class GetHistoryOfFirstContractInNetwork(BaseTest):
 
     @lcc.prop("type", "scenario")
     @lcc.test("Check contract history of the first contract in the network")
-    @lcc.disabled()
-    @lcc.tags("Bug ECHO-1036", "Bug ECHO-1037")
     def get_history_of_first_contract_scenario(self):
         stop, start = "1.6.0", "1.6.0"
-        # todo: change limit to 100. Bug ECHO-1037
-        limit = 1
+        limit = 100
 
-        lcc.set_step("Check that '1.14.0' contract in the network or not")
-        response_id = self.send_request(self.get_request("get_objects", [["1.14.0"]]), self.__database_api_identifier)
+        lcc.set_step("Check that '{}' first contract in the network or not".format(self.contract_id))
+        response_id = self.send_request(self.get_request("get_objects", [[self.contract_id]]),
+                                        self.__database_api_identifier)
         response = self.get_response(response_id)
         if response["result"] == [None]:
-            lcc.set_step("Perform create contract operation")
+            lcc.set_step("Perform create contract operation".format(self.contract_id))
             self.contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract,
                                                           self.__database_api_identifier)
         elif "error" in response:
             lcc.log_error("'get_objects' return error message, got {}".format(str(response)))
             raise Exception("'get_objects' return error message")
 
-        lcc.set_step("Get '1.14.0' contract history")
+        lcc.set_step("Get '{}' first contract history".format(self.contract_id))
         params = [self.contract_id, stop, limit, start]
         response_id = self.send_request(self.get_request("get_contract_history", params), self.__history_api_identifier)
         response = self.get_response(response_id)
         lcc.log_info("Call method 'get_contract_history' with params: '{}'".format(params))
 
-        lcc.set_step("Check '1.14.0' contract history")
+        lcc.set_step("Check '{}' first contract history".format(self.contract_id))
         check_that(
-            "''1.14.0' contract history'",
+            "''{}' contract history'".format(self.contract_id),
             response["result"], is_not_none(), quiet=True
         )

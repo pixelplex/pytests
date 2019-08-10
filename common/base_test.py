@@ -517,6 +517,8 @@ class BaseTest(object):
         if len([contract_result]) != 1:
             lcc.log_error("Need one contract id, got:\n{}".format(contract_result))
             raise Exception("Need one contract id")
+        if self.validator.is_erc20_object_id(contract_result):
+            return contract_result
         if not self.validator.is_contract_result_id(contract_result):
             lcc.log_error("Wrong format of contract result id, got {}".format(contract_result))
             raise Exception("Wrong format of contract result id")
