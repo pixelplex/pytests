@@ -7,6 +7,8 @@ from lemoncheesecake.matching import require_that, check_that, has_length, is_tr
 
 from common.base_test import BaseTest
 
+from project import BLOCKS_NUM_TO_WAIT
+
 SUITE = {
     "description": "Method 'get_recent_transaction_by_id'"
 }
@@ -50,6 +52,11 @@ class GetRecentTransactionById(BaseTest):
         now = self.get_datetime(global_datetime=True)
         expiration = datetime.strptime(now, pattern) + timedelta(seconds=seconds)
         return expiration.strftime(pattern)
+
+    def get_last_block_time(self):
+        response_id = self.send_request(self.get_request("get_dynamic_global_properties"),
+                                        self.__database_api_identifier)
+        return self.get_response(response_id)["result"]["time"]
 
     def setup_suite(self):
         super().setup_suite()
@@ -120,17 +127,23 @@ class GetRecentTransactionById(BaseTest):
             )
             if expiration_status:
                 break
-        self.set_timeout_wait(wait_block_count=10)
 
         lcc.set_step("Get recent transaction by id (after it expire)")
-        response_id = self.send_request(self.get_request("get_recent_transaction_by_id", params),
-                                        self.__database_api_identifier)
-        response = self.get_response(response_id)
-        lcc.log_info("Call method 'get_recent_transaction_by_id' with transaction_id='{}' parameter".format(
-            params))
 
-        lcc.set_step("Check 'get_recent_transaction_by_id' method result for expired transaction")
-        require_that(
-            "'expired transaction result'",
-            response["result"], is_none()
-        )
+        while True:
+            last_block_time = self.get_last_block_time()
+            if self.compare_datetimes(last_block_time, expiration):
+                lcc.log_info("Call method 'get_recent_transaction_by_id' with transaction_id='{}'".format(
+                    params))
+                response_id = self.send_request(self.get_request("get_recent_transaction_by_id", params),
+                                                self.__database_api_identifier)
+                response = self.get_response(response_id)
+
+                lcc.set_step("Check 'get_recent_transaction_by_id' method result for expired transaction")
+                require_that(
+                    "'expired transaction result'",
+                    response["result"], is_none()
+                )
+
+                break
+            self.set_timeout_wait(wait_block_count=1)
