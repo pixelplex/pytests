@@ -16,7 +16,7 @@ class Utils(object):
 
     @staticmethod
     def add_balance_for_operations(base_test, account, operation, database_api_id, operation_count=1, transfer_amount=0,
-                                   only_in_history=False, get_only_fee=True, log_broadcast=False):
+                                   only_in_history=False, get_only_fee=False, log_broadcast=False):
         if only_in_history:
             transfer_amount = operation_count * transfer_amount
         if get_only_fee:
@@ -86,8 +86,8 @@ class Utils(object):
         return result_lower_bound_name, result_limit
 
     def get_contract_id(self, base_test, registrar, contract_bytecode, database_api_id, value_amount=0,
-                        value_asset_id="1.3.0", supported_asset_id=None, need_broadcast_result=False,
-                        log_broadcast=False):
+                        value_asset_id="1.3.0", supported_asset_id=None, get_only_fee=False,
+                        need_broadcast_result=False, log_broadcast=False):
         operation = base_test.echo_ops.get_contract_create_operation(echo=base_test.echo, registrar=registrar,
                                                                      bytecode=contract_bytecode,
                                                                      value_amount=value_amount,
@@ -98,6 +98,7 @@ class Utils(object):
             temp_operation[1]["registrar"] = base_test.echo_acc0
             broadcast_result = self.add_balance_for_operations(base_test, registrar, temp_operation, database_api_id,
                                                                transfer_amount=value_amount,
+                                                               get_only_fee=get_only_fee,
                                                                log_broadcast=log_broadcast)
             if not base_test.is_operation_completed(broadcast_result, expected_static_variant=0):
                 raise Exception("Error: can't add balance to new account, response:\n{}".format(broadcast_result))
