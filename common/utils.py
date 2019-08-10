@@ -474,7 +474,7 @@ class Utils(object):
         params = [account_id, operation_id, start, stop, limit]
         response_id = base_test.send_request(base_test.get_request("get_account_history_operations", params),
                                              history_api_id)
-        # todo: remove debug_mode and error block. Bug: "ECHO-700"
+        # todo: remove debug_mode and error block. Bug: "ECHO-1128"
         response = base_test.get_response(response_id, debug_mode=True)
         if "error" in response:
             if temp_count <= BLOCKS_NUM_TO_WAIT:
