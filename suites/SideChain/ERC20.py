@@ -60,7 +60,7 @@ class ERC20(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
-    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.tags("Bug ECHO-1141")
     @lcc.disabled()
     @lcc.test("The scenario checks the main parts before testing the ERC20 sidechain functionality")
     def erc20_sidechain_pre_run_scenario(self, get_random_valid_account_name, get_random_string,
@@ -104,17 +104,14 @@ class ERC20(BaseTest):
                                                                         eth_addr=self.erc20_contract.address,
                                                                         name=name, symbol=symbol,
                                                                         database_api_id=self.__database_api_identifier)
-        # todo: uncomment. Bug ECHO-1043
-        # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
+        self.erc20_token_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            "1.15.x"))  # todo: echo_erc20_contract_id
+            self.erc20_token_id))
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [self.erc20_contract.address[2:]]),
                                         self.__database_api_identifier)
-        result = self.get_response(response_id)["result"]
-        self.erc20_token_id = result["id"]
-        self.erc20_contract_id = result["contract"]
+        self.erc20_contract_id = self.get_response(response_id)["result"]["contract"]
         lcc.log_info("ERC20 token has id '{}' and contract_id '{}'".format(self.erc20_token_id, self.erc20_contract_id))
 
     @lcc.prop("type", "scenario")

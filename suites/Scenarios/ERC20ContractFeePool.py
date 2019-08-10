@@ -78,6 +78,7 @@ class ERC20ContractFeePool(BaseTest):
                                                                     eth_addr=erc20_contract.address, name=name,
                                                                     symbol=symbol,
                                                                     database_api_id=self.__database_api_identifier)
+        lcc.log_info("Registration of ERC20 token completed successfully")
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
