@@ -141,8 +141,8 @@ class PositiveTesting(BaseTest):
     @lcc.test("Required fee to call contract")
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def fee_to_call_contract(self):
-        lcc.set_step("Get required fee for 'call_contract_operation' with nonexistent method byte code")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        lcc.set_step("Get required fee for 'contract_call_operation' with nonexistent method byte code")
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet,
                                                               callee=self.valid_contract_id)
         params = [[operation], self.echo_asset]
@@ -323,8 +323,8 @@ class NegativeTesting(BaseTest):
     def nonexistent_contract_byte_code(self):
         not_valid_contract = "6e5964425a64326457664a44516474594a615878"
 
-        lcc.set_step("Get required fee for 'create_contract_operation' with nonexistent byte code")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        lcc.set_step("Get required fee for 'contract_create_operation' with nonexistent byte code")
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=not_valid_contract)
         response = self.get_required_fees(operation, self.echo_asset, negative=True)
         check_that(
@@ -336,8 +336,8 @@ class NegativeTesting(BaseTest):
     @lcc.test("Nonexistent asset id")
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def nonexistent_asset_id_in_operation(self):
-        lcc.set_step("Get required fee for 'create_contract_operation' with nonexistent asset in operation")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        lcc.set_step("Get required fee for 'contract_create_operation' with nonexistent asset in operation")
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract, value_amount=self.amount,
                                                                 value_asset_id=self.nonexistent_asset_id)
         response = self.get_required_fees(operation, self.echo_asset, negative=True)
@@ -350,8 +350,8 @@ class NegativeTesting(BaseTest):
     @lcc.test("Nonexistent method byte code")
     @lcc.depends_on("DatabaseApi.GetRequiredFees.GetRequiredFees.method_main_check")
     def nonexistent_method_byte_code(self, get_random_hex_string):
-        lcc.set_step("Get required fee for 'call_contract_operation' with nonexistent method byte code")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        lcc.set_step("Get required fee for 'contract_call_operation' with nonexistent method byte code")
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=get_random_hex_string,
                                                               callee=self.valid_contract_id)
         response = self.get_required_fees(operation, self.echo_asset, negative=True)

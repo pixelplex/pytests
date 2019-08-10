@@ -52,19 +52,13 @@ class GetAccounts(BaseTest):
             lcc.set_step("Checking account #{} - '{}'".format(i, params[i]))
             account_info = response["result"][i]
             with this_dict(account_info):
-                if check_that("account_info", account_info, has_length(20)):
+                if check_that("account_info", account_info, has_length(15)):
                     check_that_entry("id", is_str(params[i]))
-                    if not self.validator.is_iso8601(account_info["membership_expiration_date"]):
-                        lcc.log_error("Wrong format of 'membership_expiration_date', got: {}".format(
-                            account_info["membership_expiration_date"]))
+                    if not self.validator.is_account_id(account_info["registrar"]):
+                        lcc.log_error("Wrong format of 'registrar', got: {}".format(account_info["registrar"]))
                     else:
-                        lcc.log_info("'membership_expiration_date' has correct format: iso8601")
-                    account_ids_format = ["registrar", "referrer", "lifetime_referrer"]
-                    for j in range(len(account_ids_format)):
-                        self.check_fields_account_ids_format(account_info, account_ids_format[j])
+                        lcc.log_info("'registrar' has correct format: account_object_type")
                     check_that_entry("network_fee_percentage", is_integer(), quiet=True)
-                    check_that_entry("lifetime_referrer_fee_percentage", is_integer(), quiet=True)
-                    check_that_entry("referrer_rewards_percentage", is_integer(), quiet=True)
                     if not self.validator.is_account_name(account_info["name"]):
                         lcc.log_error("Wrong format of 'name', got: {}".format(account_info["name"]))
                     else:
@@ -158,8 +152,6 @@ class PositiveTesting(BaseTest):
             account_info = response["result"][i]
             with this_dict(account_info):
                 check_that_entry("registrar", equal_to(performed_operations["registrar"]))
-                check_that_entry("referrer", equal_to(performed_operations["referrer"]))
-                check_that_entry("referrer_rewards_percentage", equal_to(performed_operations["referrer_percent"]))
                 check_that_entry("name", equal_to(performed_operations["name"]))
                 check_that_entry("active", equal_to(performed_operations["active"]))
                 check_that_entry("echorand_key", equal_to(performed_operations["echorand_key"]))
@@ -203,9 +195,6 @@ class PositiveTesting(BaseTest):
         for i in range(len(account_info_1)):
             with this_dict(account_info_1[i]):
                 check_that_entry("registrar", equal_to(account_info_2[i]["registrar"]))
-                check_that_entry("referrer", equal_to(account_info_2[i]["referrer"]))
-                check_that_entry("referrer_rewards_percentage",
-                                 equal_to(account_info_2[i]["referrer_rewards_percentage"]))
                 check_that_entry("name", equal_to(account_info_2[i]["name"]))
                 check_that_entry("active", equal_to(account_info_2[i]["active"]))
                 check_that_entry("echorand_key", equal_to(account_info_2[i]["echorand_key"]))

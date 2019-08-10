@@ -20,7 +20,7 @@ from common.validation import Validator
 from pre_run_scripts.pre_deploy import pre_deploy_echo
 from project import RESOURCES_DIR, BASE_URL, ECHO_CONTRACTS, WALLETS, ACCOUNT_PREFIX, ETHEREUM_URL, ETH_ASSET_ID, \
     DEFAULT_ACCOUNTS_COUNT, EXECUTION_STATUS_PATH, BLOCK_RELEASE_INTERVAL, ETHEREUM_CONTRACTS, ROPSTEN, ROPSTEN_PK, \
-    GANACHE_PK
+    GANACHE_PK, DEBUG
 
 
 class BaseTest(object):
@@ -517,6 +517,8 @@ class BaseTest(object):
         if len([contract_result]) != 1:
             lcc.log_error("Need one contract id, got:\n{}".format(contract_result))
             raise Exception("Need one contract id")
+        if self.validator.is_erc20_object_id(contract_result):
+            return contract_result
         if not self.validator.is_contract_result_id(contract_result):
             lcc.log_error("Wrong format of contract result id, got {}".format(contract_result))
             raise Exception("Wrong format of contract result id")
@@ -581,7 +583,7 @@ class BaseTest(object):
     def _connect_to_echopy_lib(self):
         # Create connection to echopy-lib
         lcc.set_step("Open connection to echopy-lib")
-        self.echo.connect(url=BASE_URL)
+        self.echo.connect(url=BASE_URL, debug=DEBUG)
         if self.echo.api.ws.connection is None:
             lcc.log_error("Connection to echopy-lib not established")
             raise Exception("Connection to echopy-lib not established")

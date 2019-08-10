@@ -45,7 +45,7 @@ class CreateManyContractsInOneTrx(BaseTest):
         number_of_contracts = get_random_integer_up_to_fifty
 
         lcc.set_step("Create '{}' 'Piggy' contracts in the Echo network".format(number_of_contracts))
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         list_operations = []

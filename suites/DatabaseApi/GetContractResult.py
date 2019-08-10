@@ -103,7 +103,7 @@ class GetContractResult(BaseTest):
                         self.check_zero_bloom(tr_receipt["bloom"])
 
         lcc.set_step("Call method 'getPennie'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie,
                                                               callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -205,7 +205,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier)
 
         lcc.set_step("Call method of piggy contract: 'greet'")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -265,7 +265,7 @@ class PositiveTesting(BaseTest):
         int_param_code = self.get_byte_code_param(int_param, param_type=int)
         string_param_code = self.get_byte_code_param(string_param, param_type=str, offset="40")
         method_params = int_param_code + string_param_code
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.set_all_values + method_params,
                                                               callee=dynamic_fields_contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)

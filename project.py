@@ -12,10 +12,15 @@ sys.path.append(project_dir)
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
 GENESIS = json.load(open(os.path.join(os.path.dirname(__file__), "genesis.json")))
 
-if "ROPSTEN" in os.environ and os.environ["ROPSTEN"] != "False":
+if "ROPSTEN" in os.environ and os.environ["ROPSTEN"].lower() != "false":
     ROPSTEN = True
 else:
     ROPSTEN = False
+
+if "DEBUG" in os.environ and os.environ["DEBUG"].lower() != "false":
+    DEBUG = True
+else:
+    DEBUG = False
 
 if "BASE_URL" not in os.environ:
     BASE_URL = json.load(open(os.path.join(RESOURCES_DIR, "urls.json")))["BASE_URL"]

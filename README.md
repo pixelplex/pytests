@@ -116,6 +116,8 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 - [x] get_erc20_token
 - [ ] get_erc20_account_deposits
 - [ ] get_erc20_account_withdrawals
+- [x] get_contract_pool_balance
+- [x] check_erc20_token
 
 #### [History API](https://echo-dev.io/developers/apis/history-api/#history-api)
 
@@ -127,8 +129,7 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
 #### [Network broadcast API](https://echo-dev.io/developers/apis/network-broadcast-api/#network-broadcast-api)
 
 - [ ] [broadcast_transaction](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transactionsigned_transaction)
-- [ ] [broadcast_block](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_blocksigned_block)
-- [x] [broadcast_transaction_with_callback](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_with_callbackcallback-trx)
+- [ ] [broadcast_transaction_with_callback](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_with_callbackcallback-trx)
 - [ ] [broadcast_transaction_synchronous ](https://echo-dev.io/developers/apis/network-broadcast-api/#broadcast_transaction_synchronous-trx)
 
 #### [Registration API](https://echo-dev.io/developers/apis/registration-api/#registration-api)
@@ -176,8 +177,8 @@ _note:_ can combine run options, for example - `$ lcc run --failed --from-report
     
 #### [List of Contract Operations](https://echo-dev.io/developers/operations/#contract-operations)
 
-- [ ] [create_contract_operation](https://echo-dev.io/developers/operations/contracts/_create_contract_operation/)
-- [ ] [call_contract_operation](https://echo-dev.io/developers/operations/contracts/_call_contract_operation/)
+- [ ] [contract_create_operation](https://echo-dev.io/developers/operations/contracts/_create_contract_operation/)
+- [ ] [contract_call_operation](https://echo-dev.io/developers/operations/contracts/_call_contract_operation/)
 - [ ] [contract_transfer_operation [VIRTUAL]](https://echo-dev.io/developers/operations/contracts/_contract_transfer_operation/)
     
 #### [List of Custom Extension Operations](https://echo-dev.io/developers/operations/#custom-extension)

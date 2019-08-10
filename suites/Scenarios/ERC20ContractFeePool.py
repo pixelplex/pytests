@@ -45,11 +45,13 @@ class ERC20ContractFeePool(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "scenario")
+    @lcc.tags("Bug ECHO-1141")
+    @lcc.disabled()
     @lcc.test("The scenario checks ERC20 contract fee pool after creation")
     def erc20_contract_fee_pool_scenario(self, get_random_string, get_random_valid_asset_name, get_random_integer):
         name = "erc20" + get_random_string
         symbol = get_random_valid_asset_name
-        registration_erc20_token_operation_id = self.echo.config.operation_ids.REGISTER_ERC20_TOKEN
+        registration_erc20_token_operation_id = self.echo.config.operation_ids.SIDECHAIN_ERC20_REGISTER_TOKEN
         register_erc20_token_fee_pool = 0
         amount = get_random_integer
 
@@ -71,9 +73,12 @@ class ERC20ContractFeePool(BaseTest):
         lcc.log_info("ERC20 contract created in Ethereum network, address: '{}'".format(erc20_contract.address))
 
         lcc.set_step("Perform register erc20 token operation")
-        self.utils.perform_register_erc20_token_operation(self, account=self.echo_acc0,
-                                                          eth_addr=erc20_contract.address, name=name,
-                                                          symbol=symbol, database_api_id=self.__database_api_identifier)
+        # todo: didn't register more than 1 erc20 obj. Bug ECHO-1141
+        self.utils.perform_sidechain_erc20_register_token_operation(self, account=self.echo_acc0,
+                                                                    eth_addr=erc20_contract.address, name=name,
+                                                                    symbol=symbol,
+                                                                    database_api_id=self.__database_api_identifier)
+        lcc.log_info("Registration of ERC20 token completed successfully")
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),

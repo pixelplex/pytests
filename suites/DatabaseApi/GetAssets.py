@@ -56,9 +56,8 @@ class GetAssets(BaseTest):
             check_that_entry("extensions", is_list(), quiet=True)
             options = asset["options"]
             with this_dict(options):
-                require_that("'options'", options, has_length(12))
+                require_that("'options'", options, has_length(8))
                 check_that_entry("blacklist_authorities", is_list(), quiet=True)
-                check_that_entry("blacklist_markets", is_list(), quiet=True)
                 check_that_entry("core_exchange_rate", is_dict(), quiet=True)
 
                 core_exchange_rate = options["core_exchange_rate"]
@@ -72,12 +71,9 @@ class GetAssets(BaseTest):
                 check_that_entry("extensions", is_list(), quiet=True)
                 check_that_entry("flags", is_integer(), quiet=True)
                 check_that_entry("issuer_permissions", is_integer(), quiet=True)
-                check_that_entry("market_fee_percent", is_integer(), quiet=True)
 
-                self.check_uint64_numbers(options, "max_market_fee", quiet=True)
                 self.check_uint64_numbers(options, "max_supply", quiet=True)
                 check_that_entry("whitelist_authorities", is_list(), quiet=True)
-                check_that_entry("whitelist_markets", is_list(), quiet=True)
 
             check_that_entry("precision", is_integer(8))
             if not self.validator.is_asset_name(asset["symbol"]):

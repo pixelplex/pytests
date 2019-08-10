@@ -43,7 +43,7 @@ class AssetInt(BaseTest):
     @lcc.test("The scenario describes the ability to pass an asset type integer, written in Solidity.")
     def asset_int_scenario(self):
         lcc.set_step("Create 'asset_int' contract in the Echo network")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation)
@@ -65,7 +65,7 @@ class AssetInt(BaseTest):
 
         lcc.set_step("Call 'assetBalance' method")
         method_params = self.get_byte_code_param(self.echo_acc0) + self.get_byte_code_param(self.echo_asset)
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.asset_balance + method_params,
                                                               callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)

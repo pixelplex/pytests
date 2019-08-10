@@ -44,6 +44,8 @@ class GetContractLogs(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Simple work of method 'get_contract_logs'")
     def method_main_check(self, get_random_integer_up_to_ten):
         value_amount = get_random_integer_up_to_ten
@@ -54,7 +56,7 @@ class GetContractLogs(BaseTest):
                                                  value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie and get trx block number")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -137,6 +139,8 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Check contract logs two identical contract calls")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_two_identical_contract_calls(self, get_random_integer):
@@ -149,7 +153,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("Call contract method getPennie two times and get trx block number")
         for i in range(call_count):
-            operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+            operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                   bytecode=self.getPennie, callee=contract_id)
             collected_operation = self.collect_operations(operation, self.__database_api_identifier)
             broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -172,6 +176,8 @@ class PositiveTesting(BaseTest):
             )
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Check contract logs contract call that make two different logs")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_contract_call_that_make_two_different_logs(self, get_random_integer, get_random_string):
@@ -187,7 +193,7 @@ class PositiveTesting(BaseTest):
         int_param_code = self.get_byte_code_param(int_param, param_type=int)
         string_param_code = self.get_byte_code_param(string_param, param_type=str, offset="40")
         method_params = int_param_code + string_param_code
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.set_all_values + method_params,
                                                               callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
@@ -211,6 +217,8 @@ class PositiveTesting(BaseTest):
             )
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Check contract logs from first block to 'head_block_number'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_first_block_to_head_block_number(self, get_random_integer):
@@ -223,7 +231,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -244,6 +252,8 @@ class PositiveTesting(BaseTest):
                     require_that("contract_logs", log, has_entry(key), quiet=True)
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Check contract logs from first block to 'current_block'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_first_block_to_current_block(self, get_random_integer):
@@ -256,7 +266,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -277,6 +287,8 @@ class PositiveTesting(BaseTest):
                     require_that("contract_logs", log, has_entry(key), quiet=True)
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Check contract logs from 'current_block' to 'head_block_number'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_current_block_to_head_block_number(self, get_random_integer):
@@ -288,7 +300,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -313,6 +325,8 @@ class PositiveTesting(BaseTest):
                     require_that("contract_logs", log, has_entry(key), quiet=True)
 
     @lcc.prop("type", "method")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1034")
     @lcc.test("Check contract logs from 'random block in [first block, current_block]' to 'head_block_number'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_random_block_to_head_block_number(self, get_random_integer):
@@ -324,7 +338,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -354,7 +368,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'negative block number' to 'head_block_number'")
-    @lcc.tags("Bug ECHO-1033")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1033", "Bug ECHO-1034")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_from_negative_block_number_to_head_block_number(self, get_random_integer):
         value_amount = get_random_integer
@@ -366,7 +381,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -396,7 +411,8 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract logs from 'first block' to 'block before operation performed'")
-    @lcc.tags("Bug ECHO-1033")
+    @lcc.disabled()
+    @lcc.tags("Bug ECHO-1033", "Bug ECHO-1034")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_in_blocks_before_operation_performed(self, get_random_integer):
         value_amount = get_random_integer
@@ -407,7 +423,7 @@ class PositiveTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -470,8 +486,8 @@ class NegativeTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Call method with negative parameter 'to'")
-    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.disabled()
+    @lcc.tags("Bug: 'ECHO-1034'")
     @lcc.depends_on("DatabaseApi.GetContractLogs.GetContractLogs.method_main_check")
     def check_contract_logs_with_negative_parameter_to(self, get_random_integer):
         value_amount = get_random_integer
@@ -482,7 +498,7 @@ class NegativeTesting(BaseTest):
                                                  self.__database_api_identifier, value_amount=value_amount)
 
         lcc.set_step("Call contract method getPennie")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.getPennie, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)

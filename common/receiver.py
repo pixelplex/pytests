@@ -52,11 +52,11 @@ class Receiver(object):
     def get_notice_obj(self, response, expected_id, print_log, temp_count=0, timeout=BLOCK_RELEASE_INTERVAL):
         actual_id, notice_obj = None, None
         notice_objs = response.get("params")[1][0]
-        for notice_obj in notice_objs:
+        for i, notice_obj in enumerate(notice_objs):
             actual_id = notice_obj["id"]
-            if len(notice_objs) > 1:
-                if actual_id.startswith(expected_id):
-                    break
+            if i + 1 < len(notice_objs):
+                if not actual_id.startswith(expected_id):
+                    continue
         temp_count += 1
         if not actual_id.startswith(expected_id):
             if temp_count <= BLOCKS_NUM_TO_WAIT:

@@ -39,8 +39,17 @@ class SetPendingTransactionCallback(BaseTest):
         self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+
+    def setup_test(self, test):
+        lcc.set_step("Setup for '{}'".format(str(test).split(".")[-1]))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
         lcc.log_info("Canceled all subscriptions successfully")
+
+    def teardown_test(self, test, status):
+        lcc.set_step("Teardown for '{}'".format(str(test).split(".")[-1]))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
+        lcc.log_info("Test {}".format(status))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -116,8 +125,17 @@ class PositiveTesting(BaseTest):
         self.echo_acc1 = self.get_account_id(self.accounts[1], self.__database_api_identifier,
                                              self.__registration_api_identifier)
         lcc.log_info("Echo account is '{}'".format(self.echo_acc1))
+
+    def setup_test(self, test):
+        lcc.set_step("Setup for '{}'".format(str(test).split(".")[-1]))
         self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
         lcc.log_info("Canceled all subscriptions successfully")
+
+    def teardown_test(self, test, status):
+        lcc.set_step("Teardown for '{}'".format(str(test).split(".")[-1]))
+        self.utils.cancel_all_subscriptions(self, self.__database_api_identifier)
+        lcc.log_info("Canceled all subscriptions successfully")
+        lcc.log_info("Test {}".format(status))
 
     def teardown_suite(self):
         self._disconnect_to_echopy_lib()
@@ -156,7 +174,7 @@ class PositiveTesting(BaseTest):
         self.subscribe_pending_transactions(subscription_callback_id)
 
         lcc.set_step("Create 'piggy' contract in the Echo network and get it's contract id")
-        operation = self.echo_ops.get_create_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_create_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                 bytecode=self.piggy_contract)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,
@@ -176,7 +194,7 @@ class PositiveTesting(BaseTest):
         lcc.log_info("Created 'piggy' contract id: '{}'".format(contract_id))
 
         lcc.set_step("Call contract method greet")
-        operation = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                               bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation, self.__database_api_identifier)
         broadcast_result = self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation,

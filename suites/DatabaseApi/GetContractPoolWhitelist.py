@@ -146,7 +146,7 @@ class PositiveTesting(BaseTest):
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
         lcc.set_step("Add fee pool to perform two calls contract 'greet' method")
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation_method = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                      bytecode=self.greet, callee=contract_id)
         needed_fee = self.get_required_fee(operation_method, self.__database_api_identifier)[0]["amount"]
         start_fee_pool_balance = needed_fee * 2
@@ -220,7 +220,7 @@ class PositiveTesting(BaseTest):
         require_that("'contract_pool_whitelist'", contract_pool_whitelist["whitelist"], is_list([]))
 
         lcc.set_step("Third: call 'greet' method using account that removed from whitelist (not fee pool sender)")
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc5,
+        operation_method = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc5,
                                                                      bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -241,7 +241,7 @@ class PositiveTesting(BaseTest):
         contract_id = self.utils.get_contract_id(self, self.echo_acc0, self.contract, self.__database_api_identifier)
 
         lcc.set_step("Add fee pool to perform two calls contract 'greet' method")
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation_method = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                      bytecode=self.greet, callee=contract_id)
         needed_fee = self.get_required_fee(operation_method, self.__database_api_identifier)[0]["amount"]
         self.utils.perform_contract_fund_pool_operation(self, self.echo_acc0, contract_id, needed_fee,
@@ -269,7 +269,7 @@ class PositiveTesting(BaseTest):
 
         lcc.set_step("First: call 'greet' method using accounts in blacklist")
         for account in blacklist:
-            operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=account,
+            operation_method = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=account,
                                                                          bytecode=self.greet, callee=contract_id)
             collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
             try:
@@ -301,7 +301,7 @@ class PositiveTesting(BaseTest):
         lcc.set_step("Second: call 'greet' method using fee pool sender")
         account_balance = self.utils.get_account_balances(self, self.echo_acc0, self.__database_api_identifier)[
             "amount"]
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc0,
+        operation_method = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc0,
                                                                      bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)
@@ -325,7 +325,7 @@ class PositiveTesting(BaseTest):
         require_that("'contract_pool_blacklist'", contract_pool_whitelist["blacklist"], is_list([]))
 
         lcc.set_step("Third: call 'greet' method using account that removed from blacklist (not fee pool sender)")
-        operation_method = self.echo_ops.get_call_contract_operation(echo=self.echo, registrar=self.echo_acc5,
+        operation_method = self.echo_ops.get_contract_call_operation(echo=self.echo, registrar=self.echo_acc5,
                                                                      bytecode=self.greet, callee=contract_id)
         collected_operation = self.collect_operations(operation_method, self.__database_api_identifier)
         self.echo_ops.broadcast(echo=self.echo, list_operations=collected_operation, log_broadcast=False)

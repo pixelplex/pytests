@@ -60,7 +60,7 @@ class GetAccountWithdrawals(BaseTest):
         eth_amount = 0.01
         withdraw_ids = []
         withdraw_values = []
-        sidechain_burn_operations = []
+        sidechain_eth_burn_operations = []
 
         lcc.set_step("Create and get new account")
         new_account = self.get_account_id(new_account, self.__database_api_identifier,
@@ -68,7 +68,7 @@ class GetAccountWithdrawals(BaseTest):
         lcc.log_info("New Echo account created, account_id='{}'".format(new_account))
 
         lcc.set_step("Generate ethereum address for new account")
-        self.utils.perform_generate_eth_address_operation(self, new_account, self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_create_address_operation(self, new_account, self.__database_api_identifier)
         lcc.log_info("Ethereum address generated successfully")
 
         lcc.set_step("Get ethereum address of created account in the network")
@@ -93,35 +93,35 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("First withdraw eth from ECHO network to Ethereum network")
         withdraw_amount = self.get_random_amount(_to=int(ethereum_balance))
         withdraw_values.append(withdraw_amount)
-        self.utils.perform_withdraw_eth_operation(self, new_account, self.eth_address, withdraw_amount,
-                                                  self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_withdraw_operation(self, new_account, self.eth_address, withdraw_amount,
+                                                            self.__database_api_identifier)
         lcc.log_info("Withdraw '{}' eeth from '{}' account".format(withdraw_amount, new_account))
 
         lcc.set_step("Store the first withdraw operation EchoToEth")
-        sidechain_burn_operation = self.echo_ops.get_operation_json("sidechain_burn_operation", example=True)
-        sidechain_burn_operation[1]["value"].update({"amount": withdraw_values[0]})
-        sidechain_burn_operation[1].update({"account": new_account})
-        sidechain_burn_operations.insert(0, sidechain_burn_operation)
+        sidechain_eth_burn_operation = self.echo_ops.get_operation_json("sidechain_eth_burn_operation", example=True)
+        sidechain_eth_burn_operation[1]["value"].update({"amount": withdraw_values[0]})
+        sidechain_eth_burn_operation[1].update({"account": new_account})
+        sidechain_eth_burn_operations.insert(0, sidechain_eth_burn_operation)
         lcc.log_info("First withdraw operation stored")
 
         lcc.set_step("Get account history operations")
-        operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_ETH_BURN
         response = self.utils.get_account_history_operations(self, new_account, operation_id,
                                                              self.__history_api_identifier,
-                                                             limit=len(sidechain_burn_operations))
-        lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
+                                                             limit=len(sidechain_eth_burn_operations))
+        lcc.log_info("Account history operations of 'sidechain_eth_burn_operation' received")
 
         lcc.set_step("Check response from method 'get_account_history_operations'")
         for i in range(len(response["result"])):
             operation_in_history = response["result"][i]["op"]
-            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            lcc.set_step("Check operation #{} in account history operations".format(i))
             check_that("operation_id", operation_in_history[0], equal_to(operation_id))
             with this_dict(operation_in_history[1]):
-                check_that_entry("fee", equal_to(sidechain_burn_operations[i][1]["fee"]))
+                check_that_entry("fee", equal_to(sidechain_eth_burn_operations[i][1]["fee"]))
                 with this_dict(operation_in_history[1]["value"]):
                     self.check_uint256_numbers(operation_in_history[1]["value"], "amount")
-                    check_that_entry("asset_id", equal_to(sidechain_burn_operations[i][1]["value"]["asset_id"]))
-                check_that_entry("account", equal_to(sidechain_burn_operations[i][1]["account"]))
+                    check_that_entry("asset_id", equal_to(sidechain_eth_burn_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_eth_burn_operations[i][1]["account"]))
                 check_that_entry("withdraw_id",
                                  starts_with(self.get_object_type(self.echo.config.object_types.WITHDRAW_ETH)))
 
@@ -132,35 +132,35 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("Second withdraw eth from ECHO network to Ethereum network")
         withdraw_amount = self.get_random_amount(_to=int(ethereum_balance))
         withdraw_values.append(withdraw_amount)
-        self.utils.perform_withdraw_eth_operation(self, new_account, self.eth_address, withdraw_amount,
-                                                  self.__database_api_identifier)
+        self.utils.perform_sidechain_eth_withdraw_operation(self, new_account, self.eth_address, withdraw_amount,
+                                                            self.__database_api_identifier)
         lcc.log_info("Withdraw '{}' eeth from '{}' account".format(withdraw_amount, new_account))
 
         lcc.set_step("Store the second withdraw operation EchoToEth")
-        sidechain_burn_operation = self.echo_ops.get_operation_json("sidechain_burn_operation", example=True)
-        sidechain_burn_operation[1]["value"].update({"amount": withdraw_values[1]})
-        sidechain_burn_operation[1].update({"account": new_account})
-        sidechain_burn_operations.insert(0, sidechain_burn_operation)
+        sidechain_eth_burn_operation = self.echo_ops.get_operation_json("sidechain_eth_burn_operation", example=True)
+        sidechain_eth_burn_operation[1]["value"].update({"amount": withdraw_values[1]})
+        sidechain_eth_burn_operation[1].update({"account": new_account})
+        sidechain_eth_burn_operations.insert(0, sidechain_eth_burn_operation)
         lcc.log_info("Second withdraw operation stored")
 
         lcc.set_step("Get account history operations")
-        operation_id = self.echo.config.operation_ids.SIDECHAIN_BURN
+        operation_id = self.echo.config.operation_ids.SIDECHAIN_ETH_BURN
         response = self.utils.get_account_history_operations(self, new_account, operation_id,
                                                              self.__history_api_identifier,
-                                                             limit=len(sidechain_burn_operations))
-        lcc.log_info("Account history operations of 'sidechain_burn_operation' received")
+                                                             limit=len(sidechain_eth_burn_operations))
+        lcc.log_info("Account history operations of 'sidechain_eth_burn_operation' received")
 
         lcc.set_step("Check response from method 'get_account_history_operations'")
         for i in range(len(response["result"])):
             operation_in_history = response["result"][i]["op"]
-            lcc.set_step("Check operation #{} in account history operations".format(str(i)))
+            lcc.set_step("Check operation #{} in account history operations".format(i))
             check_that("operation_id", operation_in_history[0], equal_to(operation_id))
             with this_dict(operation_in_history[1]):
-                check_that_entry("fee", equal_to(sidechain_burn_operations[i][1]["fee"]))
+                check_that_entry("fee", equal_to(sidechain_eth_burn_operations[i][1]["fee"]))
                 with this_dict(operation_in_history[1]["value"]):
                     self.check_uint256_numbers(operation_in_history[1]["value"], "amount")
-                    check_that_entry("asset_id", equal_to(sidechain_burn_operations[i][1]["value"]["asset_id"]))
-                check_that_entry("account", equal_to(sidechain_burn_operations[i][1]["account"]))
+                    check_that_entry("asset_id", equal_to(sidechain_eth_burn_operations[i][1]["value"]["asset_id"]))
+                check_that_entry("account", equal_to(sidechain_eth_burn_operations[i][1]["account"]))
                 check_that_entry("withdraw_id",
                                  starts_with(self.get_object_type(self.echo.config.object_types.WITHDRAW_ETH)))
 
@@ -174,7 +174,7 @@ class GetAccountWithdrawals(BaseTest):
         lcc.set_step("Check simple work of method 'get_account_withdrawals'")
         withdraw = response["result"]
         for i in range(len(withdraw)):
-            lcc.set_step("Check account withdraw #{}".format(str(i)))
+            lcc.set_step("Check account withdraw #{}".format(i))
             require_that(
                 "'first deposit of created account'",
                 withdraw[i], has_length(8)
@@ -204,7 +204,7 @@ class GetAccountWithdrawals(BaseTest):
 
         lcc.set_step("Compare withdrawals in 'get_account_withdrawals' with method 'get_objects'")
         for i in range(len(withdraw)):
-            lcc.set_step("Compare #{}, withdraw in 'get_account_withdrawals' with method 'get_objects'".format(str(i)))
+            lcc.set_step("Compare #{}, withdraw in 'get_account_withdrawals' with method 'get_objects'".format(i))
             with this_dict(withdraw[i]):
                 check_that_entry("id", is_(response[i]["id"]), quiet=True)
                 check_that_entry("withdraw_id", is_(response[i]["withdraw_id"]), quiet=True)

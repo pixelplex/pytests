@@ -54,11 +54,10 @@ class EchoOperations(object):
         return [operation_id, transfer_props, signer]
 
     def get_account_create_operation(self, echo, name, active_key_auths, echorand_key, fee_amount=0,
-                                     fee_asset_id="1.3.0", registrar="1.2.12", referrer="1.2.12", referrer_percent=7500,
-                                     active_weight_threshold=1, active_account_auths=None,
-                                     options_voting_account="1.2.5", options_delegating_account="1.2.12",
-                                     options_num_committee=0, options_votes=None, options_extensions=None,
-                                     extensions=None, signer=None, debug_mode=False):
+                                     fee_asset_id="1.3.0", registrar="1.2.12", active_weight_threshold=1,
+                                     active_account_auths=None, options_voting_account="1.2.5",
+                                     options_delegating_account="1.2.12", options_num_committee=0, options_votes=None,
+                                     options_extensions=None, extensions=None, signer=None, debug_mode=False):
         if isinstance(active_key_auths, str):
             active_key_auths = [[active_key_auths, 1]]
         if active_account_auths is None:
@@ -73,8 +72,7 @@ class EchoOperations(object):
         account_create_props = self.get_operation_json("account_create_operation")
         account_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         account_create_props.update(
-            {"registrar": registrar, "referrer": referrer, "referrer_percent": referrer_percent, "name": name,
-             "echorand_key": echorand_key, "extensions": extensions})
+            {"registrar": registrar, "name": name, "echorand_key": echorand_key, "extensions": extensions})
         account_create_props["active"].update(
             {"weight_threshold": active_weight_threshold, "account_auths": active_account_auths,
              "key_auths": active_key_auths})
@@ -118,38 +116,15 @@ class EchoOperations(object):
             return [operation_id, account_update_props, account]
         return [operation_id, account_update_props, signer]
 
-    def get_account_upgrade_operation(self, echo, account_to_upgrade, upgrade_to_lifetime_member=False, fee_amount=0,
-                                      fee_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
-        if extensions is None:
-            extensions = []
-        operation_id = echo.config.operation_ids.ACCOUNT_UPGRADE
-        account_upgrade_props = self.get_operation_json("account_upgrade_operation")
-        account_upgrade_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        account_upgrade_props.update(
-            {"account_to_upgrade": account_to_upgrade, "upgrade_to_lifetime_member": upgrade_to_lifetime_member,
-             "extensions": extensions})
-        if debug_mode:
-            lcc.log_debug("Upgrade account operation: \n{}".format(json.dumps(account_upgrade_props, indent=4)))
-        if signer is None:
-            return [operation_id, account_upgrade_props, account_to_upgrade]
-        return [operation_id, account_upgrade_props, signer]
-
     def get_asset_create_operation(self, echo, issuer, symbol, precision=0, fee_amount=0, fee_asset_id="1.3.0",
-                                   max_supply="1000000000000000", market_fee_percent=0,
-                                   max_market_fee="1000000000000000",
-                                   issuer_permissions=79, flags=0, base_amount=1, base_asset_id="1.3.0",
-                                   quote_amount=1, quote_asset_id="1.3.1", whitelist_authorities=None,
-                                   blacklist_authorities=None, whitelist_markets=None, blacklist_markets=None,
-                                   description="", is_prediction_market=False, extensions=None, signer=None,
-                                   debug_mode=False):
+                                   max_supply="1000000000000000", issuer_permissions=79, flags=0, base_amount=1,
+                                   base_asset_id="1.3.0", quote_amount=1, quote_asset_id="1.3.1",
+                                   whitelist_authorities=None, blacklist_authorities=None, description="",
+                                   extensions=None, signer=None, debug_mode=False):
         if whitelist_authorities is None:
             whitelist_authorities = []
         if blacklist_authorities is None:
             blacklist_authorities = []
-        if whitelist_markets is None:
-            whitelist_markets = []
-        if blacklist_markets is None:
-            blacklist_markets = []
         if extensions is None:
             extensions = []
         operation_id = echo.config.operation_ids.ASSET_CREATE
@@ -157,18 +132,15 @@ class EchoOperations(object):
         asset_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         asset_create_props.update(
             {"issuer": issuer, "symbol": symbol, "precision": precision, "extensions": extensions})
-        asset_create_props["common_options"].update({"max_supply": max_supply, "market_fee_percent": market_fee_percent,
-                                                     "max_market_fee": max_market_fee,
-                                                     "issuer_permissions": issuer_permissions, "flags": flags})
+        asset_create_props["common_options"].update(
+            {"max_supply": max_supply, "issuer_permissions": issuer_permissions, "flags": flags})
         asset_create_props["common_options"]["core_exchange_rate"]["base"].update(
             {"amount": base_amount, "asset_id": base_asset_id})
         asset_create_props["common_options"]["core_exchange_rate"]["quote"].update(
             {"amount": quote_amount, "asset_id": quote_asset_id})
         asset_create_props["common_options"].update(
             {"whitelist_authorities": whitelist_authorities, "blacklist_authorities": blacklist_authorities,
-             "whitelist_markets": whitelist_markets, "blacklist_markets": blacklist_markets,
              "description": description})
-        asset_create_props.update({"is_prediction_market": is_prediction_market})
         if debug_mode:
             lcc.log_debug("Create asset operation: \n{}".format(json.dumps(asset_create_props, indent=4)))
         if signer is None:
@@ -249,7 +221,7 @@ class EchoOperations(object):
 
     def get_balance_claim_operation(self, echo, deposit_to_account, balance_owner_public_key, value_amount,
                                     balance_owner_private_key=None, fee_amount=0, fee_asset_id="1.3.0",
-                                    balance_to_claim="1.13.0", value_asset_id="1.3.0", extensions=None, signer=None,
+                                    balance_to_claim="1.8.0", value_asset_id="1.3.0", extensions=None, signer=None,
                                     debug_mode=False):
         if extensions is None:
             extensions = []
@@ -267,44 +239,44 @@ class EchoOperations(object):
             return [operation_id, balance_claim_operation_props, balance_owner_private_key]
         return [operation_id, balance_claim_operation_props, signer]
 
-    def get_create_contract_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
+    def get_contract_create_operation(self, echo, registrar, bytecode, fee_amount=0, fee_asset_id="1.3.0",
                                       value_amount=0, value_asset_id="1.3.0", supported_asset_id=None,
                                       eth_accuracy=False, extensions=None, signer=None, debug_mode=False):
         if extensions is None:
             extensions = []
-        operation_id = echo.config.operation_ids.CREATE_CONTRACT
-        create_contract_props = self.get_operation_json("create_contract_operation")
-        create_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        create_contract_props.update(
+        operation_id = echo.config.operation_ids.CONTRACT_CREATE
+        contract_create_props = self.get_operation_json("contract_create_operation")
+        contract_create_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        contract_create_props.update(
             {"registrar": registrar, "code": bytecode, "eth_accuracy": eth_accuracy, "extensions": extensions})
         if supported_asset_id is not None:
-            create_contract_props.update({"supported_asset_id": supported_asset_id})
+            contract_create_props.update({"supported_asset_id": supported_asset_id})
         else:
-            del create_contract_props["supported_asset_id"]
-        create_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
+            del contract_create_props["supported_asset_id"]
+        contract_create_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
             lcc.log_debug(
-                "Create contract operation: \n{}".format(json.dumps([operation_id, create_contract_props], indent=4)))
+                "Create contract operation: \n{}".format(json.dumps([operation_id, contract_create_props], indent=4)))
         if signer is None:
-            return [operation_id, create_contract_props, registrar]
-        return [operation_id, create_contract_props, signer]
+            return [operation_id, contract_create_props, registrar]
+        return [operation_id, contract_create_props, signer]
 
-    def get_call_contract_operation(self, echo, registrar, bytecode, callee, fee_amount=0, fee_asset_id="1.3.0",
+    def get_contract_call_operation(self, echo, registrar, bytecode, callee, fee_amount=0, fee_asset_id="1.3.0",
                                     value_amount=0, value_asset_id="1.3.0", extensions=None, signer=None,
                                     debug_mode=False):
         if extensions is None:
             extensions = []
-        operation_id = echo.config.operation_ids.CALL_CONTRACT
-        call_contract_props = self.get_operation_json("call_contract_operation")
-        call_contract_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
-        call_contract_props.update(
+        operation_id = echo.config.operation_ids.CONTRACT_CALL
+        contract_call_props = self.get_operation_json("contract_call_operation")
+        contract_call_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
+        contract_call_props.update(
             {"registrar": registrar, "code": bytecode, "callee": callee, "extensions": extensions})
-        call_contract_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
+        contract_call_props["value"].update({"amount": value_amount, "asset_id": value_asset_id})
         if debug_mode:
-            lcc.log_debug("Call contract operation: \n{}".format(json.dumps(call_contract_props, indent=4)))
+            lcc.log_debug("Call contract operation: \n{}".format(json.dumps(contract_call_props, indent=4)))
         if signer is None:
-            return [operation_id, call_contract_props, registrar]
-        return [operation_id, call_contract_props, signer]
+            return [operation_id, contract_call_props, registrar]
+        return [operation_id, contract_call_props, signer]
 
     def get_account_address_create_operation(self, echo, owner, label, fee_amount=0, fee_asset_id="1.3.0",
                                              extensions=None, signer=None, debug_mode=False):
@@ -337,12 +309,13 @@ class EchoOperations(object):
             return [operation_id, transfer_to_address_props, from_account_id]
         return [operation_id, transfer_to_address_props, signer]
 
-    def get_generate_eth_address_operation(self, echo, account, fee_amount=0, fee_asset_id="1.3.0", extensions=None,
-                                           signer=None, debug_mode=False):
+    def get_sidechain_eth_create_address_operation(self, echo, account, fee_amount=0, fee_asset_id="1.3.0",
+                                                   extensions=None,
+                                                   signer=None, debug_mode=False):
         if extensions is None:
             extensions = []
-        operation_id = echo.config.operation_ids.GENERATE_ETH_ADDRESS
-        generate_eth_address_props = self.get_operation_json("generate_eth_address_operation")
+        operation_id = echo.config.operation_ids.SIDECHAIN_ETH_CREATE_ADDRESS
+        generate_eth_address_props = self.get_operation_json("sidechain_eth_create_address_operation")
         generate_eth_address_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         generate_eth_address_props.update({"account": account, "extensions": extensions})
         if debug_mode:
@@ -352,12 +325,12 @@ class EchoOperations(object):
             return [operation_id, generate_eth_address_props, account]
         return [operation_id, generate_eth_address_props, signer]
 
-    def get_withdraw_eth_operation(self, echo, account, eth_addr, value, fee_amount=0, fee_asset_id="1.3.0",
-                                   extensions=None, signer=None, debug_mode=False):
+    def get_sidechain_eth_withdraw_operation(self, echo, account, eth_addr, value, fee_amount=0, fee_asset_id="1.3.0",
+                                             extensions=None, signer=None, debug_mode=False):
         if extensions is None:
             extensions = []
-        operation_id = echo.config.operation_ids.WITHDRAW_ETH
-        withdraw_eth_props = self.get_operation_json("withdraw_eth_operation")
+        operation_id = echo.config.operation_ids.SIDECHAIN_ETH_WITHDRAW
+        withdraw_eth_props = self.get_operation_json("sidechain_eth_withdraw_operation")
         withdraw_eth_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         withdraw_eth_props.update({"account": account, "eth_addr": eth_addr, "value": value, "extensions": extensions})
         if debug_mode:
@@ -408,13 +381,13 @@ class EchoOperations(object):
             return [operation_id, contract_whitelist_props, sender]
         return [operation_id, contract_whitelist_props, signer]
 
-    def get_register_erc20_token_operation(self, echo, account, eth_addr, name, symbol, fee_amount=0,
-                                           fee_asset_id="1.3.0", decimals=0, extensions=None, signer=None,
-                                           debug_mode=False):
+    def get_sidechain_erc20_register_token_operation(self, echo, account, eth_addr, name, symbol, fee_amount=0,
+                                                     fee_asset_id="1.3.0", decimals=0, extensions=None, signer=None,
+                                                     debug_mode=False):
         if extensions is None:
             extensions = []
-        operation_id = echo.config.operation_ids.REGISTER_ERC20_TOKEN
-        register_erc20_token_props = self.get_operation_json("register_erc20_token_operation")
+        operation_id = echo.config.operation_ids.SIDECHAIN_ERC20_REGISTER_TOKEN
+        register_erc20_token_props = self.get_operation_json("sidechain_erc20_register_token_operation")
         register_erc20_token_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         register_erc20_token_props.update(
             {"account": account, "eth_addr": eth_addr, "name": name, "symbol": symbol, "decimals": decimals,
@@ -426,12 +399,13 @@ class EchoOperations(object):
             return [operation_id, register_erc20_token_props, account]
         return [operation_id, register_erc20_token_props, signer]
 
-    def get_withdraw_erc20_token_operation(self, echo, account, to, erc20_token, value, fee_amount=0,
-                                           fee_asset_id="1.3.0", extensions=None, signer=None, debug_mode=False):
+    def get_sidechain_erc20_withdraw_token_operation(self, echo, account, to, erc20_token, value, fee_amount=0,
+                                                     fee_asset_id="1.3.0", extensions=None, signer=None,
+                                                     debug_mode=False):
         if extensions is None:
             extensions = []
-        operation_id = echo.config.operation_ids.WITHDRAW_ERC20_TOKEN
-        withdraw_erc20_token_props = self.get_operation_json("withdraw_erc20_token_operation")
+        operation_id = echo.config.operation_ids.SIDECHAIN_ERC20_WITHDRAW_TOKEN
+        withdraw_erc20_token_props = self.get_operation_json("sidechain_erc20_withdraw_token_operation")
         withdraw_erc20_token_props["fee"].update({"amount": fee_amount, "asset_id": fee_asset_id})
         withdraw_erc20_token_props.update(
             {"account": account, "to": to, "erc20_token": erc20_token, "value": value, "extensions": extensions})
