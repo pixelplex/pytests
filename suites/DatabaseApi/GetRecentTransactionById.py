@@ -120,7 +120,7 @@ class GetRecentTransactionById(BaseTest):
             )
             if expiration_status:
                 break
-        self.set_timeout_wait(wait_block_count=2)
+        self.set_timeout_wait(wait_block_count=10)
 
         lcc.set_step("Get recent transaction by id (after it expire)")
         response_id = self.send_request(self.get_request("get_recent_transaction_by_id", params),
