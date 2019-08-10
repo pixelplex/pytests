@@ -128,8 +128,6 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check contract history of new account")
-    @lcc.tags("Bug ECHO-1037")
-    @lcc.disabled()
     @lcc.depends_on("HistoryApi.GetContractHistory.GetContractHistory.method_main_check")
     def new_contract_history(self, get_random_valid_account_name):
         new_account = get_random_valid_account_name
@@ -158,8 +156,6 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Check limit number of operations to retrieve")
-    @lcc.tags("Bug ECHO-1037")
-    @lcc.disabled()
     @lcc.depends_on("HistoryApi.GetContractHistory.GetContractHistory.method_main_check")
     def limit_operations_to_retrieve(self, get_random_valid_account_name, get_random_integer_up_to_fifty):
         new_account = get_random_valid_account_name
