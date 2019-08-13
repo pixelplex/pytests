@@ -99,5 +99,5 @@ class MyProjectConfiguration(SimpleProjectConfiguration, HasMetadataPolicy, HasP
 project = MyProjectConfiguration(
     suites_dir=os.path.join(project_dir, "suites"),
     fixtures_dir=os.path.join(project_dir, "fixtures"),
-    report_title="ECHO tests"
+    report_title="ECHO tests (ECHO v. 0.9.1)"
 )
