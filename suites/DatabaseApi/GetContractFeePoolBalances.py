@@ -211,8 +211,6 @@ class PositiveTesting(BaseTest):
 
     @lcc.prop("type", "method")
     @lcc.test("Add fee pool and destroy contract")
-    @lcc.disabled()
-    @lcc.tags("Bug: 'ECHO-1011'")
     @lcc.depends_on("DatabaseApi.GetContractFeePoolBalances.GetContractFeePoolBalances.method_main_check")
     def add_fee_pool_and_destroy_contract(self, get_random_integer_up_to_ten):
         lcc.set_step("Create contract in the Echo network and get its contract id")
@@ -256,8 +254,8 @@ class PositiveTesting(BaseTest):
         response_id = self.send_request(self.get_request("get_account_balances", params),
                                         self.__database_api_identifier)
         updated_account_balance = self.get_response(response_id)["result"][0]["amount"]
-        check_that("'account balance'", updated_account_balance,
-                   equal_to(account_balance + fee_pool_balance - needed_fee))
+        check_that("'account balance'", int(updated_account_balance),
+                   equal_to(int(account_balance) + fee_pool_balance - needed_fee))
 
     @lcc.prop("type", "method")
     @lcc.test("Add insufficient fee pool to contract to call contract method")

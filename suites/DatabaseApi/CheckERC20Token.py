@@ -47,7 +47,7 @@ class CheckERC20Token(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.tags("Bug ECHO-1141")
     @lcc.disabled()
     @lcc.test("Simple work of method 'check_erc20_token'")
     def method_main_check(self, get_random_string, get_random_valid_asset_name):
@@ -69,10 +69,7 @@ class CheckERC20Token(BaseTest):
                                                                         name=contract_name,
                                                                         symbol=erc20_symbol,
                                                                         database_api_id=self.__database_api_identifier)
-        # todo: uncomment. Bug ECHO-1043
-        # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
-        lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            "1.15.x"))  # todo: echo_erc20_contract_id
+        lcc.log_info("Registration of ERC20 token completed successfully")
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),

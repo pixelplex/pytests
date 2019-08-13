@@ -47,7 +47,7 @@ class GetERC20Token(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.tags("Bug ECHO-1141")
     @lcc.disabled()
     @lcc.test("Simple work of method 'get_erc20_token'")
     def method_main_check(self, get_random_string, get_random_valid_asset_name):
@@ -69,10 +69,7 @@ class GetERC20Token(BaseTest):
                                                                         name=contract_name,
                                                                         symbol=erc20_symbol,
                                                                         database_api_id=self.__database_api_identifier)
-        # todo: uncomment. Bug ECHO-1043
-        # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
-        lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            "1.15.x"))  # todo: echo_erc20_contract_id
+        lcc.log_info("Registration of ERC20 token completed successfully")
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
@@ -141,7 +138,7 @@ class PositiveTesting(BaseTest):
         super().teardown_suite()
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.tags("Bug ECHO-1141")
     @lcc.disabled()
     @lcc.test("Create contract using register_erc20_token operation and get info about it")
     @lcc.depends_on("DatabaseApi.GetERC20Token.GetERC20Token.method_main_check")
@@ -167,10 +164,9 @@ class PositiveTesting(BaseTest):
                                                                         symbol=erc20_symbol,
                                                                         decimals=erc20_token_decimals,
                                                                         database_api_id=self.__database_api_identifier)
-        # todo: uncomment. Bug ECHO-1043
-        # echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
+        erc20_token_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            "1.15.x"))  # todo: echo_erc20_contract_id
+            erc20_token_id))
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
@@ -180,8 +176,7 @@ class PositiveTesting(BaseTest):
             erc20_contract.address[2:]))
 
         with this_dict(result):
-            # todo: uncomment. Bug ECHO-1043
-            # check_that_entry("id", equal_to(echo_erc20_contract_id))
+            check_that_entry("id", equal_to(erc20_token_id))
             check_that_entry("owner", equal_to(self.echo_acc0))
             check_that_entry("eth_addr", equal_to(erc20_contract.address[2:]))
             check_that_entry("name", equal_to(contract_name))
@@ -189,7 +184,7 @@ class PositiveTesting(BaseTest):
             check_that_entry("decimals", equal_to(erc20_token_decimals))
 
     @lcc.prop("type", "method")
-    @lcc.tags("Bug ECHO-1043", "Bug ECHO-1141")
+    @lcc.tags("Bug ECHO-1141")
     @lcc.disabled()
     @lcc.test("Create contract using register_erc20_token operation and compare response from 'get_erc20_token' "
               "and 'get_objects'")
@@ -213,10 +208,9 @@ class PositiveTesting(BaseTest):
                                                                         name=contract_name,
                                                                         symbol=erc20_symbol,
                                                                         database_api_id=self.__database_api_identifier)
-        # todo: Bug ECHO-1043
-        echo_erc20_contract_id = self.get_contract_result(bd_result, self.__database_api_identifier)
+        erc20_token_id = self.get_contract_result(bd_result, self.__database_api_identifier)
         lcc.log_info("Registration of ERC20 token completed successfully, ERC20 token object is '{}'".format(
-            echo_erc20_contract_id))
+            erc20_token_id))
 
         lcc.set_step("Get created ERC20 token and store contract id in the ECHO network")
         response_id = self.send_request(self.get_request("get_erc20_token", [erc20_contract.address[2:]]),
@@ -226,11 +220,10 @@ class PositiveTesting(BaseTest):
             erc20_contract.address[2:]))
 
         lcc.set_step("Get account by id")
-        # todo: Bug ECHO-1043
-        response_id = self.send_request(self.get_request("get_objects", [[echo_erc20_contract_id]]),
+        response_id = self.send_request(self.get_request("get_objects", [[erc20_token_id]]),
                                         self.__database_api_identifier)
         response_2 = self.get_response(response_id)
-        lcc.log_info("Call method 'get_objects' with param: {}".format(echo_erc20_contract_id))
+        lcc.log_info("Call method 'get_objects' with param: {}".format(erc20_token_id))
 
         lcc.set_step("Checking created account")
         erc20_object_info_1 = response_1["result"]
